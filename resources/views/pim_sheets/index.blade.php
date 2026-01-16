@@ -421,27 +421,30 @@
         hasSolutions = withSols;
         hasNoSolutions = withoutSols;
 
+        // Si solo hay una opción disponible, descargar directamente
+        if (withSols && !withoutSols) {
+            window.location.href = '{{ url("pim-sheets") }}/' + sheetId + '/download?with_solutions=1';
+            return;
+        }
+        if (!withSols && withoutSols) {
+            window.location.href = '{{ url("pim-sheets") }}/' + sheetId + '/download?with_solutions=0';
+            return;
+        }
+        if (!withSols && !withoutSols) {
+            alert('Esta hoja no tiene archivos TEX disponibles.');
+            return;
+        }
+
         document.getElementById('modalSheetTitle').textContent = title;
 
-        // Deshabilitar botones si no hay archivos disponibles
-        document.getElementById('btnWithSolutions').disabled = !hasSolutions;
-        document.getElementById('btnWithoutSolutions').disabled = !hasNoSolutions;
+        // Ambas opciones disponibles, mostrar modal
+        document.getElementById('btnWithSolutions').disabled = false;
+        document.getElementById('btnWithSolutions').style.opacity = '1';
+        document.getElementById('btnWithSolutions').style.cursor = 'pointer';
 
-        if (!hasSolutions) {
-            document.getElementById('btnWithSolutions').style.opacity = '0.5';
-            document.getElementById('btnWithSolutions').style.cursor = 'not-allowed';
-        } else {
-            document.getElementById('btnWithSolutions').style.opacity = '1';
-            document.getElementById('btnWithSolutions').style.cursor = 'pointer';
-        }
-
-        if (!hasNoSolutions) {
-            document.getElementById('btnWithoutSolutions').style.opacity = '0.5';
-            document.getElementById('btnWithoutSolutions').style.cursor = 'not-allowed';
-        } else {
-            document.getElementById('btnWithoutSolutions').style.opacity = '1';
-            document.getElementById('btnWithoutSolutions').style.cursor = 'pointer';
-        }
+        document.getElementById('btnWithoutSolutions').disabled = false;
+        document.getElementById('btnWithoutSolutions').style.opacity = '1';
+        document.getElementById('btnWithoutSolutions').style.cursor = 'pointer';
 
         document.getElementById('downloadModal').style.display = 'block';
     }
@@ -453,8 +456,7 @@
 
     function downloadSheet(withSolutions) {
         if (currentSheetId) {
-            const url = `/pim-sheets/${currentSheetId}/download?with_solutions=${withSolutions ? '1' : '0'}`;
-            window.location.href = url;
+            window.location.href = '{{ url("pim-sheets") }}/' + currentSheetId + '/download?with_solutions=' + (withSolutions ? '1' : '0');
             closeModal();
         }
     }
