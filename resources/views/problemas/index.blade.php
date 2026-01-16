@@ -3,7 +3,7 @@
 @section('title', 'Ver Problemas')
 
 @section('styles')
-<link rel="stylesheet" href="{{ asset('css/pagination.css?v=3') }}">
+<link rel="stylesheet" href="{{ asset('css/pagination.css?v=' . time()) }}">
 <style>
 /* === ESTRUCTURA PRINCIPAL === */
 .container {

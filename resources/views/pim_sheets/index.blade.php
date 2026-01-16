@@ -3,7 +3,7 @@
 @section('title', 'Hojas de Problemas')
 
 @section('styles')
-<link rel="stylesheet" href="{{ asset('css/pagination.css?v=3') }}">
+<link rel="stylesheet" href="{{ asset('css/pagination.css?v=' . time()) }}">
 <style>
     .filters-container {
         background: #f7fafc;
