@@ -3,7 +3,8 @@
 @section('title', 'Ver Problemas')
 
 @section('styles')
-
+<link rel="stylesheet" href="{{ asset('css/pagination.css') }}">
+<style>
 /* === ESTRUCTURA PRINCIPAL === */
 .container {
     max-width: 1200px;
@@ -171,53 +172,6 @@
 
 .btn-secondary:hover {
     background-color: #4a5568;
-}
-
-/* === PAGINACIÓN === */
-.pagination-wrapper {
-    display: flex;
-    justify-content: center;
-    margin: 2rem 0;
-}
-
-.pagination {
-    display: flex;
-    gap: 0.75rem;
-    align-items: center;
-}
-
-.page-item {
-    padding: 0.75rem 1rem;
-    border: 1px solid #cbd5e0;
-    border-radius: 6px;
-    background-color: white;
-    color: #4a5568;
-    text-decoration: none;
-    font-size: 1.1rem;
-    font-weight: 500;
-    transition: all 0.2s;
-    min-width: 45px;
-    text-align: center;
-}
-
-.page-item:hover:not(.disabled):not(.active) {
-    background-color: #f7fafc;
-    border-color: #4a5568;
-    transform: translateY(-2px);
-}
-
-.page-item.active {
-    background-color: #4a5568;
-    color: white;
-    border-color: #4a5568;
-    font-weight: 700;
-}
-
-.page-item.disabled {
-    background-color: #f7fafc;
-    color: #cbd5e0;
-    cursor: not-allowed;
-    border-color: #e2e8f0;
 }
 
 /* === TARJETAS DE PROBLEMAS === */
@@ -435,18 +389,7 @@
     .select-multiple-dropdown {
         max-height: 200px;
     }
-    
-    .pagination {
-        gap: 0.3rem;
-        flex-wrap: wrap;
-    }
-    
-    .page-item {
-        padding: 0.5rem 0.7rem;
-        font-size: 0.9rem;
-        min-width: 35px;
-    }
-    
+
     .stats {
         font-size: 0.85rem;
         line-height: 1.6;
@@ -562,17 +505,7 @@
     .form-buttons {
         flex-direction: column;
     }
-    
-    .pagination {
-        gap: 0.25rem;
-    }
-    
-    .page-item {
-        padding: 0.4rem 0.6rem;
-        font-size: 0.85rem;
-        min-width: 30px;
-    }
-    
+
     .problema-content strong {
         display: block;
         margin-bottom: 0.5rem;
