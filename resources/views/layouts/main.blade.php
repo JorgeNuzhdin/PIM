@@ -135,6 +135,55 @@ window.MathJax = {
     display: block;
 }
 
+.sheets-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.sheets-dropdown-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: inherit;
+    font-weight: 600;
+    padding: 0;
+    margin: 0 1rem;
+}
+
+.sheets-dropdown-btn:hover {
+    color: #cbd5e0;
+}
+
+.sheets-dropdown-content {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 100%;
+    background-color: white;
+    min-width: 200px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    border-radius: 4px;
+    z-index: 1000;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.sheets-dropdown-content a {
+    color: #333 !important;
+    padding: 0.75rem 1rem;
+    display: block;
+    text-decoration: none;
+}
+
+.sheets-dropdown-content a:hover {
+    background-color: #f5f5f5;
+}
+
+.sheets-dropdown:hover .sheets-dropdown-content {
+    display: block;
+}
+
 /* Navbar responsive */
 @media (max-width: 768px) {
     .navbar {
@@ -171,8 +220,20 @@ window.MathJax = {
                 @if(Auth::user()->canEditProblemas())
                     <a href="{{ route('problemas.create') }}">Añadir Problema</a>
                 @endif
+
+                <div class="sheets-dropdown">
+                    <button class="sheets-dropdown-btn">
+                        Hojas de problemas ▾
+                    </button>
+                    <div class="sheets-dropdown-content">
+                        <a href="{{ route('pim-sheets.index') }}">Ver hojas</a>
+                        @if(Auth::user()->canEditProblemas())
+                            <a href="{{ route('pim-sheets.create') }}">Subir una hoja</a>
+                        @endif
+                    </div>
+                </div>
             @endauth
-            
+
 
 
 

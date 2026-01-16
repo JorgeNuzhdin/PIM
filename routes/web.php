@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\HojaController;
+use App\Http\Controllers\PimSheetController;
 
 
 Route::get('/', [HomePageController::class, 'index'])->name('homepage');
@@ -48,4 +49,16 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
     Route::patch('/users/{user}/rol', [AdminUserController::class, 'updateRol'])->name('users.updateRol');
+});
+
+// Rutas de Hojas de Problemas (PimSheets)
+Route::middleware('auth')->prefix('pim-sheets')->name('pim-sheets.')->group(function () {
+    Route::get('/', [PimSheetController::class, 'index'])->name('index');
+    Route::get('/{sheet}/download', [PimSheetController::class, 'download'])->name('download');
+
+    // Solo editores y administradores pueden subir sheets
+    Route::middleware('can.edit.problemas')->group(function () {
+        Route::get('/create', [PimSheetController::class, 'create'])->name('create');
+        Route::post('/', [PimSheetController::class, 'store'])->name('store');
+    });
 });
