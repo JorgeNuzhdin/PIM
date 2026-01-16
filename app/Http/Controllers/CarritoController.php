@@ -112,22 +112,22 @@ class CarritoController extends Controller
         $titulo = $problema->title ?? 'sin-titulo';
         $contenido .= "\n\\idtitulo{\\#" . $problema->id . ": " . $titulo . "}\n";
 
-        $contenido .= "\\begin{ejer}\n";
+        $contenido .= "\\exercise{";
         $contenido .= $problema->problem_tex ?? $problema->problem_html;
-        $contenido .= "\n\\end{ejer}\n";
-        
+        $contenido .= "}\n";
+
         // Pistas
         if ($problema->hints) {
-            $contenido .= "\n\\begin{pistas}\n";
+            $contenido .= "\n\\pistas{";
             $contenido .= $problema->hints;
-            $contenido .= "\n\\end{pistas}\n";
+            $contenido .= "}\n";
         }
-        
+
         // Solución
         if ($problema->solution_tex || $problema->solution_html) {
-            $contenido .= "\n\\begin{proof}[Solución]\n";
+            $contenido .= "\n\\solution{";
             $contenido .= $problema->solution_tex ?? $problema->solution_html;
-            $contenido .= "\n\\end{proof}\n";
+            $contenido .= "}\n";
         }
         
         // Recopilar imágenes mencionadas en el problema
@@ -160,7 +160,7 @@ private function generarPreambulo($packages)
     $preambulo .= "\\usepackage{enumerate}\n";
     $preambulo .= "\\usepackage{xcolor}\n";
     $preambulo .= "\\usepackage{tikz}\n\n";
-    
+
     // Paquetes adicionales
     if (!empty($packages)) {
         $preambulo .= "% Paquetes adicionales\n";
@@ -169,18 +169,55 @@ private function generarPreambulo($packages)
         }
         $preambulo .= "\n";
     }
-    
-    // Definir entornos
+
+    // Definir entornos básicos
     $preambulo .= "% Definición de entornos\n";
     $preambulo .= "\\newtheorem{ejer}{Problema}\n";
     $preambulo .= "\\newenvironment{pistas}{\\textbf{Pistas:}\\begin{itemize}}{\\end{itemize}}\n";
-    $preambulo .= "\\renewcommand{\\proofname}{Solución}\n";
-    $preambulo .= "\\newcommand{\\idtitulo}[1]{\\subsection*{#1}}\n\n";
-    
+    $preambulo .= "\\renewcommand{\\proofname}{Solución}\n\n";
+
+    // Comandos para filtrado por grupo
+    $preambulo .= "% Comandos para filtrado por grupo\n";
+    $preambulo .= "\\newif\\ifpreamble\n\n";
+
+    $preambulo .= "\\newcommand{\\exercise}[1]{\n";
+    $preambulo .= "\\ifpreamble{\\begin{ejer}#1\\end{ejer}}\\else{\n";
+    $preambulo .= "\\ifnum\\group=0{\n";
+    $preambulo .= "\\ifshowinfo{\\noindent\\color{blue}\\ifnep{N}\\fi\\ifmar{M}\\fi\\ifura{U}\\fi\\ifjup{J}\\fi\\ifven{V}\\fi\\ifmer{X}\\fi}\\fi\n";
+    $preambulo .= "\\begin{ejer}#1\\end{ejer}}\\fi\n";
+    $preambulo .= "\\ifnum\\group=1{\\ifnep{\\begin{ejer}#1\\end{ejer}}\\fi}\\fi\n";
+    $preambulo .= "\\ifnum\\group=2{\\ifmar{\\begin{ejer}#1\\end{ejer}}\\fi}\\fi\n";
+    $preambulo .= "\\ifnum\\group=3{\\ifura{\\begin{ejer}#1\\end{ejer}}\\fi}\\fi\n";
+    $preambulo .= "\\ifnum\\group=4{\\ifjup{\\begin{ejer}#1\\end{ejer}}\\fi}\\fi\n";
+    $preambulo .= "\\ifnum\\group=5{\\ifven{\\begin{ejer}#1\\end{ejer}}\\fi}\\fi\n";
+    $preambulo .= "\\ifnum\\group=6{\\ifmer{\\begin{ejer}#1\\end{ejer}}\\fi}\\fi\n";
+    $preambulo .= "}\\fi\n";
+    $preambulo .= "}\n\n";
+
+    $preambulo .= "\\newcommand{\\solution}[1]{\n";
+    $preambulo .= "\\ifshowsolutions{\n";
+    $preambulo .= "\\ifpreamble{\\begin{proof}[Solución]#1\\end{proof}}\\else{\n";
+    $preambulo .= "\\ifnum\\group=0{\\begin{proof}[Solución]#1\\end{proof}}\\fi\n";
+    $preambulo .= "\\ifnum\\group=1{\\ifnep{{\\begin{proof}[Solución]#1\\end{proof}}}\\fi}\\fi\n";
+    $preambulo .= "\\ifnum\\group=2{\\ifmar{\\begin{proof}[Solución]#1\\end{proof}}\\fi}\\fi\n";
+    $preambulo .= "\\ifnum\\group=3{\\ifura{\\begin{proof}[Solución]#1\\end{proof}}\\fi}\\fi\n";
+    $preambulo .= "\\ifnum\\group=4{\\ifjup{\\begin{proof}[Solución]#1\\end{proof}}\\fi}\\fi\n";
+    $preambulo .= "\\ifnum\\group=5{\\ifven{\\begin{proof}[Solución]#1\\end{proof}}\\fi}\\fi\n";
+    $preambulo .= "\\ifnum\\group=6{\\ifmer{\\begin{proof}[Solución]#1\\end{proof}}\\fi}\\fi\n";
+    $preambulo .= "}\\fi\n";
+    $preambulo .= "}\\fi\n";
+    $preambulo .= "\\NN\\MM\\UU\\JJ\\VV\\XX}\n\n";
+
+    $preambulo .= "\\newcommand{\\idtitulo}[1]{\n";
+    $preambulo .= "\\ifnum\\group=0 \\ifshowinfo \\noindent{\\color{red}#1\\\\}\\fi\\fi\n";
+    $preambulo .= "}\n\n";
+
+    $preambulo .= "\\newcommand{\\pistas}[1]{\\textbf{Pistas:} #1}\n\n";
+
     $preambulo .= "\\title{Problemas de Matemáticas}\n";
-    $preambulo .= "\\author{MatemáticaMente}\n";
+    $preambulo .= "\\author{PIM}\n";
     $preambulo .= "\\date{\\today}\n";
-    
+
     return $preambulo;
 }
 
