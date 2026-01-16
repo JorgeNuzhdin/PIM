@@ -197,18 +197,6 @@
                 <small>Tema principal de la hoja</small>
             </div>
 
-            <div class="form-group">
-                <label for="problems">Problemas</label>
-                <textarea id="problems" name="problems" maxlength="2048">{{ old('problems') }}</textarea>
-                <small>Lista o descripción de los problemas incluidos (máx. 2048 caracteres)</small>
-            </div>
-
-            <div class="form-group">
-                <label for="preambles">Preámbulos</label>
-                <input type="number" id="preambles" name="preambles" value="{{ old('preambles') }}" min="0">
-                <small>Número de preámbulos o secciones introductorias</small>
-            </div>
-
             <div class="file-upload-group">
                 <h3>Archivos TEX</h3>
 
@@ -241,6 +229,18 @@
                 </div>
             </div>
 
+            <div class="form-group">
+                <label for="preambles">Preámbulo</label>
+                <textarea id="preambles" name="preambles" rows="4" readonly style="background-color: #f7fafc;"></textarea>
+                <small>Contenido extraído automáticamente del archivo TEX (entre \preambletrue y \preamblefalse)</small>
+            </div>
+
+            <div class="form-group">
+                <label for="problems">Problemas</label>
+                <textarea id="problems" name="problems" maxlength="2048" readonly style="background-color: #f7fafc;">{{ old('problems') }}</textarea>
+                <small>IDs de problemas extraídos automáticamente del archivo TEX (formato: 2804,2805,...)</small>
+            </div>
+
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">Subir Hoja de Problemas</button>
                 <a href="{{ route('pim-sheets.index') }}" class="btn btn-secondary">Cancelar</a>
@@ -252,6 +252,66 @@
 
 @section('scripts')
 <script>
+    // Función para extraer IDs de problemas del contenido TEX
+    function extractProblemIds(texContent) {
+        const regex = /\\idtitulo\{\\#(\d+):/g;
+        const ids = [];
+        let match;
+
+        while ((match = regex.exec(texContent)) !== null) {
+            ids.push(match[1]);
+        }
+
+        return ids.join(',');
+    }
+
+    // Función para extraer preámbulo del contenido TEX
+    function extractPreamble(texContent) {
+        const regex = /\\preambletrue([\s\S]*?)\\preamblefalse/;
+        const match = texContent.match(regex);
+
+        if (match && match[1]) {
+            return match[1].trim();
+        }
+
+        return '';
+    }
+
+    // Procesar archivo TEX con soluciones cuando se selecciona
+    document.getElementById('tex_sols').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+
+        if (!file) {
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = function(event) {
+            const texContent = event.target.result;
+
+            // Extraer IDs de problemas
+            const problemIds = extractProblemIds(texContent);
+            if (problemIds) {
+                document.getElementById('problems').value = problemIds;
+                document.getElementById('problems').style.backgroundColor = '#c6f6d5'; // Verde claro
+            }
+
+            // Extraer preámbulo
+            const preamble = extractPreamble(texContent);
+            if (preamble) {
+                document.getElementById('preambles').value = preamble;
+                document.getElementById('preambles').style.backgroundColor = '#c6f6d5'; // Verde claro
+            }
+        };
+
+        reader.onerror = function() {
+            alert('Error al leer el archivo TEX. Por favor, intenta de nuevo.');
+        };
+
+        reader.readAsText(file);
+    });
+
     // Validación del formulario
     document.querySelector('form').addEventListener('submit', function(e) {
         const texSols = document.getElementById('tex_sols').files.length > 0;

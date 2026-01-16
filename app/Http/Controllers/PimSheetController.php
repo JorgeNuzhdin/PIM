@@ -99,7 +99,7 @@ class PimSheetController extends Controller
             'institution' => 'nullable|string|max:256',
             'theme' => 'nullable|exists:temas,id',
             'problems' => 'nullable|string|max:2048',
-            'preambles' => 'nullable|integer',
+            'preambles' => 'nullable|string',
             'tex_sols' => 'nullable|file|mimes:tex,txt|max:10240',
             'tex_no_sols' => 'nullable|file|mimes:tex,txt|max:10240',
             'pdf_sols' => 'nullable|file|mimes:pdf|max:20480',

@@ -95,7 +95,7 @@ class CarritoController extends Controller
     
     foreach ($items as $index => $item) {
         $problema = $item->problema;
-        
+
         // Agregar paquetes
         if ($problema->packages) {
             $pkgs = explode(',', $problema->packages);
@@ -106,9 +106,13 @@ class CarritoController extends Controller
                 }
             }
         }
-        
+
         // Construir el contenido del problema
-        $contenido .= "\n\\begin{ejer}\n";
+        // Agregar \idtitulo con el ID y título del problema
+        $titulo = $problema->title ?? 'sin-titulo';
+        $contenido .= "\n\\idtitulo{\\#" . $problema->id . ": " . $titulo . "}\n";
+
+        $contenido .= "\\begin{ejer}\n";
         $contenido .= $problema->problem_tex ?? $problema->problem_html;
         $contenido .= "\n\\end{ejer}\n";
         
@@ -170,7 +174,8 @@ private function generarPreambulo($packages)
     $preambulo .= "% Definición de entornos\n";
     $preambulo .= "\\newtheorem{ejer}{Problema}\n";
     $preambulo .= "\\newenvironment{pistas}{\\textbf{Pistas:}\\begin{itemize}}{\\end{itemize}}\n";
-    $preambulo .= "\\renewcommand{\\proofname}{Solución}\n\n";
+    $preambulo .= "\\renewcommand{\\proofname}{Solución}\n";
+    $preambulo .= "\\newcommand{\\idtitulo}[1]{\\subsection*{#1}}\n\n";
     
     $preambulo .= "\\title{Problemas de Matemáticas}\n";
     $preambulo .= "\\author{MatemáticaMente}\n";

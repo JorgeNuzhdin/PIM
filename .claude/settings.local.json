@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(find:*)",
-      "Bash(git config:*)"
+      "Bash(git config:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAñadir controlador de hojas de problemas \\(PimSheets\\)\n\n- Crear modelo PimSheet para tabla pim_sheets\n- Crear PimSheetController con funcionalidades:\n  * index: listado con filtros, búsqueda y ordenamiento\n  * create: formulario para subir nuevas hojas\n  * store: guardar hojas con archivos TEX y PDF\n  * download: descargar TEX con/sin soluciones\n- Crear vistas index y create para sheets\n- Agregar rutas protegidas \\(editores/admin para subir\\)\n- Actualizar navbar con menú desplegable \"Hojas de problemas\"\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nCorregir dropdown de Hojas de problemas en navbar\n\n- Eliminar gap entre botón y menú desplegable\n- Agregar padding al botón para mejor área clickeable\n- Agregar pseudo-elemento para mantener hover continuo\n- Solucionar problema de menú que se cierra al mover el mouse\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }
