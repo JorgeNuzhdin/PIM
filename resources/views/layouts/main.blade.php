@@ -147,8 +147,8 @@ window.MathJax = {
     cursor: pointer;
     font-size: inherit;
     font-weight: 600;
-    padding: 0;
-    margin: 0 1rem;
+    padding: 0.5rem 1rem;
+    margin: 0;
 }
 
 .sheets-dropdown-btn:hover {
@@ -166,7 +166,17 @@ window.MathJax = {
     border-radius: 4px;
     z-index: 1000;
     overflow: hidden;
-    margin-top: 0.5rem;
+    margin-top: 0;
+    padding-top: 0.25rem;
+}
+
+.sheets-dropdown-content::before {
+    content: '';
+    position: absolute;
+    top: -0.25rem;
+    left: 0;
+    right: 0;
+    height: 0.25rem;
 }
 
 .sheets-dropdown-content a {
