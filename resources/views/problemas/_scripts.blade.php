@@ -124,43 +124,51 @@ function procesarArchivoTex(input) {
 // Extraer ejercicios del contenido .tex
 function extraerEjercicios(contenido) {
     const ejercicios = [];
-    
+
     // Buscar todo entre \begin{document} y \end{document}
     const docMatch = contenido.match(/\\begin\{document\}([\s\S]*?)\\end\{document\}/);
     if (!docMatch) return ejercicios;
-    
+
     const documento = docMatch[1];
-    
+
     // Extraer metadatos globales (fuera de ejercicios)
     const temas = extraerComando(documento, 'temas');
     const fuente = extraerComando(documento, 'fuente');
-    
-    // Buscar todos los bloques de ejercicios
+
+    // Buscar todos los bloques de ejercicios con \begin{ejer}...\end{ejer}
     const regexEjer = /\\begin\{ejer\}([\s\S]*?)\\end\{ejer\}/g;
     let match;
-    
+
     while ((match = regexEjer.exec(documento)) !== null) {
         const bloqueCompleto = documento.substring(match.index);
-        
+
         // Buscar metadatos antes del ejercicio
         const antesEjer = documento.substring(0, match.index);
         const ultimosDatos = antesEjer.substring(Math.max(0, antesEjer.length - 500));
-        
+
         const dificultad = extraerComando(ultimosDatos, 'dificultad') || '';
         const curso = extraerComando(ultimosDatos, 'curso') || '';
         const comentarios = extraerComando(ultimosDatos, 'comentarios') || '';
-        
+
         // Extraer enunciado
         const enunciado = match[1].trim();
-        
+
         // Buscar pistas después del ejercicio
         const pistasMatch = bloqueCompleto.match(/\\begin\{pistas\}([\s\S]*?)\\end\{pistas\}/);
         const pistas = pistasMatch ? pistasMatch[1].trim() : '';
-        
-        // Buscar solución
-        const solucionMatch = bloqueCompleto.match(/\\begin\{proof\}(?:\[.*?\])?([\s\S]*?)\\end\{proof\}/);
-        const solucion = solucionMatch ? solucionMatch[1].trim() : '';
-        
+
+        // Buscar solución: \begin{proof}...\end{proof} o \solution{...}
+        let solucion = '';
+        const solucionProofMatch = bloqueCompleto.match(/\\begin\{proof\}(?:\[.*?\])?([\s\S]*?)\\end\{proof\}/);
+        if (solucionProofMatch) {
+            solucion = solucionProofMatch[1].trim();
+        } else {
+            const solucionCmdMatch = bloqueCompleto.match(/\\solution\{([\s\S]*?)\}(?=\s*(?:\\|$|\n))/);
+            if (solucionCmdMatch) {
+                solucion = solucionCmdMatch[1].trim();
+            }
+        }
+
         ejercicios.push({
             temas: temas,
             dificultad: dificultad,
@@ -172,7 +180,54 @@ function extraerEjercicios(contenido) {
             solucion: solucion
         });
     }
-    
+
+    // Buscar también ejercicios con \exercise{...}
+    const regexExercise = /\\exercise\{([\s\S]*?)\}(?=\s*(?:\\solution|\\begin|$|\n\n))/g;
+    let exerciseMatch;
+
+    while ((exerciseMatch = regexExercise.exec(documento)) !== null) {
+        const posicionExercise = exerciseMatch.index;
+        const bloqueCompleto = documento.substring(posicionExercise);
+
+        // Buscar metadatos antes del ejercicio
+        const antesExercise = documento.substring(0, posicionExercise);
+        const ultimosDatos = antesExercise.substring(Math.max(0, antesExercise.length - 500));
+
+        const dificultad = extraerComando(ultimosDatos, 'dificultad') || '';
+        const curso = extraerComando(ultimosDatos, 'curso') || '';
+        const comentarios = extraerComando(ultimosDatos, 'comentarios') || '';
+
+        // Extraer enunciado
+        const enunciado = exerciseMatch[1].trim();
+
+        // Buscar pistas después del ejercicio
+        const pistasMatch = bloqueCompleto.match(/\\begin\{pistas\}([\s\S]*?)\\end\{pistas\}/);
+        const pistas = pistasMatch ? pistasMatch[1].trim() : '';
+
+        // Buscar solución: \solution{...} o \begin{proof}...\end{proof}
+        let solucion = '';
+        const solucionCmdMatch = bloqueCompleto.match(/\\solution\{([\s\S]*?)\}(?=\s*(?:\\exercise|\\begin|$|\n\n))/);
+        if (solucionCmdMatch) {
+            solucion = solucionCmdMatch[1].trim();
+        } else {
+            const solucionProofMatch = bloqueCompleto.match(/\\begin\{proof\}(?:\[.*?\])?([\s\S]*?)\\end\{proof\}/);
+            if (solucionProofMatch) {
+                solucion = solucionProofMatch[1].trim();
+            }
+        }
+
+        ejercicios.push({
+            temas: temas,
+            dificultad: dificultad,
+            fuente: fuente,
+            curso: curso,
+            comentarios: comentarios,
+            enunciado: enunciado,
+            pistas: pistas,
+            solucion: solucion
+        });
+    }
+
     return ejercicios;
 }
 
