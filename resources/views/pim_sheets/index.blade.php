@@ -3,6 +3,7 @@
 @section('title', 'Hojas de Problemas')
 
 @section('styles')
+<link rel="stylesheet" href="{{ asset('css/pagination.css') }}">
 <style>
     .filters-container {
         background: #f7fafc;
@@ -135,38 +136,6 @@
         background-color: #f7fafc;
     }
 
-    .pagination-container {
-        margin-top: 2rem;
-        display: flex;
-        justify-content: center;
-    }
-
-    .pagination {
-        display: flex;
-        gap: 0.5rem;
-        list-style: none;
-        padding: 0;
-    }
-
-    .pagination a,
-    .pagination span {
-        padding: 0.5rem 1rem;
-        border: 1px solid #cbd5e0;
-        border-radius: 4px;
-        text-decoration: none;
-        color: #2d3748;
-    }
-
-    .pagination .active span {
-        background-color: #4299e1;
-        color: white;
-        border-color: #4299e1;
-    }
-
-    .pagination a:hover {
-        background-color: #edf2f7;
-    }
-
     .modal {
         display: none;
         position: fixed;
@@ -293,6 +262,74 @@
         </form>
     </div>
 
+    <!-- Paginación superior -->
+    @if($sheets->hasPages())
+        <div class="pagination-wrapper">
+            <div class="pagination">
+                {{-- Primera página --}}
+                @if ($sheets->currentPage() > 1)
+                    <a href="{{ $sheets->appends(request()->query())->url(1) }}" class="page-item" title="Primera página">&laquo;&laquo;</a>
+                @else
+                    <span class="page-item disabled">&laquo;&laquo;</span>
+                @endif
+
+                {{-- Página anterior --}}
+                @if ($sheets->onFirstPage())
+                    <span class="page-item disabled">&laquo;</span>
+                @else
+                    <a href="{{ $sheets->appends(request()->query())->previousPageUrl() }}" class="page-item">&laquo;</a>
+                @endif
+
+                {{-- Números de página --}}
+                @php
+                    $current = $sheets->currentPage();
+                    $last = $sheets->lastPage();
+                    $start = max(1, $current - 4);
+                    $end = min($last, $current + 4);
+                @endphp
+
+                {{-- Primera página siempre visible --}}
+                @if ($start > 1)
+                    <a href="{{ $sheets->appends(request()->query())->url(1) }}" class="page-item">1</a>
+                    @if ($start > 2)
+                        <span class="page-item disabled">...</span>
+                    @endif
+                @endif
+
+                {{-- Rango de páginas alrededor de la actual --}}
+                @for ($page = $start; $page <= $end; $page++)
+                    @if ($page == $current)
+                        <span class="page-item active">{{ $page }}</span>
+                    @else
+                        <a href="{{ $sheets->appends(request()->query())->url($page) }}" class="page-item">{{ $page }}</a>
+                    @endif
+                @endfor
+
+                {{-- Última página siempre visible --}}
+                @if ($end < $last)
+                    @if ($end < $last - 1)
+                        <span class="page-item disabled">...</span>
+                    @endif
+                    <a href="{{ $sheets->appends(request()->query())->url($last) }}" class="page-item">{{ $last }}</a>
+                @endif
+
+                {{-- Página siguiente --}}
+                @if ($sheets->hasMorePages())
+                    <a href="{{ $sheets->appends(request()->query())->nextPageUrl() }}" class="page-item">&raquo;</a>
+                @else
+                    <span class="page-item disabled">&raquo;</span>
+                @endif
+
+                {{-- Última página --}}
+                @if ($sheets->currentPage() < $sheets->lastPage())
+                    <a href="{{ $sheets->appends(request()->query())->url($sheets->lastPage()) }}" class="page-item" title="Última página">&raquo;&raquo;</a>
+                @else
+                    <span class="page-item disabled">&raquo;&raquo;</span>
+                @endif
+            </div>
+        </div>
+    @endif
+
     <!-- Tabla de sheets -->
     <div class="sheets-table">
         <table>
@@ -336,13 +373,6 @@
             </tbody>
         </table>
     </div>
-
-    <!-- Paginación -->
-    @if($sheets->hasPages())
-        <div class="pagination-container">
-            {{ $sheets->links() }}
-        </div>
-    @endif
 </div>
 
 <!-- Modal de descarga -->
