@@ -3,7 +3,6 @@
 @section('title', 'Ver Problemas')
 
 @section('styles')
-<link rel="stylesheet" href="{{ url('css/pagination.css') }}">
 <style>
 /* === ESTRUCTURA PRINCIPAL === */
 .container {

@@ -3,7 +3,6 @@
 @section('title', 'Hojas de Problemas')
 
 @section('styles')
-<link rel="stylesheet" href="{{ url('css/pagination.css') }}">
 <style>
     .filters-container {
         background: #f7fafc;
