@@ -153,9 +153,17 @@ function extraerEjercicios(contenido) {
         // Extraer enunciado
         const enunciado = match[1].trim();
 
-        // Buscar pistas después del ejercicio
-        const pistasMatch = bloqueCompleto.match(/\\begin\{pistas\}([\s\S]*?)\\end\{pistas\}/);
-        const pistas = pistasMatch ? pistasMatch[1].trim() : '';
+        // Buscar pistas después del ejercicio: \begin{pistas}...\end{pistas} o \pistas{...}
+        let pistas = '';
+        const pistasEnvMatch = bloqueCompleto.match(/\\begin\{pistas\}([\s\S]*?)\\end\{pistas\}/);
+        if (pistasEnvMatch) {
+            pistas = pistasEnvMatch[1].trim();
+        } else {
+            const pistasCmdMatch = bloqueCompleto.match(/\\pistas\{([\s\S]*?)\}(?=\s*(?:\\begin|\\solution|\\end|$|\n))/);
+            if (pistasCmdMatch) {
+                pistas = pistasCmdMatch[1].trim();
+            }
+        }
 
         // Buscar solución: \begin{proof}...\end{proof} o \solution{...}
         let solucion = '';
@@ -182,7 +190,7 @@ function extraerEjercicios(contenido) {
     }
 
     // Buscar también ejercicios con \exercise{...}
-    const regexExercise = /\\exercise\{([\s\S]*?)\}(?=\s*(?:\\solution|\\begin|$|\n\n))/g;
+    const regexExercise = /\\exercise\{([\s\S]*?)\}(?=\s*(?:\\solution|\\pistas|\\begin|$|\n\n))/g;
     let exerciseMatch;
 
     while ((exerciseMatch = regexExercise.exec(documento)) !== null) {
@@ -200,9 +208,17 @@ function extraerEjercicios(contenido) {
         // Extraer enunciado
         const enunciado = exerciseMatch[1].trim();
 
-        // Buscar pistas después del ejercicio
-        const pistasMatch = bloqueCompleto.match(/\\begin\{pistas\}([\s\S]*?)\\end\{pistas\}/);
-        const pistas = pistasMatch ? pistasMatch[1].trim() : '';
+        // Buscar pistas después del ejercicio: \begin{pistas}...\end{pistas} o \pistas{...}
+        let pistas = '';
+        const pistasEnvMatch = bloqueCompleto.match(/\\begin\{pistas\}([\s\S]*?)\\end\{pistas\}/);
+        if (pistasEnvMatch) {
+            pistas = pistasEnvMatch[1].trim();
+        } else {
+            const pistasCmdMatch = bloqueCompleto.match(/\\pistas\{([\s\S]*?)\}(?=\s*(?:\\solution|\\exercise|\\begin|$|\n\n))/);
+            if (pistasCmdMatch) {
+                pistas = pistasCmdMatch[1].trim();
+            }
+        }
 
         // Buscar solución: \solution{...} o \begin{proof}...\end{proof}
         let solucion = '';
