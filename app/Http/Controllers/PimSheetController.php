@@ -100,10 +100,7 @@ class PimSheetController extends Controller
             'theme' => 'nullable|exists:temas,id',
             'problems' => 'nullable|string|max:2048',
             'preambles' => 'nullable|string',
-            'tex_sols' => 'nullable|file|mimes:tex,txt|max:10240',
-            'tex_no_sols' => 'nullable|file|mimes:tex,txt|max:10240',
-            'pdf_sols' => 'nullable|file|mimes:pdf|max:20480',
-            'pdf_no_sols' => 'nullable|file|mimes:pdf|max:20480',
+            'tex_sols' => 'required|file|mimes:tex,txt|max:10240',
         ]);
 
         $data = [
@@ -115,24 +112,8 @@ class PimSheetController extends Controller
             'problems' => $request->problems,
             'preambles' => $request->preambles,
             'theme' => $request->theme,
+            'tex_sols' => file_get_contents($request->file('tex_sols')->getRealPath()),
         ];
-
-        // Procesar archivos TEX y PDF como blobs
-        if ($request->hasFile('tex_sols')) {
-            $data['tex_sols'] = file_get_contents($request->file('tex_sols')->getRealPath());
-        }
-
-        if ($request->hasFile('tex_no_sols')) {
-            $data['tex_no_sols'] = file_get_contents($request->file('tex_no_sols')->getRealPath());
-        }
-
-        if ($request->hasFile('pdf_sols')) {
-            $data['pdf_sols'] = file_get_contents($request->file('pdf_sols')->getRealPath());
-        }
-
-        if ($request->hasFile('pdf_no_sols')) {
-            $data['pdf_no_sols'] = file_get_contents($request->file('pdf_no_sols')->getRealPath());
-        }
 
         PimSheet::create($data);
 
@@ -140,26 +121,18 @@ class PimSheetController extends Controller
     }
 
     /**
-     * Descargar TEX con o sin soluciones
+     * Descargar archivo TEX
      */
-    public function download(PimSheet $sheet, Request $request)
+    public function download(PimSheet $sheet)
     {
-        $withSolutions = $request->boolean('with_solutions', true);
-
-        // Determinar qué archivo descargar
-        $content = $withSolutions ? $sheet->tex_sols : $sheet->tex_no_sols;
-
-        if (empty($content)) {
+        if (empty($sheet->tex_sols)) {
             abort(404, 'Archivo TEX no disponible.');
         }
 
         // Generar nombre de archivo
-        $filename = str_replace(' ', '_', $sheet->title) .
-                   '_' . $sheet->date_year .
-                   ($withSolutions ? '_con_soluciones' : '_sin_soluciones') .
-                   '.tex';
+        $filename = str_replace(' ', '_', $sheet->title) . '_' . $sheet->date_year . '.tex';
 
-        return response($content)
+        return response($sheet->tex_sols)
             ->header('Content-Type', 'text/x-tex')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
     }

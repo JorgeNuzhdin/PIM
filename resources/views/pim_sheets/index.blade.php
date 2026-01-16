@@ -135,33 +135,6 @@
         background-color: #f7fafc;
     }
 
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0,0,0,0.5);
-    }
-
-    .modal-content {
-        background-color: white;
-        margin: 15% auto;
-        padding: 2rem;
-        border-radius: 8px;
-        width: 400px;
-        text-align: center;
-    }
-
-    .modal-buttons {
-        display: flex;
-        gap: 1rem;
-        justify-content: center;
-        margin-top: 1.5rem;
-    }
-
     .alert {
         padding: 1rem;
         border-radius: 4px;
@@ -355,7 +328,7 @@
             </thead>
             <tbody>
                 @forelse($sheets as $sheet)
-                    <tr onclick="showDownloadModal({{ $sheet->id }}, '{{ addslashes($sheet->title) }}', {{ $sheet->tex_sols ? 'true' : 'false' }}, {{ $sheet->tex_no_sols ? 'true' : 'false' }})">
+                    <tr onclick="downloadSheet({{ $sheet->id }}, {{ $sheet->tex_sols ? 'true' : 'false' }})" style="cursor: pointer;">
                         <td><strong>{{ $sheet->title }}</strong></td>
                         <td>{{ $sheet->date_year }}</td>
                         <td>{{ $sheet->planet ?? '-' }}</td>
@@ -373,31 +346,14 @@
         </table>
     </div>
 </div>
-
-<!-- Modal de descarga -->
-<div id="downloadModal" class="modal">
-    <div class="modal-content">
-        <h2>Descargar Hoja</h2>
-        <p id="modalSheetTitle" style="margin: 1rem 0; color: #718096;"></p>
-        <p>¿Qué versión deseas descargar?</p>
-        <div class="modal-buttons">
-            <button id="btnWithSolutions" class="btn btn-success" onclick="downloadSheet(true)">Con Soluciones</button>
-            <button id="btnWithoutSolutions" class="btn btn-primary" onclick="downloadSheet(false)">Sin Soluciones</button>
-            <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-        </div>
-    </div>
-</div>
 @endsection
 
 @section('scripts')
 <script>
-    let currentSheetId = null;
-    let hasSolutions = false;
-    let hasNoSolutions = false;
-
     // Ordenamiento de columnas
     document.querySelectorAll('th.sortable').forEach(th => {
-        th.addEventListener('click', function() {
+        th.addEventListener('click', function(e) {
+            e.stopPropagation();
             const sortBy = this.dataset.sort;
             const currentSortBy = document.getElementById('sort_by').value;
             const currentSortOrder = document.getElementById('sort_order').value;
@@ -415,57 +371,12 @@
         });
     });
 
-    // Modal de descarga
-    function showDownloadModal(sheetId, title, withSols, withoutSols) {
-        currentSheetId = sheetId;
-        hasSolutions = withSols;
-        hasNoSolutions = withoutSols;
-
-        // Si solo hay una opción disponible, descargar directamente
-        if (withSols && !withoutSols) {
-            window.location.href = '{{ url("pim-sheets") }}/' + sheetId + '/download?with_solutions=1';
-            return;
-        }
-        if (!withSols && withoutSols) {
-            window.location.href = '{{ url("pim-sheets") }}/' + sheetId + '/download?with_solutions=0';
-            return;
-        }
-        if (!withSols && !withoutSols) {
-            alert('Esta hoja no tiene archivos TEX disponibles.');
-            return;
-        }
-
-        document.getElementById('modalSheetTitle').textContent = title;
-
-        // Ambas opciones disponibles, mostrar modal
-        document.getElementById('btnWithSolutions').disabled = false;
-        document.getElementById('btnWithSolutions').style.opacity = '1';
-        document.getElementById('btnWithSolutions').style.cursor = 'pointer';
-
-        document.getElementById('btnWithoutSolutions').disabled = false;
-        document.getElementById('btnWithoutSolutions').style.opacity = '1';
-        document.getElementById('btnWithoutSolutions').style.cursor = 'pointer';
-
-        document.getElementById('downloadModal').style.display = 'block';
-    }
-
-    function closeModal() {
-        document.getElementById('downloadModal').style.display = 'none';
-        currentSheetId = null;
-    }
-
-    function downloadSheet(withSolutions) {
-        if (currentSheetId) {
-            window.location.href = '{{ url("pim-sheets") }}/' + currentSheetId + '/download?with_solutions=' + (withSolutions ? '1' : '0');
-            closeModal();
-        }
-    }
-
-    // Cerrar modal al hacer clic fuera de él
-    window.onclick = function(event) {
-        const modal = document.getElementById('downloadModal');
-        if (event.target === modal) {
-            closeModal();
+    // Descargar hoja directamente
+    function downloadSheet(sheetId, hasTexSols) {
+        if (hasTexSols) {
+            window.location.href = '{{ url("pim-sheets") }}/' + sheetId + '/download';
+        } else {
+            alert('Esta hoja no tiene archivo TEX disponible.');
         }
     }
 </script>

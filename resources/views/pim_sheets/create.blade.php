@@ -154,7 +154,7 @@
         @endif
 
         <div class="info-box">
-            <p><strong>Nota:</strong> Los campos marcados con <span style="color: #e53e3e;">*</span> son obligatorios. Debes subir al menos un archivo TEX o PDF.</p>
+            <p><strong>Nota:</strong> Los campos marcados con <span style="color: #e53e3e;">*</span> son obligatorios.</p>
         </div>
 
         <form action="{{ route('pim-sheets.store') }}" method="POST" enctype="multipart/form-data">
@@ -197,36 +197,10 @@
                 <small>Tema principal de la hoja</small>
             </div>
 
-            <div class="file-upload-group">
-                <h3>Archivos TEX</h3>
-
-                <div class="form-group">
-                    <label for="tex_sols">TEX con Soluciones</label>
-                    <input type="file" id="tex_sols" name="tex_sols" accept=".tex,.txt">
-                    <small>Archivo LaTeX con soluciones (máx. 10MB)</small>
-                </div>
-
-                <div class="form-group">
-                    <label for="tex_no_sols">TEX sin Soluciones</label>
-                    <input type="file" id="tex_no_sols" name="tex_no_sols" accept=".tex,.txt">
-                    <small>Archivo LaTeX sin soluciones (máx. 10MB)</small>
-                </div>
-            </div>
-
-            <div class="file-upload-group">
-                <h3>Archivos PDF</h3>
-
-                <div class="form-group">
-                    <label for="pdf_sols">PDF con Soluciones</label>
-                    <input type="file" id="pdf_sols" name="pdf_sols" accept=".pdf">
-                    <small>Archivo PDF con soluciones (máx. 20MB)</small>
-                </div>
-
-                <div class="form-group">
-                    <label for="pdf_no_sols">PDF sin Soluciones</label>
-                    <input type="file" id="pdf_no_sols" name="pdf_no_sols" accept=".pdf">
-                    <small>Archivo PDF sin soluciones (máx. 20MB)</small>
-                </div>
+            <div class="form-group">
+                <label for="tex_sols">Archivo TEX <span class="required">*</span></label>
+                <input type="file" id="tex_sols" name="tex_sols" accept=".tex,.txt" required>
+                <small>Archivo LaTeX de la hoja de problemas (máx. 10MB)</small>
             </div>
 
             <div class="form-group">
@@ -312,18 +286,5 @@
         reader.readAsText(file);
     });
 
-    // Validación del formulario
-    document.querySelector('form').addEventListener('submit', function(e) {
-        const texSols = document.getElementById('tex_sols').files.length > 0;
-        const texNoSols = document.getElementById('tex_no_sols').files.length > 0;
-        const pdfSols = document.getElementById('pdf_sols').files.length > 0;
-        const pdfNoSols = document.getElementById('pdf_no_sols').files.length > 0;
-
-        if (!texSols && !texNoSols && !pdfSols && !pdfNoSols) {
-            e.preventDefault();
-            alert('Debes subir al menos un archivo (TEX o PDF).');
-            return false;
-        }
-    });
 </script>
 @endsection
