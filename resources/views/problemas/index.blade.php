@@ -939,13 +939,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         debounceTimer = setTimeout(() => {
-            fetch(`/api/topics/buscar?term=${encodeURIComponent(term)}`)
+            fetch(`/api/topics/buscar?q=${encodeURIComponent(term)}`)
                 .then(response => response.json())
                 .then(data => {
                     console.log('Topics encontrados:', data);
                     if (data.length > 0) {
-                        topicSuggestions.innerHTML = data.map(topic => 
-                            `<div data-title="${topic.title}">${topic.title}</div>`
+                        topicSuggestions.innerHTML = data.map(topic =>
+                            `<div data-title="${topic}">${topic}</div>`
                         ).join('');
                         topicSuggestions.style.display = 'block';
                     } else {
