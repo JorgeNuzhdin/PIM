@@ -23,22 +23,10 @@
         .container {
             padding: 0.5rem;
             max-width: 100%;
-            overflow-x: hidden;
         }
 
         .filters-container {
             padding: 1rem;
-        }
-
-        .sheets-table {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            margin: 0 -0.5rem;
-            width: calc(100% + 1rem);
-        }
-
-        .sheets-table table {
-            min-width: 550px;
         }
 
         .sheets-table th,
@@ -136,17 +124,22 @@
         background-color: #38a169;
     }
 
+    .sheets-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
     .sheets-table {
         width: 100%;
         background: white;
         border-radius: 8px;
-        overflow: hidden;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
 
     .sheets-table table {
         width: 100%;
         border-collapse: collapse;
+        min-width: 600px;
     }
 
     .sheets-table th {
@@ -360,6 +353,7 @@
     @endif
 
     <!-- Tabla de sheets -->
+    <div class="sheets-table-wrapper">
     <div class="sheets-table">
         <table>
             <thead>
@@ -401,6 +395,7 @@
                 @endforelse
             </tbody>
         </table>
+    </div>
     </div>
 </div>
 @endsection
