@@ -21,17 +21,30 @@
     /* Responsive para móvil */
     @media (max-width: 768px) {
         .container {
-            padding: 1rem;
+            padding: 0.5rem;
             max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        .filters-container {
+            padding: 1rem;
         }
 
         .sheets-table {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
+            margin: 0 -0.5rem;
+            width: calc(100% + 1rem);
         }
 
         .sheets-table table {
-            min-width: 600px;
+            min-width: 550px;
+        }
+
+        .sheets-table th,
+        .sheets-table td {
+            padding: 0.5rem;
+            font-size: 0.85rem;
         }
 
         .filter-row {
@@ -44,6 +57,21 @@
 
         .filter-actions .btn {
             width: 100%;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+        }
+
+        .pagination {
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .page-item {
+            padding: 0.5rem 0.7rem;
+            font-size: 0.85rem;
+            min-width: 35px;
         }
     }
 
