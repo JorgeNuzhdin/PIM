@@ -125,7 +125,11 @@ class PimSheetController extends Controller
      */
     public function download($id)
     {
-        $sheet = PimSheet::findOrFail($id);
+        $sheet = PimSheet::where('id', $id)->first();
+
+        if (!$sheet) {
+            abort(404, 'Hoja no encontrada.');
+        }
 
         if (empty($sheet->tex_sols)) {
             abort(404, 'Archivo TEX no disponible.');
