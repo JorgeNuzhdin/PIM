@@ -108,6 +108,13 @@
         font-size: 0.8rem;
     }
 
+    .btn-icon {
+        padding: 0.25rem 0.5rem;
+        font-size: 1rem;
+        line-height: 1;
+        min-width: auto;
+    }
+
     .tags-table-container {
         background: white;
         border-radius: 8px;
@@ -407,7 +414,7 @@
                         </span>
                     </th>
                     @if($isAdmin)
-                    <th style="width: 150px; text-align: right;">Acciones</th>
+                    <th style="width: 100px; text-align: right;">Acciones</th>
                     @endif
                 </tr>
             </thead>
@@ -424,10 +431,10 @@
                         <td class="count-cell">{{ $tag->count }}</td>
                         @if($isAdmin)
                         <td class="actions-cell">
-                            <button class="btn btn-primary btn-small btn-edit" onclick="toggleEdit('{{ $rowId }}')">Editar</button>
-                            <button class="btn btn-success btn-small btn-save" style="display: none;" onclick="saveTag('{{ $rowId }}')">Guardar</button>
-                            <button class="btn btn-secondary btn-small btn-cancel" style="display: none;" onclick="cancelEdit('{{ $rowId }}')">Cancelar</button>
-                            <button class="btn btn-danger btn-small btn-delete" onclick="confirmDelete('{{ $rowId }}', '{{ addslashes($tag->title) }}')">Borrar</button>
+                            <button class="btn btn-primary btn-icon btn-edit" onclick="toggleEdit('{{ $rowId }}')" title="Editar">✏️</button>
+                            <button class="btn btn-success btn-icon btn-save" style="display: none;" onclick="saveTag('{{ $rowId }}')" title="Guardar">💾</button>
+                            <button class="btn btn-secondary btn-icon btn-cancel" style="display: none;" onclick="cancelEdit('{{ $rowId }}')" title="Cancelar">✖️</button>
+                            <button class="btn btn-danger btn-icon btn-delete" onclick="confirmDelete('{{ $rowId }}', '{{ addslashes($tag->title) }}')" title="Borrar">🗑️</button>
                         </td>
                         @endif
                     </tr>
