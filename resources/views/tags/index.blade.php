@@ -242,6 +242,51 @@
         color: #742a2a;
         border: 1px solid #fc8181;
     }
+
+    .tag-link {
+        color: #2b6cb0;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .tag-link:hover {
+        text-decoration: underline;
+        color: #2c5282;
+    }
+
+    /* Responsive para móvil */
+    @media (max-width: 768px) {
+        .container {
+            padding: 1rem;
+            max-width: 100%;
+        }
+
+        .tags-table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tags-table {
+            min-width: 500px;
+        }
+
+        .filters-row {
+            flex-direction: column;
+        }
+
+        .filter-group {
+            min-width: 100%;
+        }
+
+        .filter-buttons {
+            width: 100%;
+            justify-content: stretch;
+        }
+
+        .filter-buttons .btn {
+            flex: 1;
+        }
+    }
 </style>
 @endsection
 
@@ -372,7 +417,7 @@
                     <tr id="{{ $rowId }}" data-title="{{ $tag->title }}">
                         <td>
                             <div class="tag-title-cell">
-                                <span class="tag-title-text">{{ $tag->title }}</span>
+                                <a href="{{ route('problemas.index', ['topic_title' => $tag->title]) }}" class="tag-title-text tag-link">{{ $tag->title }}</a>
                                 <input type="text" class="tag-title-input" value="{{ $tag->title }}">
                             </div>
                         </td>

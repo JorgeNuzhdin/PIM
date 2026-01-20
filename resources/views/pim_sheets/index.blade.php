@@ -18,6 +18,35 @@
         margin-bottom: 1rem;
     }
 
+    /* Responsive para móvil */
+    @media (max-width: 768px) {
+        .container {
+            padding: 1rem;
+            max-width: 100%;
+        }
+
+        .sheets-table {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .sheets-table table {
+            min-width: 600px;
+        }
+
+        .filter-row {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-actions {
+            flex-direction: column;
+        }
+
+        .filter-actions .btn {
+            width: 100%;
+        }
+    }
+
     .filter-group {
         display: flex;
         flex-direction: column;
@@ -328,7 +357,7 @@
             </thead>
             <tbody>
                 @forelse($sheets as $sheet)
-                    <tr onclick="downloadSheet({{ $sheet->id }}, {{ $sheet->tex_sols ? 'true' : 'false' }})" style="cursor: pointer;">
+                    <tr onclick="window.location.href='{{ url('pim-sheets/' . $sheet->id . '/download') }}'" style="cursor: pointer;">
                         <td><strong>{{ $sheet->title }}</strong></td>
                         <td>{{ $sheet->date_year }}</td>
                         <td>{{ $sheet->planet ?? '-' }}</td>
@@ -371,13 +400,5 @@
         });
     });
 
-    // Descargar hoja directamente
-    function downloadSheet(sheetId, hasTexSols) {
-        if (hasTexSols) {
-            window.location.href = '{{ url("pim-sheets") }}/' + sheetId + '/download';
-        } else {
-            alert('Esta hoja no tiene archivo TEX disponible.');
-        }
-    }
 </script>
 @endsection
