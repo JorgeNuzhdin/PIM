@@ -61,6 +61,7 @@ class TagController extends Controller
 
     /**
      * Actualizar un tag (solo admin)
+     * Permite fusionar tags: si el nuevo nombre ya existe, los registros se fusionan
      */
     public function update(Request $request, $title)
     {
@@ -86,23 +87,43 @@ class TagController extends Controller
             return response()->json(['error' => 'Tag no encontrado'], 404);
         }
 
-        // Verificar si el nuevo título ya existe en problemas_tags
+        // Verificar si el nuevo título ya existe (para mensaje de fusión)
         $newExists = ProblemaTag::where('tag', $newTitle)->exists();
-        if ($newExists) {
-            return response()->json(['error' => 'Ya existe un tag con ese nombre'], 422);
-        }
 
         DB::transaction(function () use ($oldTitle, $newTitle) {
-            // Actualizar en problemas_tags
+            // Obtener problem_ids que ya tienen el nuevo tag
+            $existingProblemIds = ProblemaTag::where('tag', $newTitle)
+                ->pluck('problem_id')
+                ->toArray();
+
+            // Actualizar solo los que no generarían duplicados
+            if (!empty($existingProblemIds)) {
+                // Eliminar los que causarían duplicados
+                ProblemaTag::where('tag', $oldTitle)
+                    ->whereIn('problem_id', $existingProblemIds)
+                    ->delete();
+            }
+
+            // Actualizar los restantes al nuevo nombre
             ProblemaTag::where('tag', $oldTitle)->update(['tag' => $newTitle]);
 
-            // Actualizar en tags si existe
-            Tag::where('title', $oldTitle)->update(['title' => $newTitle]);
+            // Actualizar en tags si existe, o eliminar si hay fusión
+            if (Tag::where('title', $newTitle)->exists()) {
+                // Si el nuevo ya existe en tags, eliminar el viejo
+                Tag::where('title', $oldTitle)->delete();
+            } else {
+                // Si no existe, renombrar
+                Tag::where('title', $oldTitle)->update(['title' => $newTitle]);
+            }
         });
+
+        $message = $newExists
+            ? "Tag '{$oldTitle}' fusionado con '{$newTitle}'"
+            : "Tag actualizado de '{$oldTitle}' a '{$newTitle}'";
 
         return response()->json([
             'success' => true,
-            'message' => "Tag actualizado de '{$oldTitle}' a '{$newTitle}'"
+            'message' => $message
         ]);
     }
 
