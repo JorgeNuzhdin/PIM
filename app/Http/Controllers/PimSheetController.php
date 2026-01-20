@@ -123,8 +123,10 @@ class PimSheetController extends Controller
     /**
      * Descargar archivo TEX
      */
-    public function download(PimSheet $sheet)
+    public function download($id)
     {
+        $sheet = PimSheet::findOrFail($id);
+
         if (empty($sheet->tex_sols)) {
             abort(404, 'Archivo TEX no disponible.');
         }

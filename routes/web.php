@@ -55,13 +55,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 // Rutas de Hojas de Problemas (PimSheets)
 Route::middleware('auth')->prefix('pim-sheets')->name('pim-sheets.')->group(function () {
     Route::get('/', [PimSheetController::class, 'index'])->name('index');
-    Route::get('/{sheet}/download', [PimSheetController::class, 'download'])->name('download');
 
     // Solo editores y administradores pueden subir sheets
     Route::middleware('can.edit.problemas')->group(function () {
         Route::get('/create', [PimSheetController::class, 'create'])->name('create');
         Route::post('/', [PimSheetController::class, 'store'])->name('store');
     });
+
+    // Descarga de hojas (debe ir después de /create para evitar conflictos)
+    Route::get('/{id}/download', [PimSheetController::class, 'download'])->name('download');
 });
 
 // Rutas de Editor de Tags (solo admin/editor pueden ver, solo admin puede editar/borrar)
