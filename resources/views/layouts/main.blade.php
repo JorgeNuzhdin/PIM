@@ -317,6 +317,10 @@ window.MathJax = {
                         @endif
                     </div>
                 </div>
+
+                @if(Auth::user()->canEditProblemas())
+                    <a href="{{ route('tags.index') }}">Tags</a>
+                @endif
             @endauth
 
 

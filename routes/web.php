@@ -7,6 +7,7 @@ use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\HojaController;
 use App\Http\Controllers\PimSheetController;
+use App\Http\Controllers\TagController;
 
 
 Route::get('/', [HomePageController::class, 'index'])->name('homepage');
@@ -61,4 +62,11 @@ Route::middleware('auth')->prefix('pim-sheets')->name('pim-sheets.')->group(func
         Route::get('/create', [PimSheetController::class, 'create'])->name('create');
         Route::post('/', [PimSheetController::class, 'store'])->name('store');
     });
+});
+
+// Rutas de Editor de Tags (solo admin/editor pueden ver, solo admin puede editar/borrar)
+Route::middleware(['auth', 'can.edit.problemas'])->prefix('tags')->name('tags.')->group(function () {
+    Route::get('/', [TagController::class, 'index'])->name('index');
+    Route::put('/{id}', [TagController::class, 'update'])->name('update');
+    Route::delete('/{id}', [TagController::class, 'destroy'])->name('destroy');
 });
