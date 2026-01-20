@@ -369,21 +369,31 @@ class ProblemaController extends Controller
     
     // API para autocompletar topics
     public function buscarTopics(Request $request)
-        {
-            $query = $request->get('q', '');
-            
-            if (strlen($query) < 3) {
-                return response()->json([]);
-            }
-            
-            $topics = ProblemaTag::where('tag', 'LIKE', "%{$query}%")
-                                ->distinct()
+    {
+        $query = $request->get('q', '');
+
+        // Si q está vacío, devolver todos los tags (para cache Levenshtein)
+        if (empty($query)) {
+            $topics = ProblemaTag::distinct()
+                                ->orderBy('tag')
                                 ->pluck('tag')
-                                ->take(10)
                                 ->toArray();
-            
             return response()->json($topics);
         }
+
+        // Para búsquedas, requerir mínimo 2 caracteres
+        if (strlen($query) < 2) {
+            return response()->json([]);
+        }
+
+        $topics = ProblemaTag::where('tag', 'LIKE', "%{$query}%")
+                            ->distinct()
+                            ->pluck('tag')
+                            ->take(10)
+                            ->toArray();
+
+        return response()->json($topics);
+    }
     public function temaDesdeTag(Request $request)
         {
             $tag = $request->get('tag', '');

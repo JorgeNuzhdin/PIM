@@ -485,24 +485,185 @@ async function importarMultiplesEjercicios(ejercicios) {
     }
 }
 
+// Función para calcular distancia Levenshtein
+function levenshteinDistance(str1, str2) {
+    const m = str1.length;
+    const n = str2.length;
+    const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+
+    for (let i = 0; i <= m; i++) dp[i][0] = i;
+    for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+    for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+            if (str1[i - 1].toLowerCase() === str2[j - 1].toLowerCase()) {
+                dp[i][j] = dp[i - 1][j - 1];
+            } else {
+                dp[i][j] = 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+            }
+        }
+    }
+    return dp[m][n];
+}
+
+// Cache de todos los tags para comparación Levenshtein
+let allTagsCache = [];
+
+// Cargar todos los tags una vez al inicio
+function loadAllTags() {
+    fetch('/api/topics/buscar?q=')
+        .then(response => response.json())
+        .then(data => {
+            allTagsCache = data;
+            console.log('Tags cargados para Levenshtein:', allTagsCache.length);
+        })
+        .catch(error => console.error('Error cargando tags:', error));
+}
+
+// Buscar tag similar usando Levenshtein
+function findSimilarTag(inputTag) {
+    if (!inputTag || allTagsCache.length === 0) return null;
+
+    const inputLower = inputTag.toLowerCase().trim();
+
+    for (const existingTag of allTagsCache) {
+        const existingLower = existingTag.toLowerCase();
+
+        // Si es exactamente igual, no hay cambio
+        if (inputLower === existingLower) return null;
+
+        // Calcular distancia
+        const distance = levenshteinDistance(inputTag, existingTag);
+
+        // Si la distancia es pequeña (1-2), sugerir el tag existente
+        if (distance > 0 && distance <= 2) {
+            return existingTag;
+        }
+    }
+    return null;
+}
+
+// Función para adjuntar autocompletado a un input de tag
+function attachTagAutocomplete(input) {
+    if (!input) return;
+
+    const suggestionsDiv = input.parentElement.querySelector('.tag-suggestions');
+    if (!suggestionsDiv) return;
+
+    let debounceTimer;
+
+    input.addEventListener('input', function() {
+        clearTimeout(debounceTimer);
+        const term = this.value.trim();
+
+        if (term.length < 2) {
+            suggestionsDiv.style.display = 'none';
+            return;
+        }
+
+        debounceTimer = setTimeout(() => {
+            fetch(`/api/topics/buscar?q=${encodeURIComponent(term)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        suggestionsDiv.innerHTML = data.map(topic =>
+                            `<div class="tag-suggestion-item" data-title="${topic}">${topic}</div>`
+                        ).join('');
+                        suggestionsDiv.style.display = 'block';
+                    } else {
+                        suggestionsDiv.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error buscando tags:', error);
+                    suggestionsDiv.style.display = 'none';
+                });
+        }, 300);
+    });
+
+    // Al hacer clic en una sugerencia
+    suggestionsDiv.addEventListener('click', function(e) {
+        if (e.target.classList.contains('tag-suggestion-item')) {
+            input.value = e.target.dataset.title;
+            suggestionsDiv.style.display = 'none';
+        }
+    });
+
+    // Al perder el foco, verificar si hay un tag similar
+    input.addEventListener('blur', function() {
+        setTimeout(() => {
+            suggestionsDiv.style.display = 'none';
+
+            const inputValue = this.value.trim();
+            if (!inputValue) return;
+
+            const similarTag = findSimilarTag(inputValue);
+            if (similarTag && similarTag !== inputValue) {
+                alert(`Tag cambiado a "${similarTag}" (similar a "${inputValue}")`);
+                this.value = similarTag;
+            }
+        }, 200);
+    });
+
+    // Cerrar sugerencias al presionar Escape
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            suggestionsDiv.style.display = 'none';
+        }
+        // Al presionar Enter, seleccionar la primera sugerencia si hay
+        if (e.key === 'Enter') {
+            const firstSuggestion = suggestionsDiv.querySelector('.tag-suggestion-item');
+            if (firstSuggestion && suggestionsDiv.style.display === 'block') {
+                e.preventDefault();
+                input.value = firstSuggestion.dataset.title;
+                suggestionsDiv.style.display = 'none';
+            }
+        }
+    });
+}
+
+// Función para añadir nuevo input de tag
+function addTagInput() {
+    const container = document.getElementById('tags-container');
+    const newRow = document.createElement('div');
+    newRow.className = 'tag-input-row';
+    newRow.style.position = 'relative';
+    newRow.innerHTML = `
+        <input type="text" name="tags[]" class="tag-input" placeholder="Escribe un tag..." autocomplete="off">
+        <div class="tag-suggestions"></div>
+        <button type="button" class="btn-remove-tag" onclick="this.parentElement.remove()">−</button>
+    `;
+    container.appendChild(newRow);
+    attachTagAutocomplete(newRow.querySelector('.tag-input'));
+    newRow.querySelector('.tag-input').focus();
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOMContentLoaded - Iniciando vista previa');
-    
+
+    // Cargar todos los tags para comparación Levenshtein
+    loadAllTags();
+
+    // Adjuntar autocompletado a todos los inputs de tag existentes
+    document.querySelectorAll('.tag-input').forEach(input => {
+        attachTagAutocomplete(input);
+    });
+
     const problemInput = document.getElementById('problem_tex');
     const solutionInput = document.getElementById('solution_tex');
-    
+
     if (problemInput) {
         problemInput.addEventListener('input', () => updatePreview('problem_tex', 'problem_preview'));
-        
+
         // Cargar vista previa inicial si hay contenido
         if (problemInput.value.trim()) {
             updatePreview('problem_tex', 'problem_preview');
         }
     }
-    
+
     if (solutionInput) {
         solutionInput.addEventListener('input', () => updatePreview('solution_tex', 'solution_preview'));
-        
+
         // Cargar vista previa inicial si hay contenido
         if (solutionInput.value.trim()) {
             updatePreview('solution_tex', 'solution_preview');
