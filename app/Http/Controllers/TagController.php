@@ -21,13 +21,14 @@ class TagController extends Controller
      */
     public function index(Request $request)
     {
-        // Obtener tags con conteo de apariciones
-        $query = Tag::select('tags.title')
-            ->selectRaw('(SELECT COUNT(*) FROM problemas_tags WHERE problemas_tags.tag = tags.title) as count');
+        // Obtener tags únicos de problemas_tags con conteo de apariciones
+        $query = ProblemaTag::select('tag as title')
+            ->selectRaw('COUNT(*) as count')
+            ->groupBy('tag');
 
         // Búsqueda por título
         if ($request->filled('search')) {
-            $query->where('tags.title', 'LIKE', '%' . $request->search . '%');
+            $query->where('tag', 'LIKE', '%' . $request->search . '%');
         }
 
         // Ordenamiento
@@ -41,16 +42,16 @@ class TagController extends Controller
         }
 
         if ($sortBy === 'count') {
-            $query->orderByRaw("(SELECT COUNT(*) FROM problemas_tags WHERE problemas_tags.tag = tags.title) {$sortOrder}");
+            $query->orderBy('count', $sortOrder);
         } else {
-            $query->orderBy($sortBy, $sortOrder);
+            $query->orderBy('tag', $sortOrder);
         }
 
         // Paginación
         $tags = $query->paginate(30)->appends($request->query());
 
-        // Total de tags
-        $totalTags = Tag::count();
+        // Total de tags únicos
+        $totalTags = ProblemaTag::distinct('tag')->count('tag');
 
         // Verificar si el usuario es admin
         $isAdmin = Auth::user()->rol === 'admin';
@@ -79,24 +80,24 @@ class TagController extends Controller
             return response()->json(['success' => true, 'message' => 'Sin cambios']);
         }
 
-        // Verificar que el tag original existe
-        $tag = Tag::where('title', $oldTitle)->first();
-        if (!$tag) {
+        // Verificar que el tag original existe en problemas_tags
+        $tagExists = ProblemaTag::where('tag', $oldTitle)->exists();
+        if (!$tagExists) {
             return response()->json(['error' => 'Tag no encontrado'], 404);
         }
 
-        // Verificar si el nuevo título ya existe
-        $exists = Tag::where('title', $newTitle)->exists();
-        if ($exists) {
+        // Verificar si el nuevo título ya existe en problemas_tags
+        $newExists = ProblemaTag::where('tag', $newTitle)->exists();
+        if ($newExists) {
             return response()->json(['error' => 'Ya existe un tag con ese nombre'], 422);
         }
 
         DB::transaction(function () use ($oldTitle, $newTitle) {
-            // Actualizar en tags
-            Tag::where('title', $oldTitle)->update(['title' => $newTitle]);
-
             // Actualizar en problemas_tags
             ProblemaTag::where('tag', $oldTitle)->update(['tag' => $newTitle]);
+
+            // Actualizar en tags si existe
+            Tag::where('title', $oldTitle)->update(['title' => $newTitle]);
         });
 
         return response()->json([
@@ -117,8 +118,9 @@ class TagController extends Controller
 
         $title = urldecode($title);
 
-        $tag = Tag::where('title', $title)->first();
-        if (!$tag) {
+        // Verificar que el tag existe en problemas_tags
+        $tagExists = ProblemaTag::where('tag', $title)->exists();
+        if (!$tagExists) {
             return response()->json(['error' => 'Tag no encontrado'], 404);
         }
 
@@ -126,7 +128,7 @@ class TagController extends Controller
             // Eliminar de problemas_tags
             ProblemaTag::where('tag', $title)->delete();
 
-            // Eliminar de tags
+            // Eliminar de tags si existe
             Tag::where('title', $title)->delete();
         });
 
