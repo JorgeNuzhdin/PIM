@@ -82,14 +82,14 @@ class ProblemaController extends Controller
                             
                             // 2. Si hay tema seleccionado, gestionar topic_tema
                             if ($request->tema_id) {
-                                // Verificar si el tag existe en pim_topics
-                                $topicExists = DB::table('pim_topics')
+                                // Verificar si el tag existe en tags
+                                $topicExists = DB::table('tags')
                                     ->where('title', $tagTrimmed)
                                     ->exists();
                                 
-                                // Si no existe en pim_topics, crearlo primero
+                                // Si no existe en tags, crearlo primero
                                 if (!$topicExists) {
-                                    DB::table('pim_topics')->insert([
+                                    DB::table('tags')->insert([
                                         'title' => $tagTrimmed,
                                         // Agrega otros campos requeridos si los hay
                                     ]);
@@ -222,14 +222,14 @@ class ProblemaController extends Controller
                                 
                                 // 2. Si hay tema seleccionado, gestionar topic_tema
                                 if ($request->tema_id) {
-                                    // Verificar si el tag existe en pim_topics
-                                    $topicExists = DB::table('pim_topics')
+                                    // Verificar si el tag existe en tags
+                                    $topicExists = DB::table('tags')
                                         ->where('title', $tagTrimmed)
                                         ->exists();
                                     
-                                    // Si no existe en pim_topics, crearlo primero
+                                    // Si no existe en tags, crearlo primero
                                     if (!$topicExists) {
-                                        DB::table('pim_topics')->insert([
+                                        DB::table('tags')->insert([
                                             'title' => $tagTrimmed,
                                             // Agrega otros campos requeridos si los hay
                                         ]);

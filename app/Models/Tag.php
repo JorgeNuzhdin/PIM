@@ -4,10 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Topic extends Model
+class Tag extends Model
 {
     protected $table = 'tags';
     public $timestamps = false;
-    
+    protected $primaryKey = 'title';
+    public $incrementing = false;
+    protected $keyType = 'string';
+
     protected $fillable = ['title'];
 }

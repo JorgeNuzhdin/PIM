@@ -367,8 +367,9 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse($tags as $tag)
-                    <tr id="tag-row-{{ $tag->id }}" data-id="{{ $tag->id }}" data-title="{{ $tag->title }}">
+                @forelse($tags as $index => $tag)
+                    @php $rowId = 'tag-row-' . $loop->index; @endphp
+                    <tr id="{{ $rowId }}" data-title="{{ $tag->title }}">
                         <td>
                             <div class="tag-title-cell">
                                 <span class="tag-title-text">{{ $tag->title }}</span>
@@ -378,10 +379,10 @@
                         <td class="count-cell">{{ $tag->count }}</td>
                         @if($isAdmin)
                         <td class="actions-cell">
-                            <button class="btn btn-primary btn-small btn-edit" onclick="toggleEdit({{ $tag->id }})">Editar</button>
-                            <button class="btn btn-success btn-small btn-save" style="display: none;" onclick="saveTag({{ $tag->id }})">Guardar</button>
-                            <button class="btn btn-secondary btn-small btn-cancel" style="display: none;" onclick="cancelEdit({{ $tag->id }})">Cancelar</button>
-                            <button class="btn btn-danger btn-small btn-delete" onclick="confirmDelete({{ $tag->id }}, '{{ addslashes($tag->title) }}')">Borrar</button>
+                            <button class="btn btn-primary btn-small btn-edit" onclick="toggleEdit('{{ $rowId }}')">Editar</button>
+                            <button class="btn btn-success btn-small btn-save" style="display: none;" onclick="saveTag('{{ $rowId }}')">Guardar</button>
+                            <button class="btn btn-secondary btn-small btn-cancel" style="display: none;" onclick="cancelEdit('{{ $rowId }}')">Cancelar</button>
+                            <button class="btn btn-danger btn-small btn-delete" onclick="confirmDelete('{{ $rowId }}', '{{ addslashes($tag->title) }}')">Borrar</button>
                         </td>
                         @endif
                     </tr>
@@ -413,7 +414,8 @@
 
 @section('scripts')
 <script>
-    let deleteTagId = null;
+    let deleteRowId = null;
+    let deleteTitle = null;
 
     // Ordenamiento de columnas
     document.querySelectorAll('th.sortable').forEach(th => {
@@ -434,8 +436,8 @@
     });
 
     // Modo edición
-    function toggleEdit(id) {
-        const row = document.getElementById('tag-row-' + id);
+    function toggleEdit(rowId) {
+        const row = document.getElementById(rowId);
         row.classList.add('edit-mode');
 
         row.querySelector('.btn-edit').style.display = 'none';
@@ -448,8 +450,8 @@
         input.select();
     }
 
-    function cancelEdit(id) {
-        const row = document.getElementById('tag-row-' + id);
+    function cancelEdit(rowId) {
+        const row = document.getElementById(rowId);
         row.classList.remove('edit-mode');
 
         row.querySelector('.btn-edit').style.display = 'inline-block';
@@ -462,8 +464,9 @@
         row.querySelector('.tag-title-input').value = originalTitle;
     }
 
-    function saveTag(id) {
-        const row = document.getElementById('tag-row-' + id);
+    function saveTag(rowId) {
+        const row = document.getElementById(rowId);
+        const originalTitle = row.dataset.title;
         const newTitle = row.querySelector('.tag-title-input').value.trim();
 
         if (!newTitle) {
@@ -471,7 +474,9 @@
             return;
         }
 
-        fetch(`{{ url('tags') }}/${id}`, {
+        const encodedTitle = encodeURIComponent(originalTitle);
+
+        fetch(`{{ url('tags') }}/${encodedTitle}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -487,7 +492,8 @@
                 // Actualizar la fila
                 row.dataset.title = newTitle;
                 row.querySelector('.tag-title-text').textContent = newTitle;
-                cancelEdit(id);
+                row.querySelector('.tag-title-input').value = newTitle;
+                cancelEdit(rowId);
             } else {
                 showAlert(data.error || 'Error al actualizar', 'error');
             }
@@ -499,21 +505,25 @@
     }
 
     // Eliminar tag
-    function confirmDelete(id, title) {
-        deleteTagId = id;
+    function confirmDelete(rowId, title) {
+        deleteRowId = rowId;
+        deleteTitle = title;
         document.getElementById('deleteTagTitle').textContent = title;
         document.getElementById('deleteModal').style.display = 'block';
     }
 
     function closeDeleteModal() {
         document.getElementById('deleteModal').style.display = 'none';
-        deleteTagId = null;
+        deleteRowId = null;
+        deleteTitle = null;
     }
 
     function deleteTag() {
-        if (!deleteTagId) return;
+        if (!deleteRowId || !deleteTitle) return;
 
-        fetch(`{{ url('tags') }}/${deleteTagId}`, {
+        const encodedTitle = encodeURIComponent(deleteTitle);
+
+        fetch(`{{ url('tags') }}/${encodedTitle}`, {
             method: 'DELETE',
             headers: {
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
@@ -525,7 +535,7 @@
                 showAlert(data.message, 'success');
 
                 // Eliminar la fila de la tabla
-                const row = document.getElementById('tag-row-' + deleteTagId);
+                const row = document.getElementById(deleteRowId);
                 if (row) {
                     row.remove();
                 }
@@ -562,18 +572,16 @@
         }
     }
 
-    // Guardar con Enter
+    // Guardar con Enter, cancelar con Escape
     document.querySelectorAll('.tag-title-input').forEach(input => {
         input.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 const row = this.closest('tr');
-                const id = row.dataset.id;
-                saveTag(id);
+                saveTag(row.id);
             }
             if (e.key === 'Escape') {
                 const row = this.closest('tr');
-                const id = row.dataset.id;
-                cancelEdit(id);
+                cancelEdit(row.id);
             }
         });
     });

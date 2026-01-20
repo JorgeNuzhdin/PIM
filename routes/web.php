@@ -67,6 +67,6 @@ Route::middleware('auth')->prefix('pim-sheets')->name('pim-sheets.')->group(func
 // Rutas de Editor de Tags (solo admin/editor pueden ver, solo admin puede editar/borrar)
 Route::middleware(['auth', 'can.edit.problemas'])->prefix('tags')->name('tags.')->group(function () {
     Route::get('/', [TagController::class, 'index'])->name('index');
-    Route::put('/{id}', [TagController::class, 'update'])->name('update');
-    Route::delete('/{id}', [TagController::class, 'destroy'])->name('destroy');
+    Route::put('/{title}', [TagController::class, 'update'])->name('update')->where('title', '.*');
+    Route::delete('/{title}', [TagController::class, 'destroy'])->name('destroy')->where('title', '.*');
 });

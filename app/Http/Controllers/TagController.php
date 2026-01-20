@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Topic;
+use App\Models\Tag;
 use App\Models\ProblemaTag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,13 +22,12 @@ class TagController extends Controller
     public function index(Request $request)
     {
         // Obtener tags con conteo de apariciones
-        $query = Topic::select('pim_topics.id', 'pim_topics.title')
-            ->selectRaw('(SELECT COUNT(*) FROM problemas_tags WHERE problemas_tags.tag = pim_topics.title) as count')
-            ->groupBy('pim_topics.id', 'pim_topics.title');
+        $query = Tag::select('tags.title')
+            ->selectRaw('(SELECT COUNT(*) FROM problemas_tags WHERE problemas_tags.tag = tags.title) as count');
 
         // Búsqueda por título
         if ($request->filled('search')) {
-            $query->where('pim_topics.title', 'LIKE', '%' . $request->search . '%');
+            $query->where('tags.title', 'LIKE', '%' . $request->search . '%');
         }
 
         // Ordenamiento
@@ -42,7 +41,7 @@ class TagController extends Controller
         }
 
         if ($sortBy === 'count') {
-            $query->orderByRaw("(SELECT COUNT(*) FROM problemas_tags WHERE problemas_tags.tag = pim_topics.title) {$sortOrder}");
+            $query->orderByRaw("(SELECT COUNT(*) FROM problemas_tags WHERE problemas_tags.tag = tags.title) {$sortOrder}");
         } else {
             $query->orderBy($sortBy, $sortOrder);
         }
@@ -51,7 +50,7 @@ class TagController extends Controller
         $tags = $query->paginate(30)->appends($request->query());
 
         // Total de tags
-        $totalTags = Topic::count();
+        $totalTags = Tag::count();
 
         // Verificar si el usuario es admin
         $isAdmin = Auth::user()->rol === 'admin';
@@ -62,7 +61,7 @@ class TagController extends Controller
     /**
      * Actualizar un tag (solo admin)
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $title)
     {
         // Solo admin puede editar
         if (Auth::user()->rol !== 'admin') {
@@ -73,24 +72,28 @@ class TagController extends Controller
             'title' => 'required|string|max:255',
         ]);
 
-        $tag = Topic::findOrFail($id);
-        $oldTitle = $tag->title;
+        $oldTitle = urldecode($title);
         $newTitle = $request->title;
 
         if ($oldTitle === $newTitle) {
             return response()->json(['success' => true, 'message' => 'Sin cambios']);
         }
 
+        // Verificar que el tag original existe
+        $tag = Tag::where('title', $oldTitle)->first();
+        if (!$tag) {
+            return response()->json(['error' => 'Tag no encontrado'], 404);
+        }
+
         // Verificar si el nuevo título ya existe
-        $exists = Topic::where('title', $newTitle)->where('id', '!=', $id)->exists();
+        $exists = Tag::where('title', $newTitle)->exists();
         if ($exists) {
             return response()->json(['error' => 'Ya existe un tag con ese nombre'], 422);
         }
 
-        DB::transaction(function () use ($tag, $oldTitle, $newTitle) {
-            // Actualizar en pim_topics
-            $tag->title = $newTitle;
-            $tag->save();
+        DB::transaction(function () use ($oldTitle, $newTitle) {
+            // Actualizar en tags
+            Tag::where('title', $oldTitle)->update(['title' => $newTitle]);
 
             // Actualizar en problemas_tags
             ProblemaTag::where('tag', $oldTitle)->update(['tag' => $newTitle]);
@@ -105,22 +108,26 @@ class TagController extends Controller
     /**
      * Eliminar un tag (solo admin)
      */
-    public function destroy($id)
+    public function destroy($title)
     {
         // Solo admin puede eliminar
         if (Auth::user()->rol !== 'admin') {
             return response()->json(['error' => 'No autorizado'], 403);
         }
 
-        $tag = Topic::findOrFail($id);
-        $title = $tag->title;
+        $title = urldecode($title);
 
-        DB::transaction(function () use ($tag, $title) {
+        $tag = Tag::where('title', $title)->first();
+        if (!$tag) {
+            return response()->json(['error' => 'Tag no encontrado'], 404);
+        }
+
+        DB::transaction(function () use ($title) {
             // Eliminar de problemas_tags
             ProblemaTag::where('tag', $title)->delete();
 
-            // Eliminar de pim_topics
-            $tag->delete();
+            // Eliminar de tags
+            Tag::where('title', $title)->delete();
         });
 
         return response()->json([
