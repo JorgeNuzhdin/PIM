@@ -379,7 +379,7 @@
             </thead>
             <tbody>
                 @forelse($sheets as $sheet)
-                    <tr onclick="window.location.href='{{ url('pim-sheets/' . $sheet->id . '/download') }}'" style="cursor: pointer;">
+                    <tr onclick="window.location.href='{{ route('pim-sheets.download', ['id' => $sheet->id]) }}'" style="cursor: pointer;">
                         <td><strong>{{ $sheet->title }}</strong></td>
                         <td>{{ $sheet->date_year }}</td>
                         <td>{{ $sheet->planet ?? '-' }}</td>

@@ -7,6 +7,7 @@ use App\Models\Tema;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class PimSheetController extends Controller
 {
@@ -125,21 +126,41 @@ class PimSheetController extends Controller
      */
     public function download($id)
     {
+        Log::info('=== PimSheet Download ===');
+        Log::info('ID recibido: ' . $id);
+        Log::info('Usuario: ' . (Auth::check() ? Auth::user()->email : 'No autenticado'));
+
         $sheet = PimSheet::where('id', $id)->first();
 
+        Log::info('Sheet encontrada: ' . ($sheet ? 'SI' : 'NO'));
+
         if (!$sheet) {
+            Log::error('Hoja no encontrada para ID: ' . $id);
             abort(404, 'Hoja no encontrada.');
         }
 
+        Log::info('Título: ' . $sheet->title);
+        Log::info('Año: ' . $sheet->date_year);
+        Log::info('Tiene tex_sols: ' . (!empty($sheet->tex_sols) ? 'SI (' . strlen($sheet->tex_sols) . ' bytes)' : 'NO'));
+
         if (empty($sheet->tex_sols)) {
+            Log::error('tex_sols vacío para sheet ID: ' . $id);
             abort(404, 'Archivo TEX no disponible.');
         }
 
         // Generar nombre de archivo
         $filename = str_replace(' ', '_', $sheet->title) . '_' . $sheet->date_year . '.tex';
+        Log::info('Nombre archivo: ' . $filename);
 
-        return response($sheet->tex_sols)
-            ->header('Content-Type', 'text/x-tex')
-            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+        // Crear archivo temporal
+        $tempPath = storage_path('app/temp_' . $id . '.tex');
+        file_put_contents($tempPath, $sheet->tex_sols);
+
+        Log::info('Archivo temporal creado: ' . $tempPath);
+        Log::info('=== Iniciando descarga ===');
+
+        return response()->download($tempPath, $filename, [
+            'Content-Type' => 'application/x-tex',
+        ])->deleteFileAfterSend(true);
     }
 }
