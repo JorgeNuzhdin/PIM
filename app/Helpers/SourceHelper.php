@@ -25,11 +25,12 @@ class SourceHelper
         'IMO Shortlist' => ['IMO\s*Shortlist', 'IMO\s*SL'],
         'EGMO' => ['EGMO'],
         'APMO' => ['APMO'],
-        'Balkan MO' => ['Balkan', 'BMO'],
+        'Olimpiada de los Balcanes' => ['Balkan', 'BMO', 'Olimpiada.*Balc', 'Balcánica'],
 
         // Olimpiadas nacionales
         'OME' => ['^OME\b', 'Olimpiada.*Espa'],
         'OIM' => ['^OIM\b', 'Olimpiada.*Iberoamericana'],
+        'Concurso de Primavera' => ['Concurso.*Primavera', 'Primavera.*Matem']
 
         // Competiciones rusas y de Moscú
         'Olimpiada de Moscú' => ['Olimpiada.*Mosc', 'Moscow.*Olympiad', 'Mosc.*Olympiad'],
@@ -47,6 +48,9 @@ class SourceHelper
 
         // Autores conocidos (normalizar variantes)
         'A. Shen' => ['\bShen\b', 'A\.\s*Shen', 'Shen\s*A'],
+        'A. Shapovalov' => ['\bShapovalov\b', 'A\.\s*Shapovalov', 'Shapovalov\s*A'],
+        'M. Gardner' => ['\bGardner\b', 'M\.\s*Gardner', 'Martin\s*Gardner', 'Gardner\s*M'],
+        'V. Prasolov' => ['\bPrasolov\b', 'V\.\s*Prasolov', 'Prasolov\s*V'],
         'Engel' => ['\bEngel\b'],
         'Andreescu' => ['\bAndreescu\b'],
         'Zeitz' => ['\bZeitz\b'],
@@ -54,7 +58,14 @@ class SourceHelper
         // Sitios web y círculos
         'We Solve Problems' => ['We\s*Solve\s*Problems', 'wesolveproblems'],
         'Problems.ru' => ['problems\.ru', 'problems\.com\.ru'],
+        'zadachi.mccme.ru' => ['zadachi\.mccme', 'mccme\.ru'],
+        'Art of Problem Solving' => ['Art\s*of\s*Problem', 'AoPS', 'artofproblemsolving'],
         'Berkeley Math Circle' => ['Berkeley.*Math.*Circle', 'BMC'],
+        'Círculos Matemáticos' => ['C.rculo.*Matem', 'Math.*Circle'],
+
+        // Libros
+        'Problem Solving Strategies' => ['Problem\s*Solving\s*Strategies', 'Engel.*Strategies'],
+        'Excalibur' => ['Excalibur'],
 
         // Otras competiciones
         'Putnam' => ['Putnam'],
