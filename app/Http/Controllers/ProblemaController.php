@@ -355,9 +355,9 @@ class ProblemaController extends Controller
         $query->where('school_year', '<=', $request->school_year);
     }
 
-    // Filtro por fuente (source) - usando SourceHelper para grupos
+    // Filtro por fuente (source) - usando SourceHelper para grupos y comas
     if ($request->filled('source')) {
-        SourceHelper::applySourceFilter($query, $request->source);
+        SourceHelper::applySourceFilterWithCommas($query, $request->source);
     }
 
     // Filtro por proponente (proponent_id)

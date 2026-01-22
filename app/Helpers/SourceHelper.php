@@ -31,6 +31,12 @@ class SourceHelper
         'OME' => ['^OME\b', 'Olimpiada.*Espa'],
         'OIM' => ['^OIM\b', 'Olimpiada.*Iberoamericana'],
 
+        // Competiciones rusas y de Moscú
+        'Olimpiada de Moscú' => ['Olimpiada.*Mosc', 'Moscow.*Olympiad', 'Mosc.*Olympiad'],
+        'Olimpiada de Rusia' => ['Olimpiada.*Rusia', 'Russian.*Olympiad', 'Russia.*Olympiad', 'Olimpiada.*Rusa'],
+        'Tournament of Towns' => ['Tournament.*Towns', 'Tornео.*ciudad', 'Torneo.*ciudades'],
+        'Fiesta Matemática de Moscú' => ['Fiesta.*Matem.*Mosc', 'Moscow.*Math.*Festival'],
+
         // Competiciones por países
         'China' => ['China', 'Chinese'],
         'Russia' => ['Russia', 'Russian', 'USSR', 'Soviet'],
@@ -44,6 +50,11 @@ class SourceHelper
         'Engel' => ['\bEngel\b'],
         'Andreescu' => ['\bAndreescu\b'],
         'Zeitz' => ['\bZeitz\b'],
+
+        // Sitios web y círculos
+        'We Solve Problems' => ['We\s*Solve\s*Problems', 'wesolveproblems'],
+        'Problems.ru' => ['problems\.ru', 'problems\.com\.ru'],
+        'Berkeley Math Circle' => ['Berkeley.*Math.*Circle', 'BMC'],
 
         // Otras competiciones
         'Putnam' => ['Putnam'],
@@ -60,13 +71,16 @@ class SourceHelper
     public static function getGroupedSources(): array
     {
         // Obtener todas las fuentes únicas
-        $allSources = DB::table('pim_problems')
+        $rawSources = DB::table('pim_problems')
             ->whereNotNull('source')
             ->where('source', '!=', '')
             ->distinct()
             ->orderBy('source')
             ->pluck('source')
             ->toArray();
+
+        // Expandir fuentes con comas en partes individuales
+        $allSources = self::expandSourcesWithCommas($rawSources);
 
         $groups = [];
         $usedSources = [];
@@ -188,5 +202,63 @@ class SourceHelper
         });
 
         return $query->count();
+    }
+
+    /**
+     * Expande fuentes que contienen comas en partes individuales.
+     * Por ejemplo: "A. Shen, Engel" -> ["A. Shen", "Engel"]
+     * Mantiene también la fuente original para búsquedas exactas.
+     */
+    private static function expandSourcesWithCommas(array $rawSources): array
+    {
+        $expanded = [];
+        $seen = [];
+
+        foreach ($rawSources as $source) {
+            // Si contiene coma, separar en partes
+            if (strpos($source, ',') !== false) {
+                $parts = array_map('trim', explode(',', $source));
+                foreach ($parts as $part) {
+                    if (!empty($part) && !isset($seen[$part])) {
+                        $expanded[] = $part;
+                        $seen[$part] = true;
+                    }
+                }
+            } else {
+                if (!isset($seen[$source])) {
+                    $expanded[] = $source;
+                    $seen[$source] = true;
+                }
+            }
+        }
+
+        // Ordenar alfabéticamente
+        sort($expanded, SORT_STRING | SORT_FLAG_CASE);
+
+        return $expanded;
+    }
+
+    /**
+     * Aplica el filtro buscando también en fuentes compuestas (con comas).
+     * Si el usuario selecciona "A. Shen", también encuentra "A. Shen, Engel".
+     */
+    public static function applySourceFilterWithCommas($query, string $sourceFilter)
+    {
+        if (empty($sourceFilter)) {
+            return $query;
+        }
+
+        // Si es un grupo, usar la lógica de grupos
+        if (strpos($sourceFilter, 'group:') === 0) {
+            return self::applySourceFilter($query, $sourceFilter);
+        }
+
+        // Buscar coincidencia exacta O como parte de una lista con comas
+        return $query->where(function($q) use ($sourceFilter) {
+            $q->where('source', $sourceFilter)
+              ->orWhere('source', 'LIKE', $sourceFilter . ',%')
+              ->orWhere('source', 'LIKE', '%, ' . $sourceFilter)
+              ->orWhere('source', 'LIKE', '%, ' . $sourceFilter . ',%');
+        });
     }
 }
