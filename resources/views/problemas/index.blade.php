@@ -519,7 +519,7 @@
 
     <div class="stats">
     Total de problemas en la base de datos: <strong>{{ $totalProblemas }}</strong>
-    @if(request()->hasAny(['buscar', 'tema_id', 'topic_title']))
+    @if(request()->hasAny(['buscar', 'tema_id', 'topic_title', 'source', 'proponent_id', 'difficulty_min', 'difficulty_max', 'school_year']))
         | Problemas encontrados: <strong style="color: #4299e1;">{{ $problemasEncontrados }}</strong>
     @endif
     | Mostrando en esta página: <strong>{{ $problemas->count() }}</strong>
@@ -594,7 +594,33 @@
                     @endforeach
                 </select>
             </div>
-            
+
+            {{-- Filtro por fuente --}}
+            <div class="form-group">
+                <label for="source">Fuente</label>
+                <select name="source" id="source">
+                    <option value="">-- Todas las fuentes --</option>
+                    @foreach($sources as $source)
+                        <option value="{{ $source }}" {{ request('source') == $source ? 'selected' : '' }}>
+                            {{ $source }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Filtro por proponente --}}
+            <div class="form-group">
+                <label for="proponent_id">Proponente</label>
+                <select name="proponent_id" id="proponent_id">
+                    <option value="">-- Todos los proponentes --</option>
+                    @foreach($proponents as $proponent)
+                        <option value="{{ $proponent->id }}" {{ request('proponent_id') == $proponent->id ? 'selected' : '' }}>
+                            {{ $proponent->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
             {{-- Opciones a mostrar --}}
 <div class="form-group">
     <label for="mostrar">Mostrar</label>

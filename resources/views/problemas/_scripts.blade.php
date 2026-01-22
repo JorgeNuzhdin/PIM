@@ -56,23 +56,7 @@ function updatePreview(inputId, previewId) {
 }
 
 
-// Adjuntar eventos al cargar la página
-document.addEventListener('DOMContentLoaded', function() {
-    const problemInput = document.getElementById('problem_tex');
-    const solutionInput = document.getElementById('solution_tex');
-    
-    if (problemInput) {
-        problemInput.addEventListener('input', () => updatePreview('problem_tex', 'problem_preview'));
-        // Cargar vista previa inicial
-        updatePreview('problem_tex', 'problem_preview');
-    }
-    
-    if (solutionInput) {
-        solutionInput.addEventListener('input', () => updatePreview('solution_tex', 'solution_preview'));
-        // Cargar vista previa inicial
-        updatePreview('solution_tex', 'solution_preview');
-    }
-});
+// Los eventos se adjuntan en el segundo DOMContentLoaded más abajo
 
 
 function procesarArchivoTex(input) {
@@ -655,19 +639,61 @@ document.addEventListener('DOMContentLoaded', function() {
     if (problemInput) {
         problemInput.addEventListener('input', () => updatePreview('problem_tex', 'problem_preview'));
 
-        // Cargar vista previa inicial si hay contenido
+        // Cargar vista previa inicial si hay contenido (inmediatamente, sin esperar)
         if (problemInput.value.trim()) {
-            updatePreview('problem_tex', 'problem_preview');
+            console.log('Cargando vista previa inicial del enunciado');
+            // Ejecutar inmediatamente sin el debounce de 500ms
+            renderPreviewImmediate('problem_tex', 'problem_preview');
         }
     }
 
     if (solutionInput) {
         solutionInput.addEventListener('input', () => updatePreview('solution_tex', 'solution_preview'));
 
-        // Cargar vista previa inicial si hay contenido
+        // Cargar vista previa inicial si hay contenido (inmediatamente, sin esperar)
         if (solutionInput.value.trim()) {
-            updatePreview('solution_tex', 'solution_preview');
+            console.log('Cargando vista previa inicial de la solución');
+            // Ejecutar inmediatamente sin el debounce de 500ms
+            renderPreviewImmediate('solution_tex', 'solution_preview');
         }
     }
 });
+
+// Función para renderizar vista previa inmediatamente (sin debounce)
+function renderPreviewImmediate(inputId, previewId) {
+    const texContent = document.getElementById(inputId).value;
+    const previewDiv = document.getElementById(previewId);
+
+    if (!texContent.trim()) {
+        previewDiv.innerHTML = '<p style="color: #a0aec0; font-style: italic;">La vista previa aparecerá aquí...</p>';
+        return;
+    }
+
+    previewDiv.innerHTML = '<p style="color: #4a5568;">⏳ Procesando...</p>';
+
+    fetch('{{ route("latex.preview") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ latex: texContent })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.html) {
+            previewDiv.innerHTML = data.html;
+            // Renderizar MathJax en el nuevo contenido
+            if (window.MathJax) {
+                MathJax.typesetPromise([previewDiv]).catch(err => console.error('MathJax error:', err));
+            }
+        } else if (data.error) {
+            previewDiv.innerHTML = '<p style="color: #e53e3e;">❌ Error: ' + data.error + '</p>';
+        }
+    })
+    .catch(error => {
+        console.error('Error al procesar LaTeX:', error);
+        previewDiv.innerHTML = '<p style="color: #e53e3e;">❌ Error al procesar la vista previa</p>';
+    });
+}
 </script>

@@ -25,7 +25,15 @@ class Problema extends Model
         'comments',
         'source',
         'packages',
+        'proponent_id',
     ];
+
+    // Relación con el proponente (usuario que subió el problema)
+    public function proponent()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'proponent_id');
+    }
+
     // Relación con tags
     public function tags()
     {

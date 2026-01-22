@@ -12,6 +12,7 @@ use App\Helpers\SchoolYearHelper;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 use App\Helpers\LatexHelper;
 
@@ -66,6 +67,7 @@ class ProblemaController extends Controller
                     'solution_html' => $validated['solution_tex'] ?? null,
                     'comments' => $validated['comments'] ?? null,
                     'source' => $validated['source'] ?? null,
+                    'proponent_id' => Auth::id(),
                 ]);
                 
                 // Guardar tags
@@ -351,20 +353,47 @@ class ProblemaController extends Controller
     if ($request->filled('school_year')) {
         $query->where('school_year', '<=', $request->school_year);
     }
-    
+
+    // Filtro por fuente (source)
+    if ($request->filled('source')) {
+        $query->where('source', $request->source);
+    }
+
+    // Filtro por proponente (proponent_id)
+    if ($request->filled('proponent_id')) {
+        $query->where('proponent_id', $request->proponent_id);
+    }
+
     // Contar problemas filtrados ANTES de paginar
     $problemasEncontrados = $query->count();
     $totalProblemas = Problema::count();
-    
+
     // Paginar resultados
-    $problemas = $query->with('tags')->paginate(20)->appends($request->query());
+    $problemas = $query->with(['tags', 'proponent'])->paginate(20)->appends($request->query());
     $temas = Tema::all();
     $schoolYears = SchoolYearHelper::getAllYears();
-    
+
+    // Obtener lista de fuentes únicas para el filtro
+    $sources = Problema::whereNotNull('source')
+                       ->where('source', '!=', '')
+                       ->distinct()
+                       ->orderBy('source')
+                       ->pluck('source');
+
+    // Obtener lista de proponentes para el filtro
+    $proponents = \App\Models\User::whereIn('id', function($q) {
+                        $q->select('proponent_id')
+                          ->from('pim_problems')
+                          ->whereNotNull('proponent_id')
+                          ->distinct();
+                    })
+                    ->orderBy('name')
+                    ->get(['id', 'name']);
+
     // Opciones de visualización
     $mostrar = $request->get('mostrar', ['fuente', 'pistas', 'solucion', 'comentarios', 'year']);
-    
-    return view('problemas.index', compact('problemas', 'temas', 'totalProblemas', 'problemasEncontrados', 'mostrar', 'schoolYears'));
+
+    return view('problemas.index', compact('problemas', 'temas', 'totalProblemas', 'problemasEncontrados', 'mostrar', 'schoolYears', 'sources', 'proponents'));
 }
     
     // API para autocompletar topics
