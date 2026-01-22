@@ -30,7 +30,7 @@ class SourceHelper
         // Olimpiadas nacionales
         'OME' => ['^OME\b', 'Olimpiada.*Espa'],
         'OIM' => ['^OIM\b', 'Olimpiada.*Iberoamericana'],
-        'Concurso de Primavera' => ['Concurso.*Primavera', 'Primavera.*Matem']
+        'Concurso de Primavera' => ['Concurso.*Primavera', 'Primavera.*Matem'],
 
         // Competiciones rusas y de Moscú
         'Olimpiada de Moscú' => ['Olimpiada.*Mosc', 'Moscow.*Olympiad', 'Mosc.*Olympiad'],
