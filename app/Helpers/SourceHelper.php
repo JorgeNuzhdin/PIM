@@ -21,14 +21,13 @@ class SourceHelper
         'USA TST' => ['USA\s*TST'],
 
         // Olimpiadas internacionales
-        'IMO' => ['^IMO\b', 'International Mathematical Olympiad'],
-        'IMO Shortlist' => ['IMO\s*Shortlist', 'IMO\s*SL'],
+        'IMO' => ['^IMO\b', 'International Mathematical Olympiad', 'IMO\s*Shortlist', 'IMO\s*SL'],
         'EGMO' => ['EGMO'],
         'APMO' => ['APMO'],
         'Olimpiada de los Balcanes' => ['Balkan', 'BMO', 'Olimpiada.*Balc', 'Balcánica'],
 
         // Olimpiadas nacionales
-        'OME' => ['^OME\b', 'Olimpiada.*Espa'],
+        'OME' => ['^OME\b', 'Olimpiada.*Espa', 'fase.*local.*OME'],
         'OIM' => ['^OIM\b', 'Olimpiada.*Iberoamericana'],
         'Concurso de Primavera' => ['Concurso.*Primavera', 'Primavera.*Matem'],
 
@@ -49,6 +48,9 @@ class SourceHelper
         // Autores conocidos (normalizar variantes)
         'A. Shen' => ['\bShen\b', 'A\.\s*Shen', 'Shen\s*A'],
         'A. Shapovalov' => ['\bShapovalov\b', 'A\.\s*Shapovalov', 'Shapovalov\s*A'],
+        'N. Konstantinov' => ['\bKonstantinov\b', 'N\.\s*Konstantinov', 'Konstantinov\s*N'],
+        'M. Volchkevich' => ['\bVolchkevich\b', 'M\.\s*Volchkevich', 'Volchkevich\s*M', 'Maxim\s*Volchkevich'],
+        'A. Kanel-Belov' => ['\bKanel-Belov\b', '\bKanel\b', 'A\.\s*Kanel', 'Kanel-Belov\s*A'],
         'M. Gardner' => ['\bGardner\b', 'M\.\s*Gardner', 'Martin\s*Gardner', 'Gardner\s*M'],
         'V. Prasolov' => ['\bPrasolov\b', 'V\.\s*Prasolov', 'Prasolov\s*V'],
         'Engel' => ['\bEngel\b'],
@@ -60,7 +62,7 @@ class SourceHelper
         'Problems.ru' => ['problems\.ru', 'problems\.com\.ru'],
         'zadachi.mccme.ru' => ['zadachi\.mccme', 'mccme\.ru'],
         'Art of Problem Solving' => ['Art\s*of\s*Problem', 'AoPS', 'artofproblemsolving'],
-        'Berkeley Math Circle' => ['Berkeley.*Math.*Circle', 'BMC'],
+        'Berkeley Math Circle' => ['Berkeley.*Math.*Circle', 'BMC', 'Berkeley\s*MC'],
         'Círculos Matemáticos' => ['C.rculo.*Matem', 'Math.*Circle'],
 
         // Libros

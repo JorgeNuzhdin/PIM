@@ -8,7 +8,8 @@
       "Bash(git commit -m \"$\\(cat <<''EOF''\nCorregir dropdown de Hojas de problemas en navbar\n\n- Eliminar gap entre botón y menú desplegable\n- Agregar padding al botón para mejor área clickeable\n- Agregar pseudo-elemento para mantener hover continuo\n- Solucionar problema de menú que se cierra al mover el mouse\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git commit:*)",
       "Bash(php artisan:*)",
-      "Bash(cd /d e:PIM)"
+      "Bash(cd /d e:PIM)",
+      "Read(//e/**)"
     ]
   }
 }
