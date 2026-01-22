@@ -9,6 +9,7 @@ use App\Models\TopicTema;
 use App\Models\ProblemaTag;
 use Illuminate\Http\Request;
 use App\Helpers\SchoolYearHelper;
+use App\Helpers\SourceHelper;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -354,9 +355,9 @@ class ProblemaController extends Controller
         $query->where('school_year', '<=', $request->school_year);
     }
 
-    // Filtro por fuente (source)
+    // Filtro por fuente (source) - usando SourceHelper para grupos
     if ($request->filled('source')) {
-        $query->where('source', $request->source);
+        SourceHelper::applySourceFilter($query, $request->source);
     }
 
     // Filtro por proponente (proponent_id)
@@ -373,12 +374,8 @@ class ProblemaController extends Controller
     $temas = Tema::all();
     $schoolYears = SchoolYearHelper::getAllYears();
 
-    // Obtener lista de fuentes únicas para el filtro
-    $sources = Problema::whereNotNull('source')
-                       ->where('source', '!=', '')
-                       ->distinct()
-                       ->orderBy('source')
-                       ->pluck('source');
+    // Obtener fuentes agrupadas para el filtro
+    $sourceData = SourceHelper::getGroupedSources();
 
     // Obtener lista de proponentes para el filtro
     $proponents = \App\Models\User::whereIn('id', function($q) {
@@ -393,7 +390,7 @@ class ProblemaController extends Controller
     // Opciones de visualización
     $mostrar = $request->get('mostrar', ['fuente', 'pistas', 'solucion', 'comentarios', 'year']);
 
-    return view('problemas.index', compact('problemas', 'temas', 'totalProblemas', 'problemasEncontrados', 'mostrar', 'schoolYears', 'sources', 'proponents'));
+    return view('problemas.index', compact('problemas', 'temas', 'totalProblemas', 'problemasEncontrados', 'mostrar', 'schoolYears', 'sourceData', 'proponents'));
 }
     
     // API para autocompletar topics

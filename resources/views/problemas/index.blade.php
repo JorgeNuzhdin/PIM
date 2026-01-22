@@ -595,16 +595,33 @@
                 </select>
             </div>
 
-            {{-- Filtro por fuente --}}
+            {{-- Filtro por fuente (agrupado) --}}
             <div class="form-group">
                 <label for="source">Fuente</label>
                 <select name="source" id="source">
                     <option value="">-- Todas las fuentes --</option>
-                    @foreach($sources as $source)
-                        <option value="{{ $source }}" {{ request('source') == $source ? 'selected' : '' }}>
-                            {{ $source }}
-                        </option>
-                    @endforeach
+
+                    {{-- Grupos de fuentes --}}
+                    @if(count($sourceData['groups']) > 0)
+                        <optgroup label="Grupos">
+                            @foreach($sourceData['groups'] as $groupName => $groupInfo)
+                                <option value="group:{{ $groupName }}" {{ request('source') == 'group:' . $groupName ? 'selected' : '' }}>
+                                    {{ $groupName }} ({{ $groupInfo['count'] }})
+                                </option>
+                            @endforeach
+                        </optgroup>
+                    @endif
+
+                    {{-- Fuentes individuales no agrupadas --}}
+                    @if(count($sourceData['ungrouped']) > 0)
+                        <optgroup label="Otras fuentes">
+                            @foreach($sourceData['ungrouped'] as $source)
+                                <option value="{{ $source }}" {{ request('source') == $source ? 'selected' : '' }}>
+                                    {{ $source }}
+                                </option>
+                            @endforeach
+                        </optgroup>
+                    @endif
                 </select>
             </div>
 
