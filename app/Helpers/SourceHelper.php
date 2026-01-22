@@ -37,6 +37,7 @@ class SourceHelper
         'Tournament of Towns' => ['Tournament.*Towns', 'Tornео.*ciudad', 'Torneo.*ciudades'],
         'Fiesta Matemática de Moscú' => ['Fiesta.*Matem.*Mosc', 'Moscow.*Math.*Festival'],
 
+
         // Competiciones por países
         'China' => ['China', 'Chinese'],
         'Russia' => ['Russia', 'Russian', 'USSR', 'Soviet'],
@@ -56,7 +57,6 @@ class SourceHelper
         'Engel' => ['\bEngel\b'],
         'Andreescu' => ['\bAndreescu\b'],
         'Zeitz' => ['\bZeitz\b'],
-
         // Sitios web y círculos
         'We Solve Problems' => ['We\s*Solve\s*Problems', 'wesolveproblems'],
         'Problems.ru' => ['problems\.ru', 'problems\.com\.ru'],
@@ -64,6 +64,7 @@ class SourceHelper
         'Art of Problem Solving' => ['Art\s*of\s*Problem', 'AoPS', 'artofproblemsolving'],
         'Berkeley Math Circle' => ['Berkeley.*Math.*Circle', 'BMC', 'Berkeley\s*MC'],
         'Círculos Matemáticos' => ['C.rculo.*Matem', 'Math.*Circle'],
+        'Skolkovo' =>['Skolkovo'],
 
         // Libros
         'Problem Solving Strategies' => ['Problem\s*Solving\s*Strategies', 'Engel.*Strategies'],

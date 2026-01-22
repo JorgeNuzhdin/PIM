@@ -124,6 +124,24 @@
         background-color: #38a169;
     }
 
+    .btn-delete {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+    }
+
+    .btn-delete:hover {
+        background-color: #fed7d7;
+    }
+
+    .actions-cell {
+        text-align: center;
+        width: 60px;
+    }
+
     .sheets-table-wrapper {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
@@ -375,20 +393,34 @@
                         Institución
                     </th>
                     <th>Tema</th>
+                    @auth
+                        @if(Auth::user()->isAdmin())
+                            <th class="actions-cell">Acciones</th>
+                        @endif
+                    @endauth
                 </tr>
             </thead>
             <tbody>
                 @forelse($sheets as $sheet)
-                    <tr onclick="window.location.href='{{ route('pim-sheets.download', ['id' => $sheet->id]) }}'" style="cursor: pointer;">
-                        <td><strong>{{ $sheet->title }}</strong></td>
-                        <td>{{ $sheet->date_year }}</td>
-                        <td>{{ $sheet->planet ?? '-' }}</td>
-                        <td>{{ $sheet->institution ?? '-' }}</td>
-                        <td>{{ $sheet->tema->tema ?? '-' }}</td>
+                    <tr>
+                        <td onclick="window.location.href='{{ route('pim-sheets.download', ['id' => $sheet->id]) }}'" style="cursor: pointer;"><strong>{{ $sheet->title }}</strong></td>
+                        <td onclick="window.location.href='{{ route('pim-sheets.download', ['id' => $sheet->id]) }}'" style="cursor: pointer;">{{ $sheet->date_year }}</td>
+                        <td onclick="window.location.href='{{ route('pim-sheets.download', ['id' => $sheet->id]) }}'" style="cursor: pointer;">{{ $sheet->planet ?? '-' }}</td>
+                        <td onclick="window.location.href='{{ route('pim-sheets.download', ['id' => $sheet->id]) }}'" style="cursor: pointer;">{{ $sheet->institution ?? '-' }}</td>
+                        <td onclick="window.location.href='{{ route('pim-sheets.download', ['id' => $sheet->id]) }}'" style="cursor: pointer;">{{ $sheet->tema->tema ?? '-' }}</td>
+                        @auth
+                            @if(Auth::user()->isAdmin())
+                                <td class="actions-cell">
+                                    <button class="btn-delete" onclick="eliminarHoja({{ $sheet->id }}, '{{ addslashes($sheet->title) }}')" title="Eliminar hoja">
+                                        🗑️
+                                    </button>
+                                </td>
+                            @endif
+                        @endauth
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" style="text-align: center; padding: 2rem; color: #718096;">
+                        <td colspan="{{ Auth::check() && Auth::user()->isAdmin() ? '6' : '5' }}" style="text-align: center; padding: 2rem; color: #718096;">
                             No se encontraron hojas de problemas.
                         </td>
                     </tr>
@@ -422,6 +454,31 @@
             document.getElementById('filterForm').submit();
         });
     });
+
+    // Función para eliminar hoja (solo admin)
+    function eliminarHoja(id, titulo) {
+        if (confirm('¿Estás seguro de que quieres eliminar la hoja "' + titulo + '"?\n\nEsta acción no se puede deshacer.')) {
+            fetch('{{ url("pim-sheets") }}/' + id, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al eliminar la hoja');
+            });
+        }
+    }
 
 </script>
 @endsection

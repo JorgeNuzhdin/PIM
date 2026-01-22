@@ -62,6 +62,9 @@ Route::middleware('auth')->prefix('pim-sheets')->name('pim-sheets.')->group(func
         Route::post('/', [PimSheetController::class, 'store'])->name('store');
     });
 
+    // Solo administradores pueden eliminar sheets
+    Route::delete('/{id}', [PimSheetController::class, 'destroy'])->name('destroy');
+
     // Descarga de hojas (debe ir después de /create para evitar conflictos)
     Route::get('/{id}/download', [PimSheetController::class, 'download'])->name('download');
 });

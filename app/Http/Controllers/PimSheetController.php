@@ -163,4 +163,25 @@ class PimSheetController extends Controller
             'Content-Type' => 'application/x-tex',
         ])->deleteFileAfterSend(true);
     }
+
+    /**
+     * Eliminar una hoja de problemas (solo admin)
+     */
+    public function destroy($id)
+    {
+        // Solo administradores pueden eliminar sheets
+        if (!Auth::user()->isAdmin()) {
+            return response()->json(['success' => false, 'message' => 'No tienes permiso para eliminar hojas.'], 403);
+        }
+
+        $sheet = PimSheet::find($id);
+
+        if (!$sheet) {
+            return response()->json(['success' => false, 'message' => 'Hoja no encontrada.'], 404);
+        }
+
+        $sheet->delete();
+
+        return response()->json(['success' => true, 'message' => 'Hoja eliminada correctamente.']);
+    }
 }
