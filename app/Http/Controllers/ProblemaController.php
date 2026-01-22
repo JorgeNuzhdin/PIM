@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 
 use App\Helpers\LatexHelper;
+use App\Helpers\TagHelper;
 
 
 
@@ -71,11 +72,11 @@ class ProblemaController extends Controller
                     'proponent_id' => Auth::id(),
                 ]);
                 
-                // Guardar tags
+                // Guardar tags (normalizados con Levenshtein)
                 if ($request->has('tags') && is_array($request->tags)) {
-                    foreach ($request->tags as $tag) {
-                        if (!empty(trim($tag))) {
-                            $tagTrimmed = trim($tag);
+                    $normalizedTags = TagHelper::normalizeArray($request->tags);
+                    foreach ($normalizedTags as $tagTrimmed) {
+                        if (!empty($tagTrimmed)) {
                             
                             // 1. Guardar en pim_problem_tags (relación problema-tag)
                             ProblemaTag::create([
@@ -211,38 +212,36 @@ class ProblemaController extends Controller
                     // Eliminar tags antiguos y crear nuevos
                     ProblemaTag::where('problem_id', $problema->id)->delete();
                     
-                    // Guardar tags
+                    // Guardar tags (normalizados con Levenshtein)
                     if ($request->has('tags') && is_array($request->tags)) {
-                        foreach ($request->tags as $tag) {
-                            if (!empty(trim($tag))) {
-                                $tagTrimmed = trim($tag);
-                                
+                        $normalizedTags = TagHelper::normalizeArray($request->tags);
+                        foreach ($normalizedTags as $tagTrimmed) {
+                            if (!empty($tagTrimmed)) {
                                 // 1. Guardar en pim_problem_tags (relación problema-tag)
                                 ProblemaTag::create([
                                     'problem_id' => $problema->id,
                                     'tag' => $tagTrimmed,
                                 ]);
-                                
+
                                 // 2. Si hay tema seleccionado, gestionar topic_tema
                                 if ($request->tema_id) {
                                     // Verificar si el tag existe en tags
                                     $topicExists = DB::table('tags')
                                         ->where('title', $tagTrimmed)
                                         ->exists();
-                                    
+
                                     // Si no existe en tags, crearlo primero
                                     if (!$topicExists) {
                                         DB::table('tags')->insert([
                                             'title' => $tagTrimmed,
-                                            // Agrega otros campos requeridos si los hay
                                         ]);
                                     }
-                                    
+
                                     // Verificar si ya existe la relación en topic_tema
                                     $relacionExists = TopicTema::where('tema_id', $request->tema_id)
                                         ->where('topic_title', $tagTrimmed)
                                         ->exists();
-                                    
+
                                     // Si no existe la relación, crearla
                                     if (!$relacionExists) {
                                         TopicTema::create([

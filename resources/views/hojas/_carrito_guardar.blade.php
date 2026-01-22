@@ -28,8 +28,14 @@
                 </div>
                 <div class="form-group-hoja">
                     <label for="modal-year">Año</label>
-                    <input type="number" id="modal-year" name="year" 
+                    <input type="number" id="modal-year" name="year"
                            value="2026" min="2021" max="2050">
+                </div>
+                <div class="form-group-hoja">
+                    <label for="modal-institucion">Institución</label>
+                    <input type="text" id="modal-institucion" name="institucion"
+                           value="{{ Auth::user()->institution ?? '' }}"
+                           placeholder="Ej: PIM">
                 </div>
             </form>
         </div>
@@ -203,6 +209,7 @@ function guardarHoja() {
         nombre_grupo: document.getElementById('modal-nombre-grupo').value,
         tema: document.getElementById('modal-tema').value,
         year: document.getElementById('modal-year').value || null,
+        institucion: document.getElementById('modal-institucion').value,
         problemas: problemas
     };
 

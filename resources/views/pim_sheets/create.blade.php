@@ -180,7 +180,7 @@
 
             <div class="form-group">
                 <label for="institution">Institución</label>
-                <input type="text" id="institution" name="institution" value="{{ old('institution') }}" maxlength="256">
+                <input type="text" id="institution" name="institution" value="{{ old('institution', Auth::user()->institution ?? '') }}" maxlength="256">
                 <small>Nombre de la institución educativa</small>
             </div>
 
