@@ -301,12 +301,18 @@ class ProblemaController extends Controller
 {
     $query = Problema::query();
     
-    // Filtro por texto
+    // Filtro por texto (busca en ID, problema, solución y fuente)
     if ($request->filled('buscar')) {
         $buscar = $request->buscar;
         $query->where(function($q) use ($buscar) {
-            $q->where('problem_html', 'LIKE', "%{$buscar}%")
-              ->orWhere('solution_html', 'LIKE', "%{$buscar}%");
+            // Si es un número, buscar primero por ID exacto
+            if (is_numeric($buscar)) {
+                $q->where('id', $buscar);
+            }
+            // Buscar también en contenido y fuente
+            $q->orWhere('problem_html', 'LIKE', "%{$buscar}%")
+              ->orWhere('solution_html', 'LIKE', "%{$buscar}%")
+              ->orWhere('source', 'LIKE', "%{$buscar}%");
         });
     }
     
@@ -368,6 +374,11 @@ class ProblemaController extends Controller
     // Contar problemas filtrados ANTES de paginar
     $problemasEncontrados = $query->count();
     $totalProblemas = Problema::count();
+
+    // Ordenar: si se busca por número, poner el ID exacto primero
+    if ($request->filled('buscar') && is_numeric($request->buscar)) {
+        $query->orderByRaw('CASE WHEN id = ? THEN 0 ELSE 1 END', [$request->buscar]);
+    }
 
     // Paginar resultados
     $problemas = $query->with(['tags', 'proponent'])->paginate(20)->appends($request->query());
