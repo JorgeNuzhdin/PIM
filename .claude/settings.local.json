@@ -9,7 +9,8 @@
       "Bash(git commit:*)",
       "Bash(php artisan:*)",
       "Bash(cd /d e:PIM)",
-      "Read(//e/**)"
+      "Read(//e/**)",
+      "Bash(del \"database\\\\migrations\\\\2026_01_22_000000_add_institution_to_users_table.php\")"
     ]
   }
 }
