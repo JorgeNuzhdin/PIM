@@ -118,19 +118,18 @@ function extraerEjercicios(contenido) {
     // Buscar todos los bloques de ejercicios
     const regexEjer = /\\begin\{ejer\}([\s\S]*?)\\end\{ejer\}/g;
     let match;
-    let lastIndex = 0;
+    let lastEjerEnd = 0;
 
     while ((match = regexEjer.exec(documento)) !== null) {
-        // Buscar metadatos antes del ejercicio
-        const antesEjer = documento.substring(0, match.index);
-        const ultimosDatos = antesEjer.substring(Math.max(0, antesEjer.length - 500));
+        // Buscar metadatos SOLO entre el ejercicio anterior y el actual
+        const bloqueMetadatos = documento.substring(lastEjerEnd, match.index);
 
-        const temas = extraerComando(ultimosDatos, 'temas') || '';
-        const dificultad = extraerComando(ultimosDatos, 'dificultad') || '';
-        const fuente = extraerComando(ultimosDatos, 'fuente') || '';
-        const curso = extraerComando(ultimosDatos, 'curso') || '';
-        const titulo = extraerComando(ultimosDatos, 'title') || '';
-        const comentarios = extraerComando(ultimosDatos, 'comentarios') || '';
+        const temas = extraerComando(bloqueMetadatos, 'temas') || '';
+        const dificultad = extraerComando(bloqueMetadatos, 'dificultad') || '';
+        const fuente = extraerComando(bloqueMetadatos, 'fuente') || '';
+        const curso = extraerComando(bloqueMetadatos, 'curso') || '';
+        const titulo = extraerComando(bloqueMetadatos, 'title') || '';
+        const comentarios = extraerComando(bloqueMetadatos, 'comentarios') || '';
 
         // Extraer enunciado
         const enunciado = match[1].trim();
@@ -160,6 +159,9 @@ function extraerEjercicios(contenido) {
             pistas: pistas,
             solucion: solucion
         });
+
+        // Actualizar la posición del final del ejercicio actual
+        lastEjerEnd = match.index + match[0].length;
     }
 
     return ejercicios;
