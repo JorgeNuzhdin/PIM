@@ -406,16 +406,18 @@ async function importarMultiplesEjercicios(ejercicios) {
                     'Accept': 'application/json'
                 }
             });
-            
+
             const result = await response.text();
-            
+
             if (response.ok) {
                 exitosos++;
                 console.log(`Ejercicio ${i + 1} importado con éxito`);
             } else {
                 fallidos++;
                 console.error(`Error en ejercicio ${i + 1}:`, result);
-                errores.push(`Ejercicio ${i + 1}: ${result.substring(0, 100)}`);
+                console.error(`Título del ejercicio ${i + 1}:`, ejercicio.titulo);
+                console.error(`Longitud del título:`, ejercicio.titulo ? ejercicio.titulo.length : 0);
+                errores.push(`Ejercicio ${i + 1}: ${result.substring(0, 200)}`);
             }
             
             // Pequeña pausa para no saturar el servidor

@@ -63,7 +63,7 @@ class SourceHelper
         'zadachi.mccme.ru' => ['zadachi\.mccme', 'mccme\.ru'],
         'Art of Problem Solving' => ['Art\s*of\s*Problem', 'AoPS', 'artofproblemsolving'],
         'Berkeley Math Circle' => ['Berkeley.*Math.*Circle', 'BMC', 'Berkeley\s*MC'],
-        'Círculos Matemáticos' => ['C.rculo.*Matem', 'Math.*Circle'],
+        'Círculos Matemáticos' => ['C.rculo.*Matem', 'Math.*Circle', 'C.rculo.*Matem.*Ruso'],
         'Skolkovo' =>['Skolkovo'],
 
         // Libros
