@@ -1,4 +1,5 @@
 // Vista previa LaTeX en tiempo real
+console.log('problema-form.js cargado - versión con soporte de título y llaves anidadas');
 let previewTimeout;
 
 function updatePreview(inputId, previewId) {
@@ -389,8 +390,11 @@ async function importarMultiplesEjercicios(ejercicios) {
             }
             
             console.log(`Enviando ejercicio ${i + 1}:`, {
+                titulo: ejercicio.titulo || '(vacío)',
                 difficulty: ejercicio.dificultad,
                 school_year: schoolYearIndex,
+                fuente: ejercicio.fuente || '(vacío)',
+                pistas: ejercicio.pistas ? ejercicio.pistas.substring(0, 30) + '...' : '(vacío)',
                 problem_tex: ejercicio.enunciado.substring(0, 50) + '...',
                 solution_tex: ejercicio.solucion ? ejercicio.solucion.substring(0, 50) + '...' : 'sin solución'
             });
