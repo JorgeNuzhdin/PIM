@@ -160,8 +160,21 @@ function extraerEjercicios(contenido) {
             solucion: solucion
         });
 
-        // Actualizar la posición del final del ejercicio actual
-        lastEjerEnd = match.index + match[0].length;
+        // Actualizar lastEjerEnd al final de \end{proof} (o \end{pistas} si no hay proof)
+        // para que el siguiente ejercicio empiece después del ejercicio completo
+        if (solucionMatch) {
+            const proofEndIndex = finBloque.indexOf('\\end{proof}', solucionMatch.index);
+            if (proofEndIndex !== -1) {
+                lastEjerEnd = match.index + match[0].length + proofEndIndex + 11; // 11 = length of '\end{proof}'
+            }
+        } else if (pistasMatch) {
+            const pistasEndIndex = finBloque.indexOf('\\end{pistas}', pistasMatch.index);
+            if (pistasEndIndex !== -1) {
+                lastEjerEnd = match.index + match[0].length + pistasEndIndex + 12; // 12 = length of '\end{pistas}'
+            }
+        } else {
+            lastEjerEnd = match.index + match[0].length;
+        }
     }
 
     return ejercicios;
