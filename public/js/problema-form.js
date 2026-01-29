@@ -129,6 +129,7 @@ function extraerEjercicios(contenido) {
         const dificultad = extraerComando(ultimosDatos, 'dificultad') || '';
         const fuente = extraerComando(ultimosDatos, 'fuente') || '';
         const curso = extraerComando(ultimosDatos, 'curso') || '';
+        const titulo = extraerComando(ultimosDatos, 'title') || '';
         const comentarios = extraerComando(ultimosDatos, 'comentarios') || '';
 
         // Extraer enunciado
@@ -153,6 +154,7 @@ function extraerEjercicios(contenido) {
             dificultad: dificultad,
             fuente: fuente,
             curso: curso,
+            titulo: titulo,
             comentarios: comentarios,
             enunciado: enunciado,
             pistas: pistas,
@@ -192,7 +194,12 @@ function rellenarFormulario(ejercicio) {
     if (ejercicio.fuente) {
         document.getElementById('source').value = ejercicio.fuente;
     }
-    
+
+    // Título
+    if (ejercicio.titulo) {
+        document.getElementById('title').value = ejercicio.titulo;
+    }
+
     // Enunciado
     if (ejercicio.enunciado) {
         document.getElementById('problem_tex').value = ejercicio.enunciado;
@@ -329,8 +336,8 @@ async function importarMultiplesEjercicios(ejercicios) {
             if (schoolYearIndex) {
                 formData.append('school_year', schoolYearIndex);
             }
-            
-            formData.append('title', ''); // Título vacío por defecto
+
+            formData.append('title', ejercicio.titulo ? ejercicio.titulo.trim() : '');
             formData.append('problem_tex', ejercicio.enunciado.trim());
             formData.append('hints', ejercicio.pistas ? ejercicio.pistas.trim() : '');
             formData.append('solution_tex', ejercicio.solucion ? ejercicio.solucion.trim() : '');
