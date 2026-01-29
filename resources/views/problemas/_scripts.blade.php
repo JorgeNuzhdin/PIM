@@ -444,10 +444,9 @@ async function importarMultiplesEjercicios(ejercicios) {
     }
     
     alert(mensaje);
-    
-    if (exitosos > 0) {
-        window.location.href = '{{ route("problemas.index") }}';
-    }
+
+    // No redirigir automáticamente - dejar al usuario en la página de creación
+    // para que pueda seguir importando o creando más problemas
 }
 
 // Función para calcular distancia Levenshtein
