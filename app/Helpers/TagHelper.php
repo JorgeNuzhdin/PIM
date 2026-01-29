@@ -89,8 +89,8 @@ class TagHelper
         static $cachedTags = null;
 
         if ($cachedTags === null) {
-            // Obtener tags de pim_problem_tags (uso real)
-            $problemTags = DB::table('pim_problem_tags')
+            // Obtener tags de problemas_tags (uso real)
+            $problemTags = DB::table('problemas_tags')
                 ->distinct()
                 ->pluck('tag')
                 ->toArray();

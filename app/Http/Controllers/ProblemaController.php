@@ -78,7 +78,7 @@ class ProblemaController extends Controller
                     foreach ($normalizedTags as $tagTrimmed) {
                         if (!empty($tagTrimmed)) {
                             
-                            // 1. Guardar en pim_problem_tags (relación problema-tag)
+                            // 1. Guardar en problemas_tags (relación problema-tag)
                             ProblemaTag::create([
                                 'problem_id' => $problema->id,
                                 'tag' => $tagTrimmed,
@@ -217,7 +217,7 @@ class ProblemaController extends Controller
                         $normalizedTags = TagHelper::normalizeArray($request->tags);
                         foreach ($normalizedTags as $tagTrimmed) {
                             if (!empty($tagTrimmed)) {
-                                // 1. Guardar en pim_problem_tags (relación problema-tag)
+                                // 1. Guardar en problemas_tags (relación problema-tag)
                                 ProblemaTag::create([
                                     'problem_id' => $problema->id,
                                     'tag' => $tagTrimmed,
