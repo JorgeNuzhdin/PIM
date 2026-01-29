@@ -180,11 +180,32 @@ function extraerEjercicios(contenido) {
     return ejercicios;
 }
 
-// Extraer valor de un comando LaTeX
+// Extraer valor de un comando LaTeX (maneja llaves anidadas)
 function extraerComando(texto, comando) {
-    const regex = new RegExp(`\\\\${comando}\\{([^}]*?)\\}`, 'i');
+    const regex = new RegExp(`\\\\${comando}\\{`, 'i');
     const match = texto.match(regex);
-    return match ? match[1].trim() : '';
+
+    if (!match) return '';
+
+    const startIndex = match.index + match[0].length;
+    let braceCount = 1;
+    let endIndex = startIndex;
+
+    // Contar llaves para encontrar la llave de cierre correspondiente
+    while (endIndex < texto.length && braceCount > 0) {
+        if (texto[endIndex] === '{') {
+            braceCount++;
+        } else if (texto[endIndex] === '}') {
+            braceCount--;
+        }
+        endIndex++;
+    }
+
+    if (braceCount === 0) {
+        return texto.substring(startIndex, endIndex - 1).trim();
+    }
+
+    return '';
 }
 
 // Rellenar formulario con datos de un ejercicio

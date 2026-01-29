@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Test Extracción de Ejercicios</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .ejercicio { border: 2px solid #333; margin: 20px 0; padding: 15px; background: #f5f5f5; }
+        .campo { margin: 5px 0; }
+        .label { font-weight: bold; color: #0066cc; }
+        .value { color: #006600; white-space: pre-wrap; }
+        textarea { width: 100%; height: 300px; font-family: monospace; }
+        button { padding: 10px 20px; font-size: 16px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Test de Extracción de Ejercicios</h1>
+    <p>Pega el contenido de tu archivo .tex aquí:</p>
+    <textarea id="texContent"></textarea>
+    <br>
+    <button onclick="testExtraer()">Extraer Ejercicios</button>
+
+    <div id="resultado"></div>
+
+    <script>
+// Extraer ejercicios del contenido .tex
+function extraerEjercicios(contenido) {
+    const ejercicios = [];
+
+    // Buscar todo entre \begin{document} y \end{document}
+    const docMatch = contenido.match(/\\begin\{document\}([\s\S]*?)\\end\{document\}/);
+    if (!docMatch) return ejercicios;
+
+    const documento = docMatch[1];
+
+    // Buscar todos los bloques de ejercicios
+    const regexEjer = /\\begin\{ejer\}([\s\S]*?)\\end\{ejer\}/g;
+    let match;
+    let lastEjerEnd = 0;
+
+    while ((match = regexEjer.exec(documento)) !== null) {
+        // Buscar metadatos SOLO entre el ejercicio anterior y el actual
+        const bloqueMetadatos = documento.substring(lastEjerEnd, match.index);
+
+        const temas = extraerComando(bloqueMetadatos, 'temas') || '';
+        const dificultad = extraerComando(bloqueMetadatos, 'dificultad') || '';
+        const fuente = extraerComando(bloqueMetadatos, 'fuente') || '';
+        const curso = extraerComando(bloqueMetadatos, 'curso') || '';
+        const titulo = extraerComando(bloqueMetadatos, 'title') || '';
+        const comentarios = extraerComando(bloqueMetadatos, 'comentarios') || '';
+
+        // Extraer enunciado
+        const enunciado = match[1].trim();
+
+        // Determinar el final del bloque del ejercicio actual
+        // (desde el final de \end{ejer} hasta el siguiente \begin{ejer} o final del documento)
+        const despuesEjer = documento.substring(match.index + match[0].length);
+        const siguienteEjerMatch = despuesEjer.match(/\\begin\{ejer\}/);
+        const finBloque = siguienteEjerMatch ? despuesEjer.substring(0, siguienteEjerMatch.index) : despuesEjer;
+
+        // Buscar pistas en el bloque limitado
+        const pistasMatch = finBloque.match(/\\begin\{pistas\}([\s\S]*?)\\end\{pistas\}/);
+        const pistas = pistasMatch ? pistasMatch[1].trim() : '';
+
+        // Buscar solución en el bloque limitado
+        const solucionMatch = finBloque.match(/\\begin\{proof\}(?:\[.*?\])?([\s\S]*?)\\end\{proof\}/);
+        const solucion = solucionMatch ? solucionMatch[1].trim() : '';
+
+        ejercicios.push({
+            temas: temas,
+            dificultad: dificultad,
+            fuente: fuente,
+            curso: curso,
+            titulo: titulo,
+            comentarios: comentarios,
+            enunciado: enunciado,
+            pistas: pistas,
+            solucion: solucion,
+            _debug: {
+                bloqueMetadatos: bloqueMetadatos,
+                lastEjerEnd: lastEjerEnd,
+                matchIndex: match.index
+            }
+        });
+
+        // Actualizar lastEjerEnd al final de \end{proof} (o \end{pistas} si no hay proof)
+        // para que el siguiente ejercicio empiece después del ejercicio completo
+        if (solucionMatch) {
+            const proofEndIndex = finBloque.indexOf('\\end{proof}', solucionMatch.index);
+            if (proofEndIndex !== -1) {
+                lastEjerEnd = match.index + match[0].length + proofEndIndex + 11; // 11 = length of '\end{proof}'
+            }
+        } else if (pistasMatch) {
+            const pistasEndIndex = finBloque.indexOf('\\end{pistas}', pistasMatch.index);
+            if (pistasEndIndex !== -1) {
+                lastEjerEnd = match.index + match[0].length + pistasEndIndex + 12; // 12 = length of '\end{pistas}'
+            }
+        } else {
+            lastEjerEnd = match.index + match[0].length;
+        }
+    }
+
+    return ejercicios;
+}
+
+// Extraer valor de un comando LaTeX (maneja llaves anidadas)
+function extraerComando(texto, comando) {
+    const regex = new RegExp(`\\\\${comando}\\{`, 'i');
+    const match = texto.match(regex);
+
+    if (!match) return '';
+
+    const startIndex = match.index + match[0].length;
+    let braceCount = 1;
+    let endIndex = startIndex;
+
+    // Contar llaves para encontrar la llave de cierre correspondiente
+    while (endIndex < texto.length && braceCount > 0) {
+        if (texto[endIndex] === '{') {
+            braceCount++;
+        } else if (texto[endIndex] === '}') {
+            braceCount--;
+        }
+        endIndex++;
+    }
+
+    if (braceCount === 0) {
+        return texto.substring(startIndex, endIndex - 1).trim();
+    }
+
+    return '';
+}
+
+function testExtraer() {
+    const contenido = document.getElementById('texContent').value;
+    const ejercicios = extraerEjercicios(contenido);
+
+    let html = '<h2>Resultados (' + ejercicios.length + ' ejercicios encontrados):</h2>';
+
+    ejercicios.forEach((ej, i) => {
+        html += '<div class="ejercicio">';
+        html += '<h3>Ejercicio ' + (i + 1) + '</h3>';
+        html += '<div class="campo"><span class="label">Título:</span> <span class="value">' + (ej.titulo || '(vacío)') + '</span></div>';
+        html += '<div class="campo"><span class="label">Temas:</span> <span class="value">' + (ej.temas || '(vacío)') + '</span></div>';
+        html += '<div class="campo"><span class="label">Dificultad:</span> <span class="value">' + (ej.dificultad || '(vacío)') + '</span></div>';
+        html += '<div class="campo"><span class="label">Fuente:</span> <span class="value">' + (ej.fuente || '(vacío)') + '</span></div>';
+        html += '<div class="campo"><span class="label">Curso:</span> <span class="value">' + (ej.curso || '(vacío)') + '</span></div>';
+        html += '<div class="campo"><span class="label">Comentarios:</span> <span class="value">' + (ej.comentarios || '(vacío)') + '</span></div>';
+        html += '<div class="campo"><span class="label">Enunciado:</span> <span class="value">' + ej.enunciado.substring(0, 100) + '...</span></div>';
+        html += '<div class="campo"><span class="label">Pistas:</span> <span class="value">' + (ej.pistas || '(vacío)') + '</span></div>';
+        html += '<div class="campo"><span class="label">Solución:</span> <span class="value">' + (ej.solucion ? ej.solucion.substring(0, 100) + '...' : '(vacío)') + '</span></div>';
+        html += '<hr>';
+        html += '<details><summary>DEBUG: Ver bloque de metadatos</summary><pre>' + ej._debug.bloqueMetadatos + '</pre></details>';
+        html += '</div>';
+    });
+
+    document.getElementById('resultado').innerHTML = html;
+}
+    </script>
+</body>
+</html>
