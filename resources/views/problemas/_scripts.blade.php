@@ -1,4 +1,5 @@
 <script>
+console.log('_scripts.blade.php cargado - versión con soporte de título y llaves anidadas');
 // Vista previa LaTeX en tiempo real
 let problemPreviewTimeout;
 let solutionPreviewTimeout;
@@ -115,127 +116,97 @@ function extraerEjercicios(contenido) {
 
     const documento = docMatch[1];
 
-    // Extraer metadatos globales (fuera de ejercicios)
-    const temas = extraerComando(documento, 'temas');
-    const fuente = extraerComando(documento, 'fuente');
-
-    // Buscar todos los bloques de ejercicios con \begin{ejer}...\end{ejer}
+    // Buscar todos los bloques de ejercicios
     const regexEjer = /\\begin\{ejer\}([\s\S]*?)\\end\{ejer\}/g;
     let match;
+    let lastEjerEnd = 0;
 
     while ((match = regexEjer.exec(documento)) !== null) {
-        const bloqueCompleto = documento.substring(match.index);
+        // Buscar metadatos SOLO entre el ejercicio anterior y el actual
+        const bloqueMetadatos = documento.substring(lastEjerEnd, match.index);
 
-        // Buscar metadatos antes del ejercicio
-        const antesEjer = documento.substring(0, match.index);
-        const ultimosDatos = antesEjer.substring(Math.max(0, antesEjer.length - 500));
-
-        const dificultad = extraerComando(ultimosDatos, 'dificultad') || '';
-        const curso = extraerComando(ultimosDatos, 'curso') || '';
-        const comentarios = extraerComando(ultimosDatos, 'comentarios') || '';
+        const temas = extraerComando(bloqueMetadatos, 'temas') || '';
+        const dificultad = extraerComando(bloqueMetadatos, 'dificultad') || '';
+        const fuente = extraerComando(bloqueMetadatos, 'fuente') || '';
+        const curso = extraerComando(bloqueMetadatos, 'curso') || '';
+        const titulo = extraerComando(bloqueMetadatos, 'title') || '';
+        const comentarios = extraerComando(bloqueMetadatos, 'comentarios') || '';
 
         // Extraer enunciado
         const enunciado = match[1].trim();
 
-        // Buscar pistas después del ejercicio: \begin{pistas}...\end{pistas} o \pistas{...}
-        let pistas = '';
-        const pistasEnvMatch = bloqueCompleto.match(/\\begin\{pistas\}([\s\S]*?)\\end\{pistas\}/);
-        if (pistasEnvMatch) {
-            pistas = pistasEnvMatch[1].trim();
-        } else {
-            const pistasCmdMatch = bloqueCompleto.match(/\\pistas\{([\s\S]*?)\}(?=\s*(?:\\begin|\\solution|\\end|$|\n))/);
-            if (pistasCmdMatch) {
-                pistas = pistasCmdMatch[1].trim();
-            }
-        }
+        // Determinar el final del bloque del ejercicio actual
+        // (desde el final de \end{ejer} hasta el siguiente \begin{ejer} o final del documento)
+        const despuesEjer = documento.substring(match.index + match[0].length);
+        const siguienteEjerMatch = despuesEjer.match(/\\begin\{ejer\}/);
+        const finBloque = siguienteEjerMatch ? despuesEjer.substring(0, siguienteEjerMatch.index) : despuesEjer;
 
-        // Buscar solución: \begin{proof}...\end{proof} o \solution{...}
-        let solucion = '';
-        const solucionProofMatch = bloqueCompleto.match(/\\begin\{proof\}(?:\[.*?\])?([\s\S]*?)\\end\{proof\}/);
-        if (solucionProofMatch) {
-            solucion = solucionProofMatch[1].trim();
-        } else {
-            const solucionCmdMatch = bloqueCompleto.match(/\\solution\{([\s\S]*?)\}(?=\s*(?:\\|$|\n))/);
-            if (solucionCmdMatch) {
-                solucion = solucionCmdMatch[1].trim();
-            }
-        }
+        // Buscar pistas en el bloque limitado
+        const pistasMatch = finBloque.match(/\\begin\{pistas\}([\s\S]*?)\\end\{pistas\}/);
+        const pistas = pistasMatch ? pistasMatch[1].trim() : '';
+
+        // Buscar solución en el bloque limitado
+        const solucionMatch = finBloque.match(/\\begin\{proof\}(?:\[.*?\])?([\s\S]*?)\\end\{proof\}/);
+        const solucion = solucionMatch ? solucionMatch[1].trim() : '';
 
         ejercicios.push({
             temas: temas,
             dificultad: dificultad,
             fuente: fuente,
             curso: curso,
+            titulo: titulo,
             comentarios: comentarios,
             enunciado: enunciado,
             pistas: pistas,
             solucion: solucion
         });
-    }
 
-    // Buscar también ejercicios con \exercise{...}
-    const regexExercise = /\\exercise\{([\s\S]*?)\}(?=\s*(?:\\solution|\\pistas|\\begin|$|\n\n))/g;
-    let exerciseMatch;
-
-    while ((exerciseMatch = regexExercise.exec(documento)) !== null) {
-        const posicionExercise = exerciseMatch.index;
-        const bloqueCompleto = documento.substring(posicionExercise);
-
-        // Buscar metadatos antes del ejercicio
-        const antesExercise = documento.substring(0, posicionExercise);
-        const ultimosDatos = antesExercise.substring(Math.max(0, antesExercise.length - 500));
-
-        const dificultad = extraerComando(ultimosDatos, 'dificultad') || '';
-        const curso = extraerComando(ultimosDatos, 'curso') || '';
-        const comentarios = extraerComando(ultimosDatos, 'comentarios') || '';
-
-        // Extraer enunciado
-        const enunciado = exerciseMatch[1].trim();
-
-        // Buscar pistas después del ejercicio: \begin{pistas}...\end{pistas} o \pistas{...}
-        let pistas = '';
-        const pistasEnvMatch = bloqueCompleto.match(/\\begin\{pistas\}([\s\S]*?)\\end\{pistas\}/);
-        if (pistasEnvMatch) {
-            pistas = pistasEnvMatch[1].trim();
-        } else {
-            const pistasCmdMatch = bloqueCompleto.match(/\\pistas\{([\s\S]*?)\}(?=\s*(?:\\solution|\\exercise|\\begin|$|\n\n))/);
-            if (pistasCmdMatch) {
-                pistas = pistasCmdMatch[1].trim();
+        // Actualizar lastEjerEnd al final de \end{proof} (o \end{pistas} si no hay proof)
+        // para que el siguiente ejercicio empiece después del ejercicio completo
+        if (solucionMatch) {
+            const proofEndIndex = finBloque.indexOf('\\end{proof}', solucionMatch.index);
+            if (proofEndIndex !== -1) {
+                lastEjerEnd = match.index + match[0].length + proofEndIndex + 11; // 11 = length of '\end{proof}'
             }
-        }
-
-        // Buscar solución: \solution{...} o \begin{proof}...\end{proof}
-        let solucion = '';
-        const solucionCmdMatch = bloqueCompleto.match(/\\solution\{([\s\S]*?)\}(?=\s*(?:\\exercise|\\begin|$|\n\n))/);
-        if (solucionCmdMatch) {
-            solucion = solucionCmdMatch[1].trim();
-        } else {
-            const solucionProofMatch = bloqueCompleto.match(/\\begin\{proof\}(?:\[.*?\])?([\s\S]*?)\\end\{proof\}/);
-            if (solucionProofMatch) {
-                solucion = solucionProofMatch[1].trim();
+        } else if (pistasMatch) {
+            const pistasEndIndex = finBloque.indexOf('\\end{pistas}', pistasMatch.index);
+            if (pistasEndIndex !== -1) {
+                lastEjerEnd = match.index + match[0].length + pistasEndIndex + 12; // 12 = length of '\end{pistas}'
             }
+        } else {
+            lastEjerEnd = match.index + match[0].length;
         }
-
-        ejercicios.push({
-            temas: temas,
-            dificultad: dificultad,
-            fuente: fuente,
-            curso: curso,
-            comentarios: comentarios,
-            enunciado: enunciado,
-            pistas: pistas,
-            solucion: solucion
-        });
     }
 
     return ejercicios;
 }
 
-// Extraer valor de un comando LaTeX
+// Extraer valor de un comando LaTeX (maneja llaves anidadas)
 function extraerComando(texto, comando) {
-    const regex = new RegExp(`\\\\${comando}\\{([^}]*?)\\}`, 'i');
+    const regex = new RegExp(`\\\\${comando}\\{`, 'i');
     const match = texto.match(regex);
-    return match ? match[1].trim() : '';
+
+    if (!match) return '';
+
+    const startIndex = match.index + match[0].length;
+    let braceCount = 1;
+    let endIndex = startIndex;
+
+    // Contar llaves para encontrar la llave de cierre correspondiente
+    while (endIndex < texto.length && braceCount > 0) {
+        if (texto[endIndex] === '{') {
+            braceCount++;
+        } else if (texto[endIndex] === '}') {
+            braceCount--;
+        }
+        endIndex++;
+    }
+
+    if (braceCount === 0) {
+        return texto.substring(startIndex, endIndex - 1).trim();
+    }
+
+    return '';
 }
 
 // Rellenar formulario con datos de un ejercicio
@@ -260,7 +231,12 @@ function rellenarFormulario(ejercicio) {
     if (ejercicio.fuente) {
         document.getElementById('source').value = ejercicio.fuente;
     }
-    
+
+    // Título
+    if (ejercicio.titulo) {
+        document.getElementById('title').value = ejercicio.titulo;
+    }
+
     // Enunciado
     if (ejercicio.enunciado) {
         document.getElementById('problem_tex').value = ejercicio.enunciado;
@@ -291,20 +267,20 @@ function rellenarFormulario(ejercicio) {
 // Convertir nombre de curso a índice
 function convertirCursoAIndice(curso) {
     const cursos = {
-        '1 Primaria': 1, '1º Primaria': 1,
-        '2 Primaria': 2, '2º Primaria': 2,
-        '3 Primaria': 3, '3º Primaria': 3,
-        '4 Primaria': 4, '4º Primaria': 4,
-        '5 Primaria': 5, '5º Primaria': 5,
-        '6 Primaria': 6, '6º Primaria': 6,
-        '1 ESO': 7, '1º ESO': 7,
-        '2 ESO': 8, '2º ESO': 8,
-        '3 ESO': 9, '3º ESO': 9,
-        '4 ESO': 10, '4º ESO': 10,
-        '1 Bachillerato': 11, '1º Bachillerato': 11, '1 BACH': 11, '1º BACH': 11,
-        '2 Bachillerato': 12, '2º Bachillerato': 12, '2 BACH': 12, '2º BACH': 12
+        '1 Primaria': 1, '1º Primaria': 1, '1Primaria': 1, '1ºPrimaria': 1,
+        '2 Primaria': 2, '2º Primaria': 2, '2Primaria': 2, '2ºPrimaria': 2,
+        '3 Primaria': 3, '3º Primaria': 3, '3Primaria': 3, '3ºPrimaria': 3,
+        '4 Primaria': 4, '4º Primaria': 4, '4Primaria': 4, '4ºPrimaria': 4,
+        '5 Primaria': 5, '5º Primaria': 5, '5Primaria': 5, '5ºPrimaria': 5,
+        '6 Primaria': 6, '6º Primaria': 6, '6Primaria': 6, '6ºPrimaria': 6,
+        '1 ESO': 7, '1º ESO': 7, '1ESO': 7, '1ºESO': 7,
+        '2 ESO': 8, '2º ESO': 8, '2ESO': 8, '2ºESO': 8,
+        '3 ESO': 9, '3º ESO': 9, '3ESO': 9, '3ºESO': 9,
+        '4 ESO': 10, '4º ESO': 10, '4ESO': 10, '4ºESO': 10,
+        '1 Bachillerato': 11, '1º Bachillerato': 11, '1 BACH': 11, '1º BACH': 11, '1Bachillerato': 11, '1ºBachillerato': 11, '1BACH': 11, '1ºBACH': 11,
+        '2 Bachillerato': 12, '2º Bachillerato': 12, '2 BACH': 12, '2º BACH': 12, '2Bachillerato': 12, '2ºBachillerato': 12, '2BACH': 12, '2ºBACH': 12
     };
-    
+
     return cursos[curso] || null;
 }
 
@@ -398,7 +374,7 @@ async function importarMultiplesEjercicios(ejercicios) {
                 formData.append('school_year', schoolYearIndex);
             }
             
-            formData.append('title', ''); // Título vacío por defecto
+            formData.append('title', ejercicio.titulo ? ejercicio.titulo.trim() : '');
             formData.append('problem_tex', ejercicio.enunciado.trim());
             formData.append('hints', ejercicio.pistas ? ejercicio.pistas.trim() : '');
             formData.append('solution_tex', ejercicio.solucion ? ejercicio.solucion.trim() : '');
@@ -414,8 +390,11 @@ async function importarMultiplesEjercicios(ejercicios) {
             }
             
             console.log(`Enviando ejercicio ${i + 1}:`, {
+                titulo: ejercicio.titulo || '(vacío)',
                 difficulty: ejercicio.dificultad,
                 school_year: schoolYearIndex,
+                fuente: ejercicio.fuente || '(vacío)',
+                pistas: ejercicio.pistas ? ejercicio.pistas.substring(0, 30) + '...' : '(vacío)',
                 problem_tex: ejercicio.enunciado.substring(0, 50) + '...',
                 solution_tex: ejercicio.solucion ? ejercicio.solucion.substring(0, 50) + '...' : 'sin solución'
             });
