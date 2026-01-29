@@ -220,20 +220,20 @@ function rellenarFormulario(ejercicio) {
 // Convertir nombre de curso a índice
 function convertirCursoAIndice(curso) {
     const cursos = {
-        '1 Primaria': 1, '1º Primaria': 1,
-        '2 Primaria': 2, '2º Primaria': 2,
-        '3 Primaria': 3, '3º Primaria': 3,
-        '4 Primaria': 4, '4º Primaria': 4,
-        '5 Primaria': 5, '5º Primaria': 5,
-        '6 Primaria': 6, '6º Primaria': 6,
-        '1 ESO': 7, '1º ESO': 7,
-        '2 ESO': 8, '2º ESO': 8,
-        '3 ESO': 9, '3º ESO': 9,
-        '4 ESO': 10, '4º ESO': 10,
-        '1 Bachillerato': 11, '1º Bachillerato': 11, '1 BACH': 11, '1º BACH': 11,
-        '2 Bachillerato': 12, '2º Bachillerato': 12, '2 BACH': 12, '2º BACH': 12
+        '1 Primaria': 1, '1º Primaria': 1, '1Primaria': 1, '1ºPrimaria': 1,
+        '2 Primaria': 2, '2º Primaria': 2, '2Primaria': 2, '2ºPrimaria': 2,
+        '3 Primaria': 3, '3º Primaria': 3, '3Primaria': 3, '3ºPrimaria': 3,
+        '4 Primaria': 4, '4º Primaria': 4, '4Primaria': 4, '4ºPrimaria': 4,
+        '5 Primaria': 5, '5º Primaria': 5, '5Primaria': 5, '5ºPrimaria': 5,
+        '6 Primaria': 6, '6º Primaria': 6, '6Primaria': 6, '6ºPrimaria': 6,
+        '1 ESO': 7, '1º ESO': 7, '1ESO': 7, '1ºESO': 7,
+        '2 ESO': 8, '2º ESO': 8, '2ESO': 8, '2ºESO': 8,
+        '3 ESO': 9, '3º ESO': 9, '3ESO': 9, '3ºESO': 9,
+        '4 ESO': 10, '4º ESO': 10, '4ESO': 10, '4ºESO': 10,
+        '1 Bachillerato': 11, '1º Bachillerato': 11, '1 BACH': 11, '1º BACH': 11, '1Bachillerato': 11, '1ºBachillerato': 11, '1BACH': 11, '1ºBACH': 11,
+        '2 Bachillerato': 12, '2º Bachillerato': 12, '2 BACH': 12, '2º BACH': 12, '2Bachillerato': 12, '2ºBachillerato': 12, '2BACH': 12, '2ºBACH': 12
     };
-    
+
     return cursos[curso] || null;
 }
 
