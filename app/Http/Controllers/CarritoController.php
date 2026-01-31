@@ -68,9 +68,13 @@ class CarritoController extends Controller
     
     public function count()
     {
-        return response()->json(['count' => $this->getCount()]);
+        $items = Carrito::where('user_id', Auth::id())->get();
+        return response()->json([
+            'count' => $items->count(),
+            'problema_ids' => $items->pluck('problema_id')->toArray()
+        ]);
     }
-    
+
     private function getCount()
     {
         return Carrito::where('user_id', Auth::id())->count();

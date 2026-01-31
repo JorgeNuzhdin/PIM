@@ -957,9 +957,18 @@ document.addEventListener('DOMContentLoaded', function() {
     fetch('{{ route("carrito.count") }}')
         .then(response => response.json())
         .then(data => {
-            // Aquí podrías cargar qué problemas específicos están en el carrito
-            // Por ahora dejamos la función toggle para manejarlo
-        });
+            // Marcar los botones de problemas que están en el carrito
+            if (data.problema_ids && data.problema_ids.length > 0) {
+                data.problema_ids.forEach(problemaId => {
+                    const button = document.querySelector(`button.btn-carrito[data-problema-id="${problemaId}"]`);
+                    if (button) {
+                        button.classList.add('en-carrito');
+                        button.title = 'Quitar del carrito';
+                    }
+                });
+            }
+        })
+        .catch(error => console.error('Error al cargar estado del carrito:', error));
     @endauth
 });
 
