@@ -96,9 +96,14 @@ class CarritoController extends Controller
     foreach ($items as $index => $item) {
         $problema = $item->problema;
 
-        // Agregar paquetes
+        // Agregar paquetes y comandos
         if ($problema->packages) {
-            $pkgs = explode(',', $problema->packages);
+            // Decodificar escapes Unicode primero
+            $packagesText = preg_replace('/u([0-9a-fA-F]{4})/', '', $problema->packages);
+
+            // Dividir por saltos de línea o comas
+            $pkgs = preg_split('/[\n,]+/', $packagesText);
+
             foreach ($pkgs as $pkg) {
                 $pkg = trim($pkg);
                 if ($pkg && !in_array($pkg, $packages)) {
@@ -161,11 +166,24 @@ private function generarPreambulo($packages)
     $preambulo .= "\\usepackage{xcolor}\n";
     $preambulo .= "\\usepackage{tikz}\n\n";
 
-    // Paquetes adicionales
+    // Paquetes y comandos adicionales
     if (!empty($packages)) {
         $preambulo .= "% Paquetes adicionales\n";
         foreach ($packages as $pkg) {
-            $preambulo .= "\\usepackage{" . $pkg . "}\n";
+            // Decodificar escapes Unicode (u000du000a = \r\n)
+            $pkg = preg_replace('/u([0-9a-fA-F]{4})/', '', $pkg);
+            $pkg = trim($pkg);
+
+            if (empty($pkg)) continue;
+
+            // Si ya es un comando LaTeX completo, añadirlo directamente
+            if (preg_match('/^\\\\(usepackage|newcommand|renewcommand|DeclareMathOperator)/', $pkg)) {
+                $preambulo .= $pkg . "\n";
+            }
+            // Si es solo un nombre de paquete, envolverlo en \usepackage
+            else {
+                $preambulo .= "\\usepackage{" . $pkg . "}\n";
+            }
         }
         $preambulo .= "\n";
     }
