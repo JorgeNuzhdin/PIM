@@ -156,85 +156,193 @@ class CarritoController extends Controller
 
 private function generarPreambulo($packages)
 {
-    $preambulo = "\\documentclass[a4paper,12pt]{article}\n\n";
-    $preambulo .= "% Paquetes básicos\n";
-    $preambulo .= "\\usepackage[utf8]{inputenc}\n";
-    $preambulo .= "\\usepackage[spanish]{babel}\n";
-    $preambulo .= "\\usepackage{amsmath,amssymb,amsthm}\n";
-    $preambulo .= "\\usepackage{graphicx}\n";
-    $preambulo .= "\\usepackage{enumerate}\n";
-    $preambulo .= "\\usepackage{xcolor}\n";
-    $preambulo .= "\\usepackage{tikz}\n\n";
+    $preambulo = <<<'LATEX'
+\documentclass[12pt,a4paper]{article}
+\usepackage{amsmath}
 
-    // Paquetes y comandos adicionales
-    if (!empty($packages)) {
-        $preambulo .= "% Paquetes adicionales\n";
-        foreach ($packages as $pkg) {
-            // Decodificar escapes Unicode (u000du000a = \r\n)
-            $pkg = preg_replace('/u([0-9a-fA-F]{4})/', '', $pkg);
-            $pkg = trim($pkg);
+%%%%%%%%%%%%%%%%%%%%%
+\newif\ifshowsolutions
+\newif\ifshowinfo
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%% Setting %%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\showsolutionstrue   % para profesores
+ \showsolutionsfalse    % para alumnos
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\showinfotrue  % para ver grupos y títulos en versión generica
+%\showinfofalse % para genérica para publicar
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 0 for genérica
+% 1 for Neptuno
+% 2 for Marte
+% 3 for Urano
+% 4 for Júpiter
+% 5 for Venus
+% 6 for Mercurio
+\def\group{6}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\def\logo{logo2526pim.png}
+\def\title{Desigualdades}
+\def\dates{6, 13, 20 y 27 de febrero de  2026}
+\def\datefir{6 de febrero}
+\def\datesec{13 de febrero}
+\def\datethi{20 de febrero}
+\def\datefou{27 de febrero}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-            if (empty($pkg)) continue;
 
-            // Si ya es un comando LaTeX completo, añadirlo directamente
-            if (preg_match('/^\\\\(usepackage|newcommand|renewcommand|DeclareMathOperator)/', $pkg)) {
-                $preambulo .= $pkg . "\n";
-            }
-            // Si es solo un nombre de paquete, envolverlo en \usepackage
-            else {
-                $preambulo .= "\\usepackage{" . $pkg . "}\n";
-            }
-        }
-        $preambulo .= "\n";
-    }
+\usepackage[utf8]{inputenc}
+\usepackage{gensymb}
+\usepackage{subcaption}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{float}
+\usepackage{amsthm}
+\usepackage{graphicx,amssymb,latexsym,amsmath,verbatim, amsthm}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.15}
+\usepackage{mathrsfs}
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{math,angles,quotes}
+\usepackage{color}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{textcomp,gensymb}
+\usepackage{multicol}
+\usepackage{ifthen}
+\usepackage{gensymb}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{float}
+\usepackage{hyperref}
+\usetikzlibrary{positioning}
+\usepackage{mathtools}
+\usepackage{tcolorbox}
 
-    // Definir entornos básicos
-    $preambulo .= "% Definición de entornos\n";
-    $preambulo .= "\\newtheorem{ejer}{Problema}\n";
-    $preambulo .= "\\newenvironment{pistas}{\\textbf{Pistas:}\\begin{itemize}}{\\end{itemize}}\n";
-    $preambulo .= "\\renewcommand{\\proofname}{Solución}\n\n";
+%\usepackage{subcaption}
 
-    // Comandos para filtrado por grupo
-    $preambulo .= "% Comandos para filtrado por grupo\n";
-    $preambulo .= "\\newif\\ifpreamble\n\n";
+\usetikzlibrary{math,angles,quotes}
+\usepackage{tikz}
+\usepackage{circuitikz}
 
-    $preambulo .= "\\newcommand{\\exercise}[1]{\n";
-    $preambulo .= "\\ifpreamble{\\begin{ejer}#1\\end{ejer}}\\else{\n";
-    $preambulo .= "\\ifnum\\group=0{\n";
-    $preambulo .= "\\ifshowinfo{\\noindent\\color{blue}\\ifnep{N}\\fi\\ifmar{M}\\fi\\ifura{U}\\fi\\ifjup{J}\\fi\\ifven{V}\\fi\\ifmer{X}\\fi}\\fi\n";
-    $preambulo .= "\\begin{ejer}#1\\end{ejer}}\\fi\n";
-    $preambulo .= "\\ifnum\\group=1{\\ifnep{\\begin{ejer}#1\\end{ejer}}\\fi}\\fi\n";
-    $preambulo .= "\\ifnum\\group=2{\\ifmar{\\begin{ejer}#1\\end{ejer}}\\fi}\\fi\n";
-    $preambulo .= "\\ifnum\\group=3{\\ifura{\\begin{ejer}#1\\end{ejer}}\\fi}\\fi\n";
-    $preambulo .= "\\ifnum\\group=4{\\ifjup{\\begin{ejer}#1\\end{ejer}}\\fi}\\fi\n";
-    $preambulo .= "\\ifnum\\group=5{\\ifven{\\begin{ejer}#1\\end{ejer}}\\fi}\\fi\n";
-    $preambulo .= "\\ifnum\\group=6{\\ifmer{\\begin{ejer}#1\\end{ejer}}\\fi}\\fi\n";
-    $preambulo .= "}\\fi\n";
-    $preambulo .= "}\n\n";
+\DeclareMathOperator{\mcd}{mcd}
+\renewcommand{\min}{\textup{m\'in}\,}
+\usetikzlibrary{positioning}
+\usepackage{amsthm}
+\usepackage{subcaption}
+\usetikzlibrary{patterns}
+\usepackage{tikz-cd}
+\usepackage{float}
+\usepackage{tikz}
+\usepackage{mathtools}
+\usepackage{gensymb}
 
-    $preambulo .= "\\newcommand{\\solution}[1]{\n";
-    $preambulo .= "\\ifshowsolutions{\n";
-    $preambulo .= "\\ifpreamble{\\begin{proof}[Solución]#1\\end{proof}}\\else{\n";
-    $preambulo .= "\\ifnum\\group=0{\\begin{proof}[Solución]#1\\end{proof}}\\fi\n";
-    $preambulo .= "\\ifnum\\group=1{\\ifnep{{\\begin{proof}[Solución]#1\\end{proof}}}\\fi}\\fi\n";
-    $preambulo .= "\\ifnum\\group=2{\\ifmar{\\begin{proof}[Solución]#1\\end{proof}}\\fi}\\fi\n";
-    $preambulo .= "\\ifnum\\group=3{\\ifura{\\begin{proof}[Solución]#1\\end{proof}}\\fi}\\fi\n";
-    $preambulo .= "\\ifnum\\group=4{\\ifjup{\\begin{proof}[Solución]#1\\end{proof}}\\fi}\\fi\n";
-    $preambulo .= "\\ifnum\\group=5{\\ifven{\\begin{proof}[Solución]#1\\end{proof}}\\fi}\\fi\n";
-    $preambulo .= "\\ifnum\\group=6{\\ifmer{\\begin{proof}[Solución]#1\\end{proof}}\\fi}\\fi\n";
-    $preambulo .= "}\\fi\n";
-    $preambulo .= "}\\fi\n";
-    $preambulo .= "\\NN\\MM\\UU\\JJ\\VV\\XX}\n\n";
+\usepackage{graphicx,amssymb,latexsym,amsmath}
+%\renewcommand{\thepage}{}
+\renewcommand{\baselinestretch}{1}
+\setlength{\parindent}{2em} \setlength{\textwidth}{19cm}
+\setlength{\textheight}{25cm} \setlength{\topmargin}{-2cm}
+\setlength{\oddsidemargin}{-1.5cm}
 
-    $preambulo .= "\\newcommand{\\idtitulo}[1]{\n";
-    $preambulo .= "\\ifnum\\group=0 \\ifshowinfo \\noindent{\\color{red}#1\\\\}\\fi\\fi\n";
-    $preambulo .= "}\n\n";
+\usepackage{multirow}
+\usepackage{color}
+\usepackage{tikz}
+\usetikzlibrary{patterns}
+\usetikzlibrary{angles,quotes}
+\usepackage{array}
+\usetikzlibrary{arrows}
+\newcommand{\modd}[1]{\ (\mathrm{m\acute{o}d}\ #1)}
+\usepackage{tikz-cd}
+\usepackage{twemojis}
+%%%%%%%%%%%%%%%%%%%%%%%%%
+%\pagestyle{empty}
 
-    $preambulo .= "\\newcommand{\\pistas}[1]{\\textbf{Pistas:} #1}\n\n";
+\newcommand{\equis}[1]{	\draw[color=zzccqq,line width=2pt](#1)--	++(-3.5pt,3.5pt)-- ++(7pt,-7pt);\draw[color=zzccqq,line width=2pt](#1)--	++(3.5pt,3.5pt)-- ++(-7pt,-7pt);}
 
-    $preambulo .= "\\title{Problemas de Matemáticas}\n";
-    $preambulo .= "\\author{PIM}\n";
-    $preambulo .= "\\date{\\today}\n";
+\newcommand{\arr}{%
+	{\fontfamily{ptm}\selectfont @}%
+}
+\DeclareMathOperator{\cm}{cm}
+\newcommand{\ubrace}[2]{\underset{#1}{\underbrace{#2}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newtheorem{theorem}{Teorema}
+\theoremstyle{definition}
+\newtheorem*{definition}{Definición}
+\newtheorem{ejer}{Problema}
+\newtheorem*{ejem}{Ejemplo resuelto}
+\newtheorem*{eje}{Ejemplo}
+\newtheorem{defin} {Definición}
+
+
+\newif\ifnep
+\newcommand{\N}{\neptrue}
+\newcommand{\NN}{\nepfalse}
+\newif\ifmar
+\newcommand{\M}{\martrue}
+\newcommand{\MM}{\marfalse}
+\newif\ifura
+\newcommand{\U}{\uratrue}
+\newcommand{\UU}{\urafalse}
+\newif\ifjup
+\newcommand{\J}{\juptrue}
+\newcommand{\JJ}{\jupfalse}
+\newif\ifven
+\newcommand{\V}{\ventrue}
+\newcommand{\VV}{\venfalse}
+\newif\ifmer
+\newcommand{\X}{\mertrue}
+\newcommand{\XX}{\merfalse}
+
+
+\newif\ifpreamble
+
+\newcommand{\exercise}[1]{
+\ifpreamble{\begin{ejer}#1\end{ejer}}\else{
+\ifnum\group=0{
+\ifshowinfo{\noindent\color{blue}\ifnep{N}\fi\ifmar{M}\fi\ifura{U}\fi\ifjup{J}\fi\ifven{V}\fi\ifmer{X}\fi}\fi
+\begin{ejer}#1\end{ejer}}\fi
+\ifnum\group=1{\ifnep{\begin{ejer}#1\end{ejer}}\fi}\fi
+\ifnum\group=2{\ifmar{\begin{ejer}#1\end{ejer}}\fi}\fi
+\ifnum\group=3{\ifura{\begin{ejer}#1\end{ejer}}\fi}\fi
+\ifnum\group=4{\ifjup{\begin{ejer}#1\end{ejer}}\fi}\fi
+\ifnum\group=5{\ifven{\begin{ejer}#1\end{ejer}}\fi}\fi
+\ifnum\group=6{\ifmer{\begin{ejer}#1\end{ejer}}\fi}\fi
+}\fi
+}
+
+
+
+\newcommand{\solution}[1]{
+\ifshowsolutions{
+\ifpreamble{\begin{proof}[Solución]#1\end{proof}}\else{
+\ifnum\group=0{\begin{proof}[Solución]#1\end{proof}}\fi
+\ifnum\group=1{\ifnep{{\begin{proof}[Solución]#1\end{proof}}}\fi}\fi
+\ifnum\group=2{\ifmar{\begin{proof}[Solución]#1\end{proof}}\fi}\fi
+\ifnum\group=3{\ifura{\begin{proof}[Solución]#1\end{proof}}\fi}\fi
+\ifnum\group=4{\ifjup{\begin{proof}[Solución]#1\end{proof}}\fi}\fi
+\ifnum\group=5{\ifven{\begin{proof}[Solución]#1\end{proof}}\fi}\fi
+\ifnum\group=6{\ifmer{\begin{proof}[Solución]#1\end{proof}}\fi}\fi
+}\fi
+}\fi
+\NN\MM\UU\JJ\VV\XX}
+
+\newcommand{\idtitulo}[1]{
+\ifnum\group=0 \ifshowinfo \noindent{\color{red}#1\\}\fi\fi
+}
+
+
+\newcommand{\pistas}[1]{\textbf{Pistas:} #1}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+LATEX;
 
     return $preambulo;
 }
