@@ -170,11 +170,12 @@ private function generarPreambulo($packages)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%% Setting %%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%\showsolutionstrue   % para profesores
- \showsolutionsfalse    % para alumnos
+\showsolutionstrue   % para profesores
+% \showsolutionsfalse    % para alumnos
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \showinfotrue  % para ver grupos y títulos en versión generica
 %\showinfofalse % para genérica para publicar
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 0 for genérica
 % 1 for Neptuno
@@ -183,7 +184,9 @@ private function generarPreambulo($packages)
 % 4 for Júpiter
 % 5 for Venus
 % 6 for Mercurio
-\def\group{6}
+
+\def\group{0}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \def\logo{logo2526pim.png}
 \def\title{Desigualdades}
@@ -342,6 +345,7 @@ private function generarPreambulo($packages)
 
 
 \newcommand{\pistas}[1]{\textbf{Pistas:} #1}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
