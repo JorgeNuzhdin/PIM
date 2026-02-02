@@ -236,6 +236,18 @@
     white-space: nowrap;
 }
 
+/* Usado en hoja */
+.used-in-sheet-badge {
+    background: #fef5e7;
+    color: #d68910;
+    border: 1px solid #f9e79f;
+    padding: 0.25rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
 /* Tags */
 .problema-tags {
     display: flex;
@@ -787,6 +799,13 @@
                         @if($problema->school_year && in_array('year', $mostrarArray))
                             <span class="year-badge">
                                 📚 {{ $problema->school_year }}
+                            </span>
+                        @endif
+
+                        {{-- Usado en hoja --}}
+                        @if(isset($problemasUsados[$problema->id]))
+                            <span class="used-in-sheet-badge" title="Usado en hoja del año {{ $problemasUsados[$problema->id] }}">
+                                📄 {{ $problemasUsados[$problema->id] }}
                             </span>
                         @endif
                     </div>

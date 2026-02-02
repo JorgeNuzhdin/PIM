@@ -10,6 +10,7 @@ use App\Models\ProblemaTag;
 use Illuminate\Http\Request;
 use App\Helpers\SchoolYearHelper;
 use App\Helpers\SourceHelper;
+use App\Helpers\SheetHelper;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -400,7 +401,10 @@ class ProblemaController extends Controller
     // Opciones de visualización
     $mostrar = $request->get('mostrar', ['fuente', 'pistas', 'solucion', 'comentarios', 'year']);
 
-    return view('problemas.index', compact('problemas', 'temas', 'totalProblemas', 'problemasEncontrados', 'mostrar', 'schoolYears', 'sourceData', 'proponents'));
+    // Obtener problemas usados en hojas con sus años
+    $problemasUsados = SheetHelper::getProblemasUsadosConAnio();
+
+    return view('problemas.index', compact('problemas', 'temas', 'totalProblemas', 'problemasEncontrados', 'mostrar', 'schoolYears', 'sourceData', 'proponents', 'problemasUsados'));
 }
     
     // API para autocompletar topics
