@@ -66,16 +66,15 @@ class FixLatexController extends Controller
         try {
             \Log::info('=== Iniciando escaneo de LaTeX ===');
 
-            // Obtener problemas primero
+            // Obtener problemas primero (sin límite para escanear toda la BD)
             $problemas = DB::table('pim_problems')
                 ->where(function($query) {
                     $query->whereNotNull('problem_tex')
                           ->orWhereNotNull('solution_tex');
                 })
-                ->limit(100) // Limitar para pruebas
                 ->get();
 
-            \Log::info('Problemas encontrados: ' . count($problemas));
+            \Log::info('Total problemas a escanear: ' . count($problemas));
 
             $problemasConErrores = [];
             $ejemplos = [];
@@ -245,17 +244,26 @@ class FixLatexController extends Controller
 
         // Procesar solo los comandos más comunes para evitar regex complejo
         $comandos = ['frac', 'sqrt', 'sum', 'int', 'lim', 'sin', 'cos', 'tan', 'log', 'ln',
-                     'alpha', 'beta', 'gamma', 'delta', 'infty', 'leq', 'geq', 'cdot',
-                     'text', 'mathbb', 'mathbf', 'left', 'right', 'begin', 'end'];
+                     'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'infty', 'leq', 'geq', 'cdot',
+                     'text', 'mathbb', 'mathbf', 'left', 'right', 'begin', 'end', 'times', 'neq'];
 
         foreach ($comandos as $cmd) {
             try {
-                // Patrón: palabra sin barra seguida de { o (
-                $pattern = '/(?<!\\\\)\b' . preg_quote($cmd, '/') . '\s*([{(])/u';
-                $replaced = @preg_replace($pattern, '\\' . $cmd . '$1', $text);
+                // Buscar patrones como: "frac{" o "frac(" o " frac{" pero NO "\frac{"
+                // Usamos word boundary \b para asegurar que es una palabra completa
+                $pattern = '/([^\\\\])\\b(' . preg_quote($cmd, '/') . ')(\s*)([{(])/u';
+
+                // Reemplazar: mantener el carácter anterior, añadir \, mantener comando y delimitador
+                $replaced = @preg_replace($pattern, '$1\\\\$2$3$4', $text);
+
+                // También buscar al inicio de línea
+                $pattern2 = '/^(' . preg_quote($cmd, '/') . ')(\s*)([{(])/mu';
+                if ($replaced !== null) {
+                    $replaced = @preg_replace($pattern2, '\\\\$1$2$3', $replaced);
+                }
 
                 // Solo actualizar si no hubo error
-                if ($replaced !== null) {
+                if ($replaced !== null && $replaced !== $text) {
                     $text = $replaced;
                 }
             } catch (\Exception $e) {
