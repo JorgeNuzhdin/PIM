@@ -50,6 +50,11 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
     Route::patch('/users/{user}/rol', [AdminUserController::class, 'updateRol'])->name('users.updateRol');
+
+    // Reparar LaTeX
+    Route::get('/fix-latex', [App\Http\Controllers\FixLatexController::class, 'index'])->name('fix-latex');
+    Route::post('/fix-latex/scan', [App\Http\Controllers\FixLatexController::class, 'scan'])->name('fix-latex.scan');
+    Route::post('/fix-latex/fix', [App\Http\Controllers\FixLatexController::class, 'fix'])->name('fix-latex.fix');
 });
 
 // Rutas de Hojas de Problemas (PimSheets)
