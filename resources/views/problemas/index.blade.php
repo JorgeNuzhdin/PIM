@@ -854,7 +854,7 @@
 
                         {{-- Usado en hoja --}}
                         @if(isset($problemasUsados[$problema->id]))
-                            <span class="used-in-sheet-badge" title="Usado en hoja del año {{ $problemasUsados[$problema->id] }}">
+                            <span class="used-in-sheet-badge" title="Usado en una hoja del año {{ $problemasUsados[$problema->id] }}">
                                 📄 {{ $problemasUsados[$problema->id] }}
                             </span>
                         @endif
