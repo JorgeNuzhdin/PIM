@@ -109,8 +109,8 @@ class FixLatexController extends Controller
 
                         if ($original !== $corregido) {
                             $cambios['problem_tex'] = [
-                                'original' => $this->truncateText($original, 300),
-                                'corregido' => $this->truncateText($corregido, 300),
+                                'original' => $original,
+                                'corregido' => $corregido,
                             ];
                         }
                     }
@@ -122,8 +122,8 @@ class FixLatexController extends Controller
 
                         if ($original !== $corregido) {
                             $cambios['solution_tex'] = [
-                                'original' => $this->truncateText($original, 300),
-                                'corregido' => $this->truncateText($corregido, 300),
+                                'original' => $original,
+                                'corregido' => $corregido,
                             ];
                         }
                     }
@@ -299,7 +299,7 @@ class FixLatexController extends Controller
     }
 
     /**
-     * Reemplaza una cadena solo si NO está precedida por \
+     * Reemplaza una cadena solo si NO está precedida por \ ni por letras
      */
     private function replaceIfNotEscaped($text, $search, $replace)
     {
@@ -318,25 +318,21 @@ class FixLatexController extends Controller
                 // Comprobar si está escapada (tiene \ antes)
                 $isEscaped = ($i > 0 && $text[$i - 1] === '\\');
 
-                // Si no está al inicio y el carácter anterior no es espacio/inicio, verificar que sea límite de palabra
+                // Comprobar si está después de una letra (no queremos convertir "asqrt" en "a\sqrt")
+                $afterLetter = false;
                 if ($i > 0) {
                     $prevChar = $text[$i - 1];
-                    // Solo reemplazar si está al inicio o después de espacio, salto de línea, o caracteres especiales
-                    $isWordBoundary = in_array($prevChar, [' ', "\n", "\r", "\t", '{', '}', '(', ')', '[', ']', '$', '^', '_']);
-
-                    if (!$isWordBoundary || $isEscaped) {
-                        $result .= $text[$i];
-                        $i++;
-                        continue;
-                    }
+                    // Si el carácter previo es una letra a-z o A-Z, no reemplazar
+                    $afterLetter = (($prevChar >= 'a' && $prevChar <= 'z') || ($prevChar >= 'A' && $prevChar <= 'Z'));
                 }
 
-                if (!$isEscaped) {
-                    // No está escapado, reemplazar
+                // Solo reemplazar si NO está escapado y NO está después de una letra
+                if (!$isEscaped && !$afterLetter) {
+                    // No está escapado ni después de letra, reemplazar
                     $result .= $replace;
                     $i += $searchLen;
                 } else {
-                    // Está escapado, mantener como está
+                    // Está escapado o después de letra, mantener como está
                     $result .= $text[$i];
                     $i++;
                 }

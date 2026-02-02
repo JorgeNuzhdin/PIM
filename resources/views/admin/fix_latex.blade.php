@@ -274,9 +274,9 @@ async function escanear() {
                 for (const [campo, datos] of Object.entries(ejemplo.cambios)) {
                     ejemplosHtml += `<div class="code-label">Campo: ${campo}</div>`;
                     ejemplosHtml += `<div class="code-label">Original:</div>`;
-                    ejemplosHtml += `<div class="code-block">${escapeHtml(datos.original.substring(0, 300))}${datos.original.length > 300 ? '...' : ''}</div>`;
+                    ejemplosHtml += `<div class="code-block">${highlightDifferences(datos.original, datos.corregido, 'original')}</div>`;
                     ejemplosHtml += `<div class="code-label">Corregido:</div>`;
-                    ejemplosHtml += `<div class="code-block">${escapeHtml(datos.corregido.substring(0, 300))}${datos.corregido.length > 300 ? '...' : ''}</div>`;
+                    ejemplosHtml += `<div class="code-block">${highlightDifferences(datos.original, datos.corregido, 'corregido')}</div>`;
                 }
 
                 ejemplosHtml += `</div>`;
@@ -348,6 +348,60 @@ async function aplicarCambios() {
         loading.classList.remove('show');
         btnScan.disabled = false;
     }
+}
+
+function highlightDifferences(original, corregido, mode) {
+    // Función simple para resaltar diferencias carácter por carácter
+    let result = '';
+    const maxLen = Math.max(original.length, corregido.length);
+
+    if (mode === 'original') {
+        // Buscar partes que se eliminaron o cambiaron
+        let i = 0;
+        while (i < original.length) {
+            if (i < corregido.length && original[i] === corregido[i]) {
+                result += escapeHtml(original[i]);
+            } else {
+                // Encontrar el bloque de diferencia
+                let diff = '';
+                let j = i;
+                while (j < original.length && (j >= corregido.length || original[j] !== corregido[j])) {
+                    diff += original[j];
+                    j++;
+                    // Limitar el bloque de diferencia a algo razonable
+                    if (j - i > 50) break;
+                }
+                result += `<span style="background-color: #ffcccc; font-weight: bold;">${escapeHtml(diff)}</span>`;
+                i = j;
+                continue;
+            }
+            i++;
+        }
+    } else {
+        // mode === 'corregido' - Buscar partes que se añadieron o cambiaron
+        let i = 0;
+        while (i < corregido.length) {
+            if (i < original.length && original[i] === corregido[i]) {
+                result += escapeHtml(corregido[i]);
+            } else {
+                // Encontrar el bloque de diferencia
+                let diff = '';
+                let j = i;
+                while (j < corregido.length && (j >= original.length || original[j] !== corregido[j])) {
+                    diff += corregido[j];
+                    j++;
+                    // Limitar el bloque de diferencia a algo razonable
+                    if (j - i > 50) break;
+                }
+                result += `<span style="background-color: #ccffcc; font-weight: bold;">${escapeHtml(diff)}</span>`;
+                i = j;
+                continue;
+            }
+            i++;
+        }
+    }
+
+    return result;
 }
 
 function escapeHtml(text) {
