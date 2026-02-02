@@ -64,30 +64,31 @@ class FixLatexController extends Controller
         }
 
         try {
-            $pattern = $this->buildPattern();
-
+            // Obtener problemas primero
             $problemas = DB::table('pim_problems')
                 ->where(function($query) {
                     $query->whereNotNull('problem_tex')
                           ->orWhereNotNull('solution_tex');
                 })
+                ->limit(100) // Limitar para pruebas
                 ->get();
 
             $problemasConErrores = [];
             $ejemplos = [];
 
+            // Procesar cada comando LaTeX individualmente para evitar regex demasiado complejo
             foreach ($problemas as $problema) {
                 $cambios = [];
 
                 // Revisar problem_tex
                 if ($problema->problem_tex) {
                     $original = $problema->problem_tex;
-                    $corregido = $this->fixBackslashes($original, $pattern);
+                    $corregido = $this->fixBackslashesSimple($original);
 
                     if ($original !== $corregido) {
                         $cambios['problem_tex'] = [
-                            'original' => $original,
-                            'corregido' => $corregido,
+                            'original' => mb_substr($original, 0, 300),
+                            'corregido' => mb_substr($corregido, 0, 300),
                         ];
                     }
                 }
@@ -95,12 +96,12 @@ class FixLatexController extends Controller
                 // Revisar solution_tex
                 if ($problema->solution_tex) {
                     $original = $problema->solution_tex;
-                    $corregido = $this->fixBackslashes($original, $pattern);
+                    $corregido = $this->fixBackslashesSimple($original);
 
                     if ($original !== $corregido) {
                         $cambios['solution_tex'] = [
-                            'original' => $original,
-                            'corregido' => $corregido,
+                            'original' => mb_substr($original, 0, 300),
+                            'corregido' => mb_substr($corregido, 0, 300),
                         ];
                     }
                 }
@@ -125,8 +126,12 @@ class FixLatexController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            \Log::error('Error en scan: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
             return response()->json([
-                'error' => 'Error al escanear: ' . $e->getMessage()
+                'error' => 'Error al escanear: ' . $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => basename($e->getFile())
             ], 500);
         }
     }
@@ -139,8 +144,6 @@ class FixLatexController extends Controller
         }
 
         try {
-            $pattern = $this->buildPattern();
-
             $problemas = DB::table('pim_problems')
                 ->where(function($query) {
                     $query->whereNotNull('problem_tex')
@@ -158,7 +161,7 @@ class FixLatexController extends Controller
                     // Revisar problem_tex
                     if ($problema->problem_tex) {
                         $original = $problema->problem_tex;
-                        $corregido = $this->fixBackslashes($original, $pattern);
+                        $corregido = $this->fixBackslashesSimple($original);
 
                         if ($original !== $corregido) {
                             $updates['problem_tex'] = $corregido;
@@ -168,7 +171,7 @@ class FixLatexController extends Controller
                     // Revisar solution_tex
                     if ($problema->solution_tex) {
                         $original = $problema->solution_tex;
-                        $corregido = $this->fixBackslashes($original, $pattern);
+                        $corregido = $this->fixBackslashesSimple($original);
 
                         if ($original !== $corregido) {
                             $updates['solution_tex'] = $corregido;
@@ -183,6 +186,7 @@ class FixLatexController extends Controller
                     }
 
                 } catch (\Exception $e) {
+                    \Log::error('Error procesando problema ' . $problema->id . ': ' . $e->getMessage());
                     $errores++;
                 }
             }
@@ -194,8 +198,11 @@ class FixLatexController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            \Log::error('Error en fix: ' . $e->getMessage());
             return response()->json([
-                'error' => 'Error al aplicar cambios: ' . $e->getMessage()
+                'error' => 'Error al aplicar cambios: ' . $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => basename($e->getFile())
             ], 500);
         }
     }
@@ -214,5 +221,28 @@ class FixLatexController extends Controller
             },
             $text
         );
+    }
+
+    /**
+     * Versión simplificada que procesa comando por comando
+     */
+    private function fixBackslashesSimple($text)
+    {
+        if (empty($text)) {
+            return $text;
+        }
+
+        // Procesar solo los comandos más comunes para evitar regex complejo
+        $comandos = ['frac', 'sqrt', 'sum', 'int', 'lim', 'sin', 'cos', 'tan', 'log', 'ln',
+                     'alpha', 'beta', 'gamma', 'delta', 'infty', 'leq', 'geq', 'cdot',
+                     'text', 'mathbb', 'mathbf', 'left', 'right', 'begin', 'end'];
+
+        foreach ($comandos as $cmd) {
+            // Patrón: palabra sin barra seguida de { o (
+            $pattern = '/(?<!\\\\)\b' . preg_quote($cmd, '/') . '\s*([{(])/u';
+            $text = preg_replace($pattern, '\\' . $cmd . '$1', $text);
+        }
+
+        return $text;
     }
 }
