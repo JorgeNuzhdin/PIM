@@ -64,6 +64,8 @@ class FixLatexController extends Controller
         }
 
         try {
+            \Log::info('=== Iniciando escaneo de LaTeX ===');
+
             // Obtener problemas primero
             $problemas = DB::table('pim_problems')
                 ->where(function($query) {
@@ -73,51 +75,60 @@ class FixLatexController extends Controller
                 ->limit(100) // Limitar para pruebas
                 ->get();
 
+            \Log::info('Problemas encontrados: ' . count($problemas));
+
             $problemasConErrores = [];
             $ejemplos = [];
 
             // Procesar cada comando LaTeX individualmente para evitar regex demasiado complejo
             foreach ($problemas as $problema) {
-                $cambios = [];
+                try {
+                    $cambios = [];
 
-                // Revisar problem_tex
-                if ($problema->problem_tex) {
-                    $original = $problema->problem_tex;
-                    $corregido = $this->fixBackslashesSimple($original);
+                    // Revisar problem_tex
+                    if (!empty($problema->problem_tex) && is_string($problema->problem_tex)) {
+                        $original = $problema->problem_tex;
+                        $corregido = $this->fixBackslashesSimple($original);
 
-                    if ($original !== $corregido) {
-                        $cambios['problem_tex'] = [
-                            'original' => mb_substr($original, 0, 300),
-                            'corregido' => mb_substr($corregido, 0, 300),
-                        ];
+                        if ($original !== $corregido) {
+                            $cambios['problem_tex'] = [
+                                'original' => $this->truncateText($original, 300),
+                                'corregido' => $this->truncateText($corregido, 300),
+                            ];
+                        }
                     }
-                }
 
-                // Revisar solution_tex
-                if ($problema->solution_tex) {
-                    $original = $problema->solution_tex;
-                    $corregido = $this->fixBackslashesSimple($original);
+                    // Revisar solution_tex
+                    if (!empty($problema->solution_tex) && is_string($problema->solution_tex)) {
+                        $original = $problema->solution_tex;
+                        $corregido = $this->fixBackslashesSimple($original);
 
-                    if ($original !== $corregido) {
-                        $cambios['solution_tex'] = [
-                            'original' => mb_substr($original, 0, 300),
-                            'corregido' => mb_substr($corregido, 0, 300),
-                        ];
+                        if ($original !== $corregido) {
+                            $cambios['solution_tex'] = [
+                                'original' => $this->truncateText($original, 300),
+                                'corregido' => $this->truncateText($corregido, 300),
+                            ];
+                        }
                     }
-                }
 
-                if (!empty($cambios)) {
-                    $problemasConErrores[$problema->id] = $cambios;
+                    if (!empty($cambios)) {
+                        $problemasConErrores[$problema->id] = $cambios;
 
-                    // Guardar los primeros 5 ejemplos
-                    if (count($ejemplos) < 5) {
-                        $ejemplos[] = [
-                            'id' => $problema->id,
-                            'cambios' => $cambios,
-                        ];
+                        // Guardar los primeros 5 ejemplos
+                        if (count($ejemplos) < 5) {
+                            $ejemplos[] = [
+                                'id' => $problema->id,
+                                'cambios' => $cambios,
+                            ];
+                        }
                     }
+                } catch (\Exception $e) {
+                    \Log::error('Error procesando problema ID ' . $problema->id . ': ' . $e->getMessage());
+                    // Continuar con el siguiente problema
                 }
             }
+
+            \Log::info('Problemas con errores: ' . count($problemasConErrores));
 
             return response()->json([
                 'total_problemas' => count($problemasConErrores),
@@ -228,7 +239,7 @@ class FixLatexController extends Controller
      */
     private function fixBackslashesSimple($text)
     {
-        if (empty($text)) {
+        if (empty($text) || !is_string($text)) {
             return $text;
         }
 
@@ -238,11 +249,42 @@ class FixLatexController extends Controller
                      'text', 'mathbb', 'mathbf', 'left', 'right', 'begin', 'end'];
 
         foreach ($comandos as $cmd) {
-            // Patrón: palabra sin barra seguida de { o (
-            $pattern = '/(?<!\\\\)\b' . preg_quote($cmd, '/') . '\s*([{(])/u';
-            $text = preg_replace($pattern, '\\' . $cmd . '$1', $text);
+            try {
+                // Patrón: palabra sin barra seguida de { o (
+                $pattern = '/(?<!\\\\)\b' . preg_quote($cmd, '/') . '\s*([{(])/u';
+                $replaced = @preg_replace($pattern, '\\' . $cmd . '$1', $text);
+
+                // Solo actualizar si no hubo error
+                if ($replaced !== null) {
+                    $text = $replaced;
+                }
+            } catch (\Exception $e) {
+                \Log::warning('Error en regex para comando ' . $cmd . ': ' . $e->getMessage());
+                // Continuar con el siguiente comando
+            }
         }
 
         return $text;
+    }
+
+    /**
+     * Trunca texto de forma segura
+     */
+    private function truncateText($text, $length)
+    {
+        if (empty($text) || !is_string($text)) {
+            return '';
+        }
+
+        if (strlen($text) <= $length) {
+            return $text;
+        }
+
+        // Usar mb_substr si está disponible, sino substr
+        if (function_exists('mb_substr')) {
+            return mb_substr($text, 0, $length);
+        }
+
+        return substr($text, 0, $length);
     }
 }
