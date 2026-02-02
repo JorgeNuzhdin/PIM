@@ -757,6 +757,13 @@
 <div class="pagination-wrapper">
     @if ($problemas->hasPages())
         <div class="pagination">
+            {{-- Ordenar por ID descendente --}}
+            <a href="{{ route('problemas.index', array_merge(request()->except(['page', 'sort_id']), ['sort_id' => 'desc'])) }}"
+               class="sort-id-btn {{ request('sort_id') == 'desc' ? 'active' : '' }}"
+               title="Ordenar por ID descendente (más reciente primero)">
+                ▼
+            </a>
+
             {{-- Primera página --}}
             @if ($problemas->currentPage() > 1)
                 <a href="{{ $problemas->url(1) }}" class="page-item" title="Primera página">&laquo;&laquo;</a>
@@ -817,6 +824,13 @@
             @else
                 <span class="page-item disabled">&raquo;&raquo;</span>
             @endif
+
+            {{-- Ordenar por ID ascendente --}}
+            <a href="{{ route('problemas.index', array_merge(request()->except(['page', 'sort_id']), ['sort_id' => 'asc'])) }}"
+               class="sort-id-btn {{ request('sort_id') == 'asc' ? 'active' : '' }}"
+               title="Ordenar por ID ascendente (más antiguo primero)">
+                ▲
+            </a>
         </div>
     @endif
 </div>

@@ -262,6 +262,32 @@ window.MathJax = {
     border-color: #e2e8f0;
 }
 
+/* Botones de ordenamiento en paginación */
+.sort-id-btn {
+    display: inline-block;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    background-color: white;
+    color: #4a5568;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.sort-id-btn:hover {
+    background-color: #f7fafc;
+    border-color: #4a5568;
+    transform: translateY(-2px);
+}
+
+.sort-id-btn.active {
+    background-color: #4a5568;
+    color: white;
+    border-color: #4a5568;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .pagination {

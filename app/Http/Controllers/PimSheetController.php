@@ -55,6 +55,12 @@ class PimSheetController extends Controller
 
         $query->orderBy($sortBy, $sortOrder);
 
+        // Ordenar por ID si se solicita
+        if ($request->filled('sort_id')) {
+            $sortDirection = $request->sort_id === 'asc' ? 'asc' : 'desc';
+            $query->orderBy('id', $sortDirection);
+        }
+
         // Paginación
         $sheets = $query->paginate(20)->appends($request->query());
 

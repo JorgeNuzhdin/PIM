@@ -386,6 +386,12 @@ class ProblemaController extends Controller
         $query->orderBy('difficulty', $sortDirection);
     }
 
+    // Ordenar por ID si se solicita
+    if ($request->filled('sort_id')) {
+        $sortDirection = $request->sort_id === 'asc' ? 'asc' : 'desc';
+        $query->orderBy('id', $sortDirection);
+    }
+
     // Paginar resultados
     $problemas = $query->with(['tags', 'proponent'])->paginate(20)->appends($request->query());
     $temas = Tema::all();
