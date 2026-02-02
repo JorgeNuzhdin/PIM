@@ -63,6 +63,38 @@
     cursor: pointer;
 }
 
+/* Botones de ordenamiento */
+.sort-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.sort-btn {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #cbd5e0;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.sort-btn:hover {
+    background: #f7fafc;
+    border-color: #4a5568;
+}
+
+.sort-btn.active {
+    background: #4a5568;
+    color: white;
+    border-color: #4a5568;
+}
+
 .topic-container {
     position: relative;
 }
@@ -579,19 +611,37 @@
             <div class="form-group-range">
                 <label>Dificultad (1-6)</label>
                 <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <input type="number" 
-                           name="difficulty_min" 
+                    <input type="number"
+                           name="difficulty_min"
                            placeholder="Min"
                            min="1" max="6"
                            value="{{ request('difficulty_min') }}"
                            style="width: 70px;">
                     <span>—</span>
-                    <input type="number" 
-                           name="difficulty_max" 
+                    <input type="number"
+                           name="difficulty_max"
                            placeholder="Max"
                            min="1" max="10"
                            value="{{ request('difficulty_max') }}"
                            style="width: 70px;">
+
+                    {{-- Botones de ordenamiento --}}
+                    <div class="sort-buttons">
+                        <button type="submit"
+                                name="sort_difficulty"
+                                value="asc"
+                                class="sort-btn {{ request('sort_difficulty') == 'asc' ? 'active' : '' }}"
+                                title="Ordenar por dificultad ascendente">
+                            ▲
+                        </button>
+                        <button type="submit"
+                                name="sort_difficulty"
+                                value="desc"
+                                class="sort-btn {{ request('sort_difficulty') == 'desc' ? 'active' : '' }}"
+                                title="Ordenar por dificultad descendente">
+                            ▼
+                        </button>
+                    </div>
                 </div>
             </div>
 
