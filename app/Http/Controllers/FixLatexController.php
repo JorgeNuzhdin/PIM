@@ -249,30 +249,79 @@ class FixLatexController extends Controller
 
         foreach ($comandos as $cmd) {
             try {
-                // Buscar patrones como: "frac{" o "frac(" o " frac{" pero NO "\frac{"
-                // Usamos word boundary \b para asegurar que es una palabra completa
-                $pattern = '/([^\\\\])\\b(' . preg_quote($cmd, '/') . ')(\s*)([{(])/u';
+                // Estrategia simple: buscar literalmente "comando{" o "comando (" SIN barra antes
+                // y reemplazar por "\comando{" o "\comando ("
 
-                // Reemplazar: mantener el carácter anterior, añadir \, mantener comando y delimitador
-                $replaced = @preg_replace($pattern, '$1\\\\$2$3$4', $text);
+                // Buscar comando seguido de { (sin barra antes)
+                $text = $this->replaceIfNotEscaped($text, $cmd . '{', '\\' . $cmd . '{');
 
-                // También buscar al inicio de línea
-                $pattern2 = '/^(' . preg_quote($cmd, '/') . ')(\s*)([{(])/mu';
-                if ($replaced !== null) {
-                    $replaced = @preg_replace($pattern2, '\\\\$1$2$3', $replaced);
-                }
+                // Buscar comando seguido de ( (sin barra antes)
+                $text = $this->replaceIfNotEscaped($text, $cmd . '(', '\\' . $cmd . '(');
 
-                // Solo actualizar si no hubo error
-                if ($replaced !== null && $replaced !== $text) {
-                    $text = $replaced;
-                }
+                // Buscar comando con espacio antes de { (sin barra antes)
+                $text = $this->replaceIfNotEscaped($text, $cmd . ' {', '\\' . $cmd . ' {');
+
+                // Buscar comando con espacio antes de ( (sin barra antes)
+                $text = $this->replaceIfNotEscaped($text, $cmd . ' (', '\\' . $cmd . ' (');
+
             } catch (\Exception $e) {
-                \Log::warning('Error en regex para comando ' . $cmd . ': ' . $e->getMessage());
+                \Log::warning('Error procesando comando ' . $cmd . ': ' . $e->getMessage());
                 // Continuar con el siguiente comando
             }
         }
 
         return $text;
+    }
+
+    /**
+     * Reemplaza una cadena solo si NO está precedida por \
+     */
+    private function replaceIfNotEscaped($text, $search, $replace)
+    {
+        if (empty($text) || !is_string($text)) {
+            return $text;
+        }
+
+        $result = '';
+        $textLen = strlen($text);
+        $searchLen = strlen($search);
+
+        $i = 0;
+        while ($i < $textLen) {
+            // Comprobar si encontramos la cadena de búsqueda en esta posición
+            if (substr($text, $i, $searchLen) === $search) {
+                // Comprobar si está escapada (tiene \ antes)
+                $isEscaped = ($i > 0 && $text[$i - 1] === '\\');
+
+                // Si no está al inicio y el carácter anterior no es espacio/inicio, verificar que sea límite de palabra
+                if ($i > 0) {
+                    $prevChar = $text[$i - 1];
+                    // Solo reemplazar si está al inicio o después de espacio, salto de línea, o caracteres especiales
+                    $isWordBoundary = in_array($prevChar, [' ', "\n", "\r", "\t", '{', '}', '(', ')', '[', ']', '$', '^', '_']);
+
+                    if (!$isWordBoundary || $isEscaped) {
+                        $result .= $text[$i];
+                        $i++;
+                        continue;
+                    }
+                }
+
+                if (!$isEscaped) {
+                    // No está escapado, reemplazar
+                    $result .= $replace;
+                    $i += $searchLen;
+                } else {
+                    // Está escapado, mantener como está
+                    $result .= $text[$i];
+                    $i++;
+                }
+            } else {
+                $result .= $text[$i];
+                $i++;
+            }
+        }
+
+        return $result;
     }
 
     /**
