@@ -66,21 +66,39 @@ class FixLatexController extends Controller
         try {
             \Log::info('=== Iniciando escaneo de LaTeX ===');
 
-            // Obtener problemas primero (sin límite para escanear toda la BD)
-            $problemas = DB::table('pim_problems')
+            set_time_limit(300); // 5 minutos máximo
+            ini_set('memory_limit', '512M'); // Aumentar límite de memoria
+
+            // Obtener solo IDs primero para procesar en lotes
+            $totalProblemas = DB::table('pim_problems')
                 ->where(function($query) {
                     $query->whereNotNull('problem_tex')
                           ->orWhereNotNull('solution_tex');
                 })
-                ->get();
+                ->count();
 
-            \Log::info('Total problemas a escanear: ' . count($problemas));
+            \Log::info('Total problemas a escanear: ' . $totalProblemas);
 
             $problemasConErrores = [];
             $ejemplos = [];
+            $batchSize = 50; // Procesar de 50 en 50
+            $offset = 0;
 
-            // Procesar cada comando LaTeX individualmente para evitar regex demasiado complejo
-            foreach ($problemas as $problema) {
+            while ($offset < $totalProblemas) {
+                // Obtener lote de problemas
+                $problemas = DB::table('pim_problems')
+                    ->where(function($query) {
+                        $query->whereNotNull('problem_tex')
+                              ->orWhereNotNull('solution_tex');
+                    })
+                    ->skip($offset)
+                    ->take($batchSize)
+                    ->get();
+
+                \Log::info('Procesando lote ' . ($offset / $batchSize + 1) . ' (' . $offset . ' - ' . ($offset + $batchSize) . ')');
+
+                // Procesar cada problema del lote
+                foreach ($problemas as $problema) {
                 try {
                     $cambios = [];
 
@@ -125,6 +143,13 @@ class FixLatexController extends Controller
                     \Log::error('Error procesando problema ID ' . $problema->id . ': ' . $e->getMessage());
                     // Continuar con el siguiente problema
                 }
+                }
+
+                $offset += $batchSize;
+
+                // Liberar memoria
+                unset($problemas);
+                gc_collect_cycles();
             }
 
             \Log::info('Problemas con errores: ' . count($problemasConErrores));
