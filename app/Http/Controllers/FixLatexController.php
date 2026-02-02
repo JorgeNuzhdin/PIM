@@ -73,50 +73,50 @@ class FixLatexController extends Controller
                 })
                 ->get();
 
-        $problemasConErrores = [];
-        $ejemplos = [];
+            $problemasConErrores = [];
+            $ejemplos = [];
 
-        foreach ($problemas as $problema) {
-            $cambios = [];
+            foreach ($problemas as $problema) {
+                $cambios = [];
 
-            // Revisar problem_tex
-            if ($problema->problem_tex) {
-                $original = $problema->problem_tex;
-                $corregido = $this->fixBackslashes($original, $pattern);
+                // Revisar problem_tex
+                if ($problema->problem_tex) {
+                    $original = $problema->problem_tex;
+                    $corregido = $this->fixBackslashes($original, $pattern);
 
-                if ($original !== $corregido) {
-                    $cambios['problem_tex'] = [
-                        'original' => $original,
-                        'corregido' => $corregido,
-                    ];
+                    if ($original !== $corregido) {
+                        $cambios['problem_tex'] = [
+                            'original' => $original,
+                            'corregido' => $corregido,
+                        ];
+                    }
+                }
+
+                // Revisar solution_tex
+                if ($problema->solution_tex) {
+                    $original = $problema->solution_tex;
+                    $corregido = $this->fixBackslashes($original, $pattern);
+
+                    if ($original !== $corregido) {
+                        $cambios['solution_tex'] = [
+                            'original' => $original,
+                            'corregido' => $corregido,
+                        ];
+                    }
+                }
+
+                if (!empty($cambios)) {
+                    $problemasConErrores[$problema->id] = $cambios;
+
+                    // Guardar los primeros 5 ejemplos
+                    if (count($ejemplos) < 5) {
+                        $ejemplos[] = [
+                            'id' => $problema->id,
+                            'cambios' => $cambios,
+                        ];
+                    }
                 }
             }
-
-            // Revisar solution_tex
-            if ($problema->solution_tex) {
-                $original = $problema->solution_tex;
-                $corregido = $this->fixBackslashes($original, $pattern);
-
-                if ($original !== $corregido) {
-                    $cambios['solution_tex'] = [
-                        'original' => $original,
-                        'corregido' => $corregido,
-                    ];
-                }
-            }
-
-            if (!empty($cambios)) {
-                $problemasConErrores[$problema->id] = $cambios;
-
-                // Guardar los primeros 5 ejemplos
-                if (count($ejemplos) < 5) {
-                    $ejemplos[] = [
-                        'id' => $problema->id,
-                        'cambios' => $cambios,
-                    ];
-                }
-            }
-        }
 
             return response()->json([
                 'total_problemas' => count($problemasConErrores),
@@ -148,44 +148,44 @@ class FixLatexController extends Controller
                 })
                 ->get();
 
-        $procesados = 0;
-        $errores = 0;
+            $procesados = 0;
+            $errores = 0;
 
-        foreach ($problemas as $problema) {
-            try {
-                $updates = [];
+            foreach ($problemas as $problema) {
+                try {
+                    $updates = [];
 
-                // Revisar problem_tex
-                if ($problema->problem_tex) {
-                    $original = $problema->problem_tex;
-                    $corregido = $this->fixBackslashes($original, $pattern);
+                    // Revisar problem_tex
+                    if ($problema->problem_tex) {
+                        $original = $problema->problem_tex;
+                        $corregido = $this->fixBackslashes($original, $pattern);
 
-                    if ($original !== $corregido) {
-                        $updates['problem_tex'] = $corregido;
+                        if ($original !== $corregido) {
+                            $updates['problem_tex'] = $corregido;
+                        }
                     }
-                }
 
-                // Revisar solution_tex
-                if ($problema->solution_tex) {
-                    $original = $problema->solution_tex;
-                    $corregido = $this->fixBackslashes($original, $pattern);
+                    // Revisar solution_tex
+                    if ($problema->solution_tex) {
+                        $original = $problema->solution_tex;
+                        $corregido = $this->fixBackslashes($original, $pattern);
 
-                    if ($original !== $corregido) {
-                        $updates['solution_tex'] = $corregido;
+                        if ($original !== $corregido) {
+                            $updates['solution_tex'] = $corregido;
+                        }
                     }
-                }
 
-                if (!empty($updates)) {
-                    DB::table('pim_problems')
-                        ->where('id', $problema->id)
-                        ->update($updates);
-                    $procesados++;
-                }
+                    if (!empty($updates)) {
+                        DB::table('pim_problems')
+                            ->where('id', $problema->id)
+                            ->update($updates);
+                        $procesados++;
+                    }
 
-            } catch (\Exception $e) {
-                $errores++;
+                } catch (\Exception $e) {
+                    $errores++;
+                }
             }
-        }
 
             return response()->json([
                 'success' => true,
