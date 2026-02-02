@@ -67,21 +67,22 @@
 .sort-buttons {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 2px;
 }
 
 .sort-btn {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 18px;
     border: 1px solid #cbd5e0;
     background: white;
-    border-radius: 4px;
+    border-radius: 3px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.9rem;
+    font-size: 0.7rem;
     transition: all 0.2s;
+    padding: 0;
 }
 
 .sort-btn:hover {
@@ -610,20 +611,20 @@
             {{-- Fila 2: Rangos --}}
             <div class="form-group-range">
                 <label>Dificultad (1-6)</label>
-                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <div style="display: flex; gap: 0.5rem; align-items: center; min-height: 38px;">
                     <input type="number"
                            name="difficulty_min"
                            placeholder="Min"
                            min="1" max="6"
                            value="{{ request('difficulty_min') }}"
-                           style="width: 70px;">
+                           style="width: 70px; height: 38px;">
                     <span>—</span>
                     <input type="number"
                            name="difficulty_max"
                            placeholder="Max"
                            min="1" max="10"
                            value="{{ request('difficulty_max') }}"
-                           style="width: 70px;">
+                           style="width: 70px; height: 38px;">
 
                     {{-- Botones de ordenamiento --}}
                     <div class="sort-buttons">
