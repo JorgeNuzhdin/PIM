@@ -48,9 +48,9 @@ class FixLatexController extends Controller
 
     public function index()
     {
-        // Solo admin puede acceder
-        if (!Auth::user()->isAdmin()) {
-            abort(403, 'Solo administradores pueden acceder a esta herramienta.');
+        // Solo el usuario Georgy Nuzhdin puede acceder
+        if (Auth::user()->name !== 'Georgy Nuzhdin') {
+            abort(403, 'No tienes permiso para acceder a esta herramienta.');
         }
 
         return view('admin.fix_latex');
@@ -58,17 +58,20 @@ class FixLatexController extends Controller
 
     public function scan()
     {
-        // Solo admin puede acceder
-        if (!Auth::user()->isAdmin()) {
+        // Solo el usuario Georgy Nuzhdin puede acceder
+        if (Auth::user()->name !== 'Georgy Nuzhdin') {
             return response()->json(['error' => 'No autorizado'], 403);
         }
 
-        $pattern = $this->buildPattern();
+        try {
+            $pattern = $this->buildPattern();
 
-        $problemas = DB::table('pim_problems')
-            ->whereNotNull('problem_tex')
-            ->orWhereNotNull('solution_tex')
-            ->get();
+            $problemas = DB::table('pim_problems')
+                ->where(function($query) {
+                    $query->whereNotNull('problem_tex')
+                          ->orWhereNotNull('solution_tex');
+                })
+                ->get();
 
         $problemasConErrores = [];
         $ejemplos = [];
@@ -115,26 +118,35 @@ class FixLatexController extends Controller
             }
         }
 
-        return response()->json([
-            'total_problemas' => count($problemasConErrores),
-            'total_campos' => array_sum(array_map('count', $problemasConErrores)),
-            'ejemplos' => $ejemplos,
-        ]);
+            return response()->json([
+                'total_problemas' => count($problemasConErrores),
+                'total_campos' => array_sum(array_map('count', $problemasConErrores)),
+                'ejemplos' => $ejemplos,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al escanear: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function fix(Request $request)
     {
-        // Solo admin puede acceder
-        if (!Auth::user()->isAdmin()) {
+        // Solo el usuario Georgy Nuzhdin puede acceder
+        if (Auth::user()->name !== 'Georgy Nuzhdin') {
             return response()->json(['error' => 'No autorizado'], 403);
         }
 
-        $pattern = $this->buildPattern();
+        try {
+            $pattern = $this->buildPattern();
 
-        $problemas = DB::table('pim_problems')
-            ->whereNotNull('problem_tex')
-            ->orWhereNotNull('solution_tex')
-            ->get();
+            $problemas = DB::table('pim_problems')
+                ->where(function($query) {
+                    $query->whereNotNull('problem_tex')
+                          ->orWhereNotNull('solution_tex');
+                })
+                ->get();
 
         $procesados = 0;
         $errores = 0;
@@ -175,11 +187,17 @@ class FixLatexController extends Controller
             }
         }
 
-        return response()->json([
-            'success' => true,
-            'procesados' => $procesados,
-            'errores' => $errores,
-        ]);
+            return response()->json([
+                'success' => true,
+                'procesados' => $procesados,
+                'errores' => $errores,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al aplicar cambios: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     private function buildPattern()

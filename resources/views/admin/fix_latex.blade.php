@@ -241,6 +241,11 @@ async function escanear() {
             }
         });
 
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Error del servidor' }));
+            throw new Error(errorData.error || `Error ${response.status}`);
+        }
+
         const data = await response.json();
         datosEscaneo = data;
 
@@ -316,6 +321,11 @@ async function aplicarCambios() {
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
             }
         });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Error del servidor' }));
+            throw new Error(errorData.error || `Error ${response.status}`);
+        }
 
         const data = await response.json();
 

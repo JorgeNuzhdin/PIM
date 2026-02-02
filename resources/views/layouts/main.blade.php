@@ -371,7 +371,9 @@ window.MathJax = {
                     <div class="user-dropdown-content">
                         @if(Auth::user()->rol === 'admin')
                             <a href="{{ route('admin.users.index') }}">Administrar usuarios</a>
-                            <a href="{{ route('admin.fix-latex') }}">Reparar LaTeX</a>
+                            @if(Auth::user()->name === 'Georgy Nuzhdin')
+                                <a href="{{ route('admin.fix-latex') }}">Reparar LaTeX</a>
+                            @endif
                         @endif
                         <a href="{{ route('logout') }}" 
                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
