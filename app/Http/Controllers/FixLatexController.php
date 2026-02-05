@@ -179,52 +179,76 @@ class FixLatexController extends Controller
         }
 
         try {
-            $problemas = DB::table('pim_problems')
+            set_time_limit(300); // 5 minutos máximo
+            ini_set('memory_limit', '512M');
+
+            \Log::info('=== Iniciando corrección de LaTeX ===');
+
+            $totalProblemas = DB::table('pim_problems')
                 ->where(function($query) {
                     $query->whereNotNull('problem_tex')
                           ->orWhereNotNull('solution_tex');
                 })
-                ->get();
+                ->count();
 
             $procesados = 0;
             $errores = 0;
+            $batchSize = 50;
+            $offset = 0;
 
-            foreach ($problemas as $problema) {
-                try {
-                    $updates = [];
+            while ($offset < $totalProblemas) {
+                $problemas = DB::table('pim_problems')
+                    ->where(function($query) {
+                        $query->whereNotNull('problem_tex')
+                              ->orWhereNotNull('solution_tex');
+                    })
+                    ->skip($offset)
+                    ->take($batchSize)
+                    ->get();
 
-                    // Revisar problem_tex
-                    if ($problema->problem_tex) {
-                        $original = $problema->problem_tex;
-                        $corregido = $this->fixBackslashesSimple($original);
+                foreach ($problemas as $problema) {
+                    try {
+                        $updates = [];
 
-                        if ($original !== $corregido) {
-                            $updates['problem_tex'] = $corregido;
+                        // Revisar problem_tex
+                        if (!empty($problema->problem_tex) && is_string($problema->problem_tex)) {
+                            $original = $problema->problem_tex;
+                            $corregido = $this->fixBackslashesSimple($original);
+
+                            if ($original !== $corregido) {
+                                $updates['problem_tex'] = $corregido;
+                            }
                         }
-                    }
 
-                    // Revisar solution_tex
-                    if ($problema->solution_tex) {
-                        $original = $problema->solution_tex;
-                        $corregido = $this->fixBackslashesSimple($original);
+                        // Revisar solution_tex
+                        if (!empty($problema->solution_tex) && is_string($problema->solution_tex)) {
+                            $original = $problema->solution_tex;
+                            $corregido = $this->fixBackslashesSimple($original);
 
-                        if ($original !== $corregido) {
-                            $updates['solution_tex'] = $corregido;
+                            if ($original !== $corregido) {
+                                $updates['solution_tex'] = $corregido;
+                            }
                         }
-                    }
 
-                    if (!empty($updates)) {
-                        DB::table('pim_problems')
-                            ->where('id', $problema->id)
-                            ->update($updates);
-                        $procesados++;
-                    }
+                        if (!empty($updates)) {
+                            DB::table('pim_problems')
+                                ->where('id', $problema->id)
+                                ->update($updates);
+                            $procesados++;
+                        }
 
-                } catch (\Exception $e) {
-                    \Log::error('Error procesando problema ' . $problema->id . ': ' . $e->getMessage());
-                    $errores++;
+                    } catch (\Exception $e) {
+                        \Log::error('Error procesando problema ' . $problema->id . ': ' . $e->getMessage());
+                        $errores++;
+                    }
                 }
+
+                $offset += $batchSize;
+                unset($problemas);
+                gc_collect_cycles();
             }
+
+            \Log::info('Corrección completada: ' . $procesados . ' procesados, ' . $errores . ' errores');
 
             return response()->json([
                 'success' => true,
@@ -234,6 +258,7 @@ class FixLatexController extends Controller
 
         } catch (\Exception $e) {
             \Log::error('Error en fix: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
             return response()->json([
                 'error' => 'Error al aplicar cambios: ' . $e->getMessage(),
                 'line' => $e->getLine(),
