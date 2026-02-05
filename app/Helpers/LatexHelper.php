@@ -182,6 +182,10 @@ private static function getImSimple($filename)
         $t = preg_replace('/^%.*$/m', '', $t);  // Comentarios al inicio de línea
         $t = preg_replace('/(?<!\\\\)%.*$/m', '', $t);  // Comentarios inline (% hasta fin de línea)
 
+        // Comandos LaTeX que MathJax no reconoce - convertir a equivalentes
+        $t = str_replace('\degree', '^\\circ', $t);  // \degree → ^∘
+        $t = str_replace('\Vec', '\vec', $t);        // \Vec → \vec (MathJax usa minúscula)
+
         // Eliminar comandos LaTeX que no tienen equivalente en HTML
         // Comandos de espaciado vertical
         $t = preg_replace('/\\\\noindent\s*/', '', $t);
