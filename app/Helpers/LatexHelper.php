@@ -177,7 +177,97 @@ private static function getImSimple($filename)
     $t = preg_replace("/\n{3,}/", "\n\n", $t);
 
      $t = str_replace('\%', 'PCTG', $t);
-         $t = preg_replace('/^%.*$/m', '', $t);
+
+        // Eliminar comentarios: tanto al inicio de línea como inline (después de %)
+        $t = preg_replace('/^%.*$/m', '', $t);  // Comentarios al inicio de línea
+        $t = preg_replace('/(?<!\\\\)%.*$/m', '', $t);  // Comentarios inline (% hasta fin de línea)
+
+        // Eliminar comandos LaTeX que no tienen equivalente en HTML
+        // Comandos de espaciado vertical
+        $t = preg_replace('/\\\\noindent\s*/', '', $t);
+        $t = preg_replace('/\\\\vspace\*?\{[^}]*\}/', '', $t);
+        $t = preg_replace('/\\\\vskip\s*[^\s]+/', '', $t);
+        $t = preg_replace('/\\\\smallskip\s*/', '', $t);
+        $t = preg_replace('/\\\\medskip\s*/', '', $t);
+        $t = preg_replace('/\\\\bigskip\s*/', '', $t);
+        $t = preg_replace('/\\\\vfill\s*/', '', $t);
+
+        // Comandos de espaciado horizontal
+        $t = preg_replace('/\\\\hspace\*?\{[^}]*\}/', ' ', $t);
+        $t = preg_replace('/\\\\hfill\s*/', ' ', $t);
+        $t = preg_replace('/\\\\phantom\{[^}]*\}/', '', $t);
+        $t = preg_replace('/\\\\strut\s*/', '', $t);
+
+        // Comandos de salto de página (no tienen sentido en HTML)
+        $t = preg_replace('/\\\\newpage\s*/', '', $t);
+        $t = preg_replace('/\\\\pagebreak\s*/', '', $t);
+        $t = preg_replace('/\\\\clearpage\s*/', '', $t);
+        $t = preg_replace('/\\\\cleardoublepage\s*/', '', $t);
+
+        // Comandos de configuración que no afectan la visualización
+        $t = preg_replace('/\\\\setlength\{[^}]*\}\{[^}]*\}/', '', $t);
+        $t = preg_replace('/\\\\addtolength\{[^}]*\}\{[^}]*\}/', '', $t);
+        $t = preg_replace('/\\\\setcounter\{[^}]*\}\{[^}]*\}/', '', $t);
+        $t = preg_replace('/\\\\addtocounter\{[^}]*\}\{[^}]*\}/', '', $t);
+
+        // Comandos de formato de párrafo
+        $t = preg_replace('/\\\\indent\s*/', '', $t);
+        $t = preg_replace('/\\\\centering\s*/', '', $t);
+        $t = preg_replace('/\\\\raggedright\s*/', '', $t);
+        $t = preg_replace('/\\\\raggedleft\s*/', '', $t);
+
+        // Convertir \newline y \linebreak a <br>
+        $t = preg_replace('/\\\\newline\s*/', '<br>', $t);
+        $t = preg_replace('/\\\\linebreak\s*/', '<br>', $t);
+
+        // Eliminar \label{...} y \ref{...} que no funcionan en HTML
+        $t = preg_replace('/\\\\label\{[^}]*\}/', '', $t);
+
+        // Eliminar captions sueltos (fuera de figuras ya procesadas)
+        $t = preg_replace('/\\\\caption\{[^}]*\}/', '', $t);
+
+        // Eliminar comandos de bibliografía
+        $t = preg_replace('/\\\\cite\{[^}]*\}/', '', $t);
+        $t = preg_replace('/\\\\bibliography\{[^}]*\}/', '', $t);
+        $t = preg_replace('/\\\\bibliographystyle\{[^}]*\}/', '', $t);
+
+        // Convertir caracteres especiales de LaTeX
+        $t = str_replace('~', '&nbsp;', $t);  // Espacio no separable
+        $t = str_replace('---', '—', $t);     // Em dash (primero, más largo)
+        $t = str_replace('--', '–', $t);      // En dash
+
+        // Comillas tipográficas LaTeX
+        $t = str_replace('``', '"', $t);      // Comillas de apertura
+        $t = str_replace("''", '"', $t);      // Comillas de cierre
+
+        // Eliminar \mbox{} pero mantener contenido
+        $mbox = self::fromAtoB('\mbox{', '}', $t);
+        while ($mbox['inside'] != '') {
+            $t = $mbox['before'] . $mbox['inside'] . $mbox['after'];
+            $mbox = self::fromAtoB('\mbox{', '}', $t);
+        }
+
+        // Convertir \emph{} a cursiva
+        $emph = self::fromAtoB('\emph{', '}', $t);
+        while ($emph['inside'] != '') {
+            $t = $emph['before'] . '<em>' . $emph['inside'] . '</em>' . $emph['after'];
+            $emph = self::fromAtoB('\emph{', '}', $t);
+        }
+
+        // Eliminar \textnormal{} pero mantener contenido
+        $textnormal = self::fromAtoB('\textnormal{', '}', $t);
+        while ($textnormal['inside'] != '') {
+            $t = $textnormal['before'] . $textnormal['inside'] . $textnormal['after'];
+            $textnormal = self::fromAtoB('\textnormal{', '}', $t);
+        }
+
+        // Eliminar \ensuremath{} pero mantener contenido
+        $ensuremath = self::fromAtoB('\ensuremath{', '}', $t);
+        while ($ensuremath['inside'] != '') {
+            $t = $ensuremath['before'] . $ensuremath['inside'] . $ensuremath['after'];
+            $ensuremath = self::fromAtoB('\ensuremath{', '}', $t);
+        }
+
        $t = str_replace('<', '&&&LT&&&', $t);
     $t = str_replace('>', '&&&GT&&&', $t);
 
@@ -217,10 +307,25 @@ $t=str_replace('\end{tikzpicture}', '\end{tikzpicture}</script></div>', $t);
 // Eliminar \definecolor sueltos
 $t = preg_replace('/\\\\definecolor\{[^}]+\}\{[^}]+\}\{[^}]+\}/', '', $t);
 // paragraph
+        // paragraph con asterisco
         $par = self::fromAtoB('\paragraph*{', '}', $t);
         while ($par['inside'] != '') {
             $t = $par['before'] . '<b>' . $par['inside'] . '</b>' . $par['after'];
             $par = self::fromAtoB('\paragraph*{', '}', $t);
+        }
+
+        // paragraph sin asterisco
+        $par = self::fromAtoB('\paragraph{', '}', $t);
+        while ($par['inside'] != '') {
+            $t = $par['before'] . '<b>' . $par['inside'] . '</b>' . $par['after'];
+            $par = self::fromAtoB('\paragraph{', '}', $t);
+        }
+
+        // subparagraph
+        $subpar = self::fromAtoB('\subparagraph{', '}', $t);
+        while ($subpar['inside'] != '') {
+            $t = $subpar['before'] . '<b>' . $subpar['inside'] . '</b>' . $subpar['after'];
+            $subpar = self::fromAtoB('\subparagraph{', '}', $t);
         }
 
 
@@ -231,11 +336,25 @@ $t = preg_replace('/\\\\definecolor\{[^}]+\}\{[^}]+\}\{[^}]+\}/', '', $t);
         $t = str_replace('\begin{sol}', '<br><i>Solución</i>: ', $t);
         $t = str_replace('\end{sol}', '<br>', $t);
 
-//tildes
+        // Tildes y acentos (minúsculas y mayúsculas)
         $t = str_replace("\'e", 'é', $t);
-         $t = str_replace("\'a", 'á', $t);
-          $t = str_replace("\'o", 'ó', $t);
-           $t = str_replace("\'u", 'ú', $t); $t = str_replace("\'i", 'í', $t);
+        $t = str_replace("\'a", 'á', $t);
+        $t = str_replace("\'o", 'ó', $t);
+        $t = str_replace("\'u", 'ú', $t);
+        $t = str_replace("\'i", 'í', $t);
+        $t = str_replace("\'E", 'É', $t);
+        $t = str_replace("\'A", 'Á', $t);
+        $t = str_replace("\'O", 'Ó', $t);
+        $t = str_replace("\'U", 'Ú', $t);
+        $t = str_replace("\'I", 'Í', $t);
+        // Eñe
+        $t = str_replace('\~n', 'ñ', $t);
+        $t = str_replace('\~N', 'Ñ', $t);
+        // Diéresis
+        $t = str_replace('\"u', 'ü', $t);
+        $t = str_replace('\"U', 'Ü', $t);
+        $t = str_replace('\"o', 'ö', $t);
+        $t = str_replace('\"a', 'ä', $t);
 
 
         // Proof
@@ -297,6 +416,27 @@ $t = preg_replace('/\\\\definecolor\{[^}]+\}\{[^}]+\}\{[^}]+\}/', '', $t);
             $bold = self::fromAtoB('{\bf', '}', $t);
         }
 
+        // Monospace / código
+        $tt = self::fromAtoB('\texttt{', '}', $t);
+        while ($tt['inside'] != '') {
+            $t = $tt['before'] . '<code>' . $tt['inside'] . '</code>' . $tt['after'];
+            $tt = self::fromAtoB('\texttt{', '}', $t);
+        }
+
+        // Subrayado
+        $underline = self::fromAtoB('\underline{', '}', $t);
+        while ($underline['inside'] != '') {
+            $t = $underline['before'] . '<u>' . $underline['inside'] . '</u>' . $underline['after'];
+            $underline = self::fromAtoB('\underline{', '}', $t);
+        }
+
+        // Small caps (simulado con estilo CSS)
+        $sc = self::fromAtoB('\textsc{', '}', $t);
+        while ($sc['inside'] != '') {
+            $t = $sc['before'] . '<span style="font-variant: small-caps;">' . $sc['inside'] . '</span>' . $sc['after'];
+            $sc = self::fromAtoB('\textsc{', '}', $t);
+        }
+
         // Rules
         $rule = self::fromAtoB('\*rule[', ']', $t);
         while ($rule['inside'] != '') {
@@ -349,6 +489,26 @@ while ($li['inside'] != '') {
     $t = $li['before'] . '<ul>' . $l . '</ul>' . $li['after'];
     $li = self::fromAtoB('\begin{itemize}', '\end{itemize}', $t);
 }
+
+// Entorno minipage (eliminar el entorno pero mantener contenido)
+$t = preg_replace('/\\\\begin\{minipage\}(\[[^\]]*\])?\{[^}]*\}/', '', $t);
+$t = str_replace('\end{minipage}', '', $t);
+
+// Entornos de alineación que eliminamos pero mantenemos contenido
+$t = str_replace('\begin{flushleft}', '<div style="text-align: left;">', $t);
+$t = str_replace('\end{flushleft}', '</div>', $t);
+$t = str_replace('\begin{flushright}', '<div style="text-align: right;">', $t);
+$t = str_replace('\end{flushright}', '</div>', $t);
+
+// Citas y quotation
+$t = str_replace('\begin{quote}', '<blockquote>', $t);
+$t = str_replace('\end{quote}', '</blockquote>', $t);
+$t = str_replace('\begin{quotation}', '<blockquote>', $t);
+$t = str_replace('\end{quotation}', '</blockquote>', $t);
+
+// Verbatim (código preformateado)
+$t = str_replace('\begin{verbatim}', '<pre><code>', $t);
+$t = str_replace('\end{verbatim}', '</code></pre>', $t);
 
 
 
