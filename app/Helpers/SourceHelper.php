@@ -57,6 +57,7 @@ class SourceHelper
         'Engel' => ['\bEngel\b'],
         'Andreescu' => ['\bAndreescu\b'],
         'Zeitz' => ['\bZeitz\b'],
+        'R. Smullyan' => ['\bSmullyan\b', 'La dama o el tigre', 'The Lady or the Tiger'],
         // Sitios web y círculos
         'We Solve Problems' => ['We\s*Solve\s*Problems', 'wesolveproblems'],
         'Problems.ru' => ['problems\.ru', 'problems\.com\.ru'],
@@ -126,11 +127,15 @@ class SourceHelper
             }
         }
 
-        // Fuentes no agrupadas (solo las que aparecen al menos 2 veces)
+        // Fuentes no agrupadas (solo las que aparecen al menos 2 veces y no son solo números)
         $ungrouped = [];
         foreach ($allSources as $source => $count) {
+            // Excluir fuentes que son solo números o rangos de años (ej: "2020", "2020-2021")
+            if (preg_match('/^\d{4}(-\d{4})?$/', $source)) {
+                continue;
+            }
             if (!isset($usedSources[$source]) && $count >= 2) {
-                $ungrouped[] = $source;
+                $ungrouped[$source] = $count;
             }
         }
 

@@ -687,9 +687,9 @@
                     {{-- Fuentes individuales no agrupadas --}}
                     @if(count($sourceData['ungrouped']) > 0)
                         <optgroup label="Otras fuentes">
-                            @foreach($sourceData['ungrouped'] as $source)
+                            @foreach($sourceData['ungrouped'] as $source => $count)
                                 <option value="{{ $source }}" {{ request('source') == $source ? 'selected' : '' }}>
-                                    {{ $source }}
+                                    {{ $source }} ({{ $count }})
                                 </option>
                             @endforeach
                         </optgroup>
