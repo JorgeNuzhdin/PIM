@@ -80,21 +80,24 @@ class SourceHelper
      * Obtiene las fuentes agrupadas para mostrar en el desplegable.
      * Retorna un array con:
      * - 'groups' => grupos detectados con sus patrones
-     * - 'ungrouped' => fuentes que no encajan en ningún grupo
+     * - 'ungrouped' => fuentes que no encajan en ningún grupo (solo las que aparecen 2+ veces)
      */
     public static function getGroupedSources(): array
     {
-        // Obtener todas las fuentes únicas
-        $rawSources = DB::table('pim_problems')
+        // Obtener todas las fuentes con su conteo
+        $sourceCounts = DB::table('pim_problems')
             ->whereNotNull('source')
             ->where('source', '!=', '')
-            ->distinct()
+            ->select('source', DB::raw('COUNT(*) as count'))
+            ->groupBy('source')
             ->orderBy('source')
-            ->pluck('source')
+            ->pluck('count', 'source')
             ->toArray();
 
+        $rawSources = array_keys($sourceCounts);
+
         // Expandir fuentes con comas en partes individuales
-        $allSources = self::expandSourcesWithCommas($rawSources);
+        $allSources = self::expandSourcesWithCommas($rawSources, $sourceCounts);
 
         $groups = [];
         $usedSources = [];
@@ -102,11 +105,13 @@ class SourceHelper
         // Agrupar fuentes por patrones
         foreach (self::$groupPatterns as $groupName => $patterns) {
             $matchingSources = [];
+            $totalCount = 0;
 
-            foreach ($allSources as $source) {
+            foreach ($allSources as $source => $count) {
                 foreach ($patterns as $pattern) {
                     if (preg_match('/' . $pattern . '/i', $source)) {
                         $matchingSources[] = $source;
+                        $totalCount += $count;
                         $usedSources[$source] = true;
                         break;
                     }
@@ -115,16 +120,16 @@ class SourceHelper
 
             if (count($matchingSources) > 0) {
                 $groups[$groupName] = [
-                    'count' => count($matchingSources),
+                    'count' => $totalCount,
                     'sources' => $matchingSources,
                 ];
             }
         }
 
-        // Fuentes no agrupadas
+        // Fuentes no agrupadas (solo las que aparecen al menos 2 veces)
         $ungrouped = [];
-        foreach ($allSources as $source) {
-            if (!isset($usedSources[$source])) {
+        foreach ($allSources as $source => $count) {
+            if (!isset($usedSources[$source]) && $count >= 2) {
                 $ungrouped[] = $source;
             }
         }
@@ -220,34 +225,40 @@ class SourceHelper
 
     /**
      * Expande fuentes que contienen comas en partes individuales.
-     * Por ejemplo: "A. Shen, Engel" -> ["A. Shen", "Engel"]
-     * Mantiene también la fuente original para búsquedas exactas.
+     * Por ejemplo: "A. Shen, Engel" -> ["A. Shen" => count, "Engel" => count]
+     * Retorna un array asociativo con el conteo de cada fuente.
      */
-    private static function expandSourcesWithCommas(array $rawSources): array
+    private static function expandSourcesWithCommas(array $rawSources, array $sourceCounts): array
     {
         $expanded = [];
-        $seen = [];
 
         foreach ($rawSources as $source) {
+            $count = $sourceCounts[$source] ?? 1;
+
             // Si contiene coma, separar en partes
             if (strpos($source, ',') !== false) {
                 $parts = array_map('trim', explode(',', $source));
                 foreach ($parts as $part) {
-                    if (!empty($part) && !isset($seen[$part])) {
-                        $expanded[] = $part;
-                        $seen[$part] = true;
+                    if (!empty($part)) {
+                        // Sumar el conteo si ya existe
+                        if (isset($expanded[$part])) {
+                            $expanded[$part] += $count;
+                        } else {
+                            $expanded[$part] = $count;
+                        }
                     }
                 }
             } else {
-                if (!isset($seen[$source])) {
-                    $expanded[] = $source;
-                    $seen[$source] = true;
+                if (isset($expanded[$source])) {
+                    $expanded[$source] += $count;
+                } else {
+                    $expanded[$source] = $count;
                 }
             }
         }
 
-        // Ordenar alfabéticamente
-        sort($expanded, SORT_STRING | SORT_FLAG_CASE);
+        // Ordenar alfabéticamente por clave
+        ksort($expanded, SORT_STRING | SORT_FLAG_CASE);
 
         return $expanded;
     }

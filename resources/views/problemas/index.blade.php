@@ -25,6 +25,7 @@
     padding: 1.5rem;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     margin-bottom: 2rem;
+    overflow: hidden;
 }
 
 .filtros-grid {
@@ -32,6 +33,11 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
     align-items: start;
+    overflow: hidden;
+}
+
+.form-group {
+    min-width: 0; /* Permite que los elementos se encojan en el grid */
 }
 
 .form-group,
@@ -57,6 +63,9 @@
     font-size: 1rem;
     background-color: white;
     min-height: 38px;
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .form-group select:hover {
