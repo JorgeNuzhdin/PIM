@@ -134,6 +134,16 @@
         margin: 0;
         color: #2c5282;
     }
+
+    .form-group input:invalid,
+    .form-group select:invalid {
+        border-color: #fc8181;
+    }
+
+    .form-group input:valid,
+    .form-group select:valid {
+        border-color: #68d391;
+    }
 </style>
 @endsection
 
@@ -157,7 +167,7 @@
             <p><strong>Nota:</strong> Los campos marcados con <span style="color: #e53e3e;">*</span> son obligatorios.</p>
         </div>
 
-        <form action="{{ route('pim-sheets.store') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('pim-sheets.store') }}" method="POST" enctype="multipart/form-data" id="sheetForm" onsubmit="return validateForm()">
             @csrf
 
             <div class="form-group">
@@ -179,14 +189,14 @@
             </div>
 
             <div class="form-group">
-                <label for="institution">Institución</label>
-                <input type="text" id="institution" name="institution" value="{{ old('institution', Auth::user()->institution ?? '') }}" maxlength="256">
+                <label for="institution">Institución <span class="required">*</span></label>
+                <input type="text" id="institution" name="institution" value="{{ old('institution', Auth::user()->institution ?? '') }}" maxlength="256" required>
                 <small>Nombre de la institución educativa</small>
             </div>
 
             <div class="form-group">
-                <label for="theme">Tema</label>
-                <select id="theme" name="theme">
+                <label for="theme">Tema <span class="required">*</span></label>
+                <select id="theme" name="theme" required>
                     <option value="">Seleccionar tema...</option>
                     @foreach($temas as $tema)
                         <option value="{{ $tema->id }}" {{ old('theme') == $tema->id ? 'selected' : '' }}>
@@ -226,6 +236,40 @@
 
 @section('scripts')
 <script>
+    // Validación del formulario antes de enviar
+    function validateForm() {
+        const title = document.getElementById('title').value.trim();
+        const dateYear = document.getElementById('date_year').value.trim();
+        const institution = document.getElementById('institution').value.trim();
+        const theme = document.getElementById('theme').value;
+        const texFile = document.getElementById('tex_sols').files.length;
+
+        const errors = [];
+
+        if (!title) {
+            errors.push('El título es obligatorio.');
+        }
+        if (!dateYear) {
+            errors.push('El año es obligatorio.');
+        }
+        if (!institution) {
+            errors.push('La institución es obligatoria.');
+        }
+        if (!theme) {
+            errors.push('El tema es obligatorio.');
+        }
+        if (!texFile) {
+            errors.push('El archivo TEX es obligatorio.');
+        }
+
+        if (errors.length > 0) {
+            alert('Por favor, corrige los siguientes errores:\n\n- ' + errors.join('\n- '));
+            return false;
+        }
+
+        return true;
+    }
+
     // Función para extraer IDs de problemas del contenido TEX
     function extractProblemIds(texContent) {
         const regex = /\\idtitulo\{\\#(\d+):/g;

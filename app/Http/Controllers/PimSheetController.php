@@ -103,11 +103,17 @@ class PimSheetController extends Controller
             'title' => 'required|string|max:255',
             'date_year' => 'required|integer|min:1900|max:2100',
             'planet' => 'nullable|string|max:255',
-            'institution' => 'nullable|string|max:256',
-            'theme' => 'nullable|exists:temas,id',
+            'institution' => 'required|string|max:256',
+            'theme' => 'required|exists:temas,id',
             'problems' => 'nullable|string|max:2048',
             'preambles' => 'nullable|string',
             'tex_sols' => 'required|file|mimes:tex,txt|max:10240',
+        ], [
+            'title.required' => 'El título es obligatorio.',
+            'date_year.required' => 'El año es obligatorio.',
+            'institution.required' => 'La institución es obligatoria.',
+            'theme.required' => 'El tema es obligatorio.',
+            'tex_sols.required' => 'El archivo TEX es obligatorio.',
         ]);
 
         $data = [
