@@ -33,14 +33,13 @@ class SourceHelper
 
         // Competiciones rusas y de Moscú
         'Olimpiada de Moscú' => ['Olimpiada.*Mosc', 'Moscow.*Olympiad', 'Mosc.*Olympiad'],
-        'Olimpiada de Rusia' => ['Olimpiada.*Rusia', 'Russian.*Olympiad', 'Russia.*Olympiad', 'Olimpiada.*Rusa'],
+        'Olimpiada de Rusia' => ['Olimpiada.*Rusia', 'Russian.*Olympiad', 'Russia.*Olympiad', 'Olimpiada.*Rusa', 'Russia', 'Russian', 'USSR', 'Soviet'],
         'Tournament of Towns' => ['Tournament.*Towns', 'Tornео.*ciudad', 'Torneo.*ciudades'],
         'Fiesta Matemática de Moscú' => ['Fiesta.*Matem.*Mosc', 'Moscow.*Math.*Festival'],
 
 
         // Competiciones por países
         'China' => ['China', 'Chinese'],
-        'Russia' => ['Russia', 'Russian', 'USSR', 'Soviet'],
         'Romania' => ['Romania', 'Romanian', 'RMO'],
         'Hungary' => ['Hungar', 'Kurschak'],
         'Poland' => ['Poland', 'Polish'],
