@@ -177,9 +177,12 @@
             </div>
 
             <div class="form-group">
-                <label for="date_year">Año <span class="required">*</span></label>
-                <input type="number" id="date_year" name="date_year" value="{{ old('date_year', $currentYear) }}" min="1900" max="2100" required>
-                <small>Año académico de la hoja</small>
+                <label for="date_year">Año académico <span class="required">*</span></label>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="number" id="date_year" name="date_year" value="{{ old('date_year', $currentYear) }}" min="1900" max="2100" required style="width: 120px;">
+                    <span id="year_display" style="color: #4a5568; font-weight: 500;">{{ old('date_year', $currentYear) }}-{{ old('date_year', $currentYear) + 1 }}</span>
+                </div>
+                <small>Introduce el año de inicio del curso (ej: 2025 para el curso 2025-2026)</small>
             </div>
 
             <div class="form-group">
@@ -236,6 +239,17 @@
 
 @section('scripts')
 <script>
+    // Actualizar visualización del año académico
+    document.getElementById('date_year').addEventListener('input', function(e) {
+        const year = parseInt(e.target.value);
+        const display = document.getElementById('year_display');
+        if (year && year >= 1900 && year <= 2100) {
+            display.textContent = year + '-' + (year + 1);
+        } else {
+            display.textContent = '';
+        }
+    });
+
     // Validación del formulario antes de enviar
     function validateForm() {
         const title = document.getElementById('title').value.trim();

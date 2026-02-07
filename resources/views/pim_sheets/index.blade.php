@@ -249,7 +249,7 @@
                         <option value="">Todos los años</option>
                         @foreach($years as $year)
                             <option value="{{ $year }}" {{ request('year') == $year ? 'selected' : '' }}>
-                                {{ $year }}
+                                {{ $year }}-{{ $year + 1 }}
                             </option>
                         @endforeach
                     </select>
@@ -418,7 +418,7 @@
                 @forelse($sheets as $sheet)
                     <tr>
                         <td onclick="window.location.href='{{ route('pim-sheets.download', ['id' => $sheet->id]) }}'" style="cursor: pointer;"><strong>{{ $sheet->title }}</strong></td>
-                        <td onclick="window.location.href='{{ route('pim-sheets.download', ['id' => $sheet->id]) }}'" style="cursor: pointer;">{{ $sheet->date_year }}</td>
+                        <td onclick="window.location.href='{{ route('pim-sheets.download', ['id' => $sheet->id]) }}'" style="cursor: pointer;">{{ $sheet->date_year }}-{{ $sheet->date_year + 1 }}</td>
                         <td onclick="window.location.href='{{ route('pim-sheets.download', ['id' => $sheet->id]) }}'" style="cursor: pointer;">{{ $sheet->planet ?? '-' }}</td>
                         <td onclick="window.location.href='{{ route('pim-sheets.download', ['id' => $sheet->id]) }}'" style="cursor: pointer;">{{ $sheet->institution ?? '-' }}</td>
                         <td onclick="window.location.href='{{ route('pim-sheets.download', ['id' => $sheet->id]) }}'" style="cursor: pointer;">{{ $sheet->tema->tema ?? '-' }}</td>
