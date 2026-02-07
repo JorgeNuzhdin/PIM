@@ -193,7 +193,7 @@
 
             <div class="form-group">
                 <label for="institution">Institución <span class="required">*</span></label>
-                <input type="text" id="institution" name="institution" value="{{ old('institution', Auth::user()->institution ?? '') }}" maxlength="256" required>
+                <input type="text" id="institution" name="institution" value="{{ old('institution', 'PIM') }}" maxlength="256" required>
                 <small>Nombre de la institución educativa</small>
             </div>
 
