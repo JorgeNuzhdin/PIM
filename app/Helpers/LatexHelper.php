@@ -10,7 +10,8 @@ class LatexHelper
     private static $countReto = 0;
     private static $countRetoResuelto = 0;
     private static $isPreambleContext = false;
-    private static $debugMessages = [];  
+    private static $debugMessages = [];
+    private static $tikzBlocks = [];  
     private static function debug($message, $data = null)
     {
         $debugInfo = $message;
@@ -226,6 +227,23 @@ private static function getImSimple($filename)
         $style_th = "border:solid #000; padding:10px; margin:10px;";
         $style_ex = 'border-left: 2px solid red; padding-left:15px; margin-left:10px;';
 
+        // PRIMERO: Extraer bloques TikZ para protegerlos del escape de < y >
+        self::$tikzBlocks = [];
+        $tikzIndex = 0;
+        while (($startPos = strpos($t, '\begin{tikzpicture}')) !== false) {
+            $endPos = strpos($t, '\end{tikzpicture}', $startPos);
+            if ($endPos !== false) {
+                $endPos += strlen('\end{tikzpicture}');
+                $tikzContent = substr($t, $startPos, $endPos - $startPos);
+                $placeholder = "###TIKZ_BLOCK_{$tikzIndex}###";
+                self::$tikzBlocks[$placeholder] = '<div class="tikz" style="display:flex; justify-content:center"><script type="text/tikz">' . $tikzContent . '</script></div>';
+                $t = substr($t, 0, $startPos) . $placeholder . substr($t, $endPos);
+                $tikzIndex++;
+            } else {
+                break; // No se encontró \end{tikzpicture}, salir del bucle
+            }
+        }
+
           $t = str_replace(['u000au000au000au000a', 'u000au000au000a', 'u000au000a', 'u000a', 'u000d', 'u0009'], ["\n\n", "\n\n", "\n\n", "\n", "\r", "\t"], $t);
     $t = str_replace(['\u000a\u000a\u000a\u000a', '\u000a\u000a\u000a', '\u000a\u000a', '\u000a', '\u000d', '\u0009'], ["\n\n", "\n\n", "\n\n", "\n", "\r", "\t"], $t);
     
@@ -371,9 +389,7 @@ $t=str_replace('\end{center}', '</div>', $t);
         $t = str_replace('\begin{center}', '<div style="display:flex; justify-content:center">', $t);
         $t = str_replace('\end{center}', '</div>', $t);
 
-        //dibujos
-$t=str_replace('\begin{tikzpicture}', '<div class="tikz" style="display:flex; justify-content:center"><script type="text/tikz">\begin{tikzpicture}', $t);
-$t=str_replace('\end{tikzpicture}', '\end{tikzpicture}</script></div>', $t);
+        // (TikZ ya fue procesado al inicio con placeholders)
 
 // Eliminar \definecolor sueltos
 $t = preg_replace('/\\\\definecolor\{[^}]+\}\{[^}]+\}\{[^}]+\}/', '', $t);
@@ -704,6 +720,11 @@ $t = str_replace('\end{verbatim}', '</code></pre>', $t);
 $t = str_replace('&&&LT&&&', '&lt;', $t);
     $t = str_replace('&&&GT&&&', '&gt;', $t);
 $t = str_replace( 'PCTG','\%', $t);
+
+// Restaurar bloques TikZ (que fueron protegidos al inicio)
+foreach (self::$tikzBlocks as $placeholder => $tikzHtml) {
+    $t = str_replace($placeholder, $tikzHtml, $t);
+}
 
 $t .= self::getDebugScript();
         return $t;
