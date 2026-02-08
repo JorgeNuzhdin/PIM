@@ -56,6 +56,59 @@ class LatexHelper
         }
     }
 
+    /**
+     * Extrae contenido de un comando LaTeX contando llaves anidadas.
+     * Por ejemplo: \exercise{texto con \frac{1}{2} dentro}
+     * Devuelve todo el contenido hasta la llave de cierre que corresponde.
+     */
+    private static function extractBracedContent($command, $t)
+    {
+        $pattern = $command . '{';
+        $start = strpos($t, $pattern);
+
+        if ($start === false) {
+            return ['before' => $t, 'after' => '', 'inside' => ''];
+        }
+
+        $beforeCmd = substr($t, 0, $start);
+        $contentStart = $start + strlen($pattern);
+        $remaining = substr($t, $contentStart);
+
+        // Contar llaves para encontrar la de cierre correcta
+        $braceCount = 1;
+        $pos = 0;
+        $len = strlen($remaining);
+
+        while ($pos < $len && $braceCount > 0) {
+            $char = $remaining[$pos];
+
+            // Ignorar llaves escapadas
+            if ($pos > 0 && $remaining[$pos - 1] === '\\') {
+                $pos++;
+                continue;
+            }
+
+            if ($char === '{') {
+                $braceCount++;
+            } elseif ($char === '}') {
+                $braceCount--;
+            }
+
+            if ($braceCount > 0) {
+                $pos++;
+            }
+        }
+
+        if ($braceCount === 0) {
+            $inside = substr($remaining, 0, $pos);
+            $after = substr($remaining, $pos + 1); // +1 para saltar la llave de cierre
+            return ['before' => $beforeCmd, 'after' => $after, 'inside' => $inside];
+        }
+
+        // Si no se encontró la llave de cierre, devolver vacío
+        return ['before' => $t, 'after' => '', 'inside' => ''];
+    }
+
  
 private static function getIm($image)
 {
@@ -185,11 +238,11 @@ private static function getImSimple($filename)
         $t = preg_replace('/^%.*$/m', '', $t);  // Comentarios al inicio de línea
         $t = preg_replace('/(?<!\\\\)%.*$/m', '', $t);  // Comentarios inline (% hasta fin de línea)
 
-        // Eliminar \idtitulo{...} completamente (contenido incluido)
-        $idtitulo = self::fromAtoB('\idtitulo{', '}', $t);
+        // Eliminar \idtitulo{...} completamente (contenido incluido, con llaves anidadas)
+        $idtitulo = self::extractBracedContent('\idtitulo', $t);
         while ($idtitulo['inside'] != '') {
             $t = $idtitulo['before'] . $idtitulo['after'];
-            $idtitulo = self::fromAtoB('\idtitulo{', '}', $t);
+            $idtitulo = self::extractBracedContent('\idtitulo', $t);
         }
 
         // Eliminar patrones \+Mayúscula seguido de espacio (como \J , \R , \RM , etc.)
@@ -384,8 +437,8 @@ $t = preg_replace('/\\\\definecolor\{[^}]+\}\{[^}]+\}\{[^}]+\}/', '', $t);
         $style_reto_resuelto = 'background: #f0fdf4; border-left: 4px solid #22c55e; padding: 1rem; margin: 1rem 0; border-radius: 4px;';
         $style_solution = 'background: #fffbeb; border-left: 3px solid #f59e0b; padding: 0.75rem; margin: 0.5rem 0; border-radius: 4px;';
 
-        // \exercise{...} - Convertir a Reto o Reto resuelto según contexto
-        $exercise = self::fromAtoB('\exercise{', '}', $t);
+        // \exercise{...} - Convertir a Reto o Reto resuelto según contexto (con llaves anidadas)
+        $exercise = self::extractBracedContent('\exercise', $t);
         while ($exercise['inside'] != '') {
             if (self::$isPreambleContext) {
                 self::$countRetoResuelto++;
@@ -395,15 +448,15 @@ $t = preg_replace('/\\\\definecolor\{[^}]+\}\{[^}]+\}\{[^}]+\}/', '', $t);
                 $retoHtml = '<div style="' . $style_reto . '"><strong>Reto ' . self::$countReto . ':</strong><br>' . $exercise['inside'] . '</div>';
             }
             $t = $exercise['before'] . $retoHtml . $exercise['after'];
-            $exercise = self::fromAtoB('\exercise{', '}', $t);
+            $exercise = self::extractBracedContent('\exercise', $t);
         }
 
-        // \solution{...} - Convertir a bloque de solución
-        $solution = self::fromAtoB('\solution{', '}', $t);
+        // \solution{...} - Convertir a bloque de solución (con llaves anidadas)
+        $solution = self::extractBracedContent('\solution', $t);
         while ($solution['inside'] != '') {
             $solutionHtml = '<div style="' . $style_solution . '"><strong><em>Solución:</em></strong><br>' . $solution['inside'] . '</div>';
             $t = $solution['before'] . $solutionHtml . $solution['after'];
-            $solution = self::fromAtoB('\solution{', '}', $t);
+            $solution = self::extractBracedContent('\solution', $t);
         }
 
         // Entorno tcolorbox - Eliminar el entorno pero mantener contenido con marco simple
