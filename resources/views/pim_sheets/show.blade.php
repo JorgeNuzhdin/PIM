@@ -250,7 +250,7 @@
         </div>
         <div class="sheet-actions">
             <a href="{{ route('pim-sheets.download', ['id' => $sheet->id]) }}" class="btn btn-primary">
-                ⬇️ Descargar TEX
+                📦 Descargar ZIP
             </a>
             <a href="{{ route('pim-sheets.index') }}" class="btn btn-secondary">
                 ← Volver al listado

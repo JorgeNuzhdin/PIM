@@ -169,46 +169,85 @@ class PimSheetController extends Controller
     }
 
     /**
-     * Descargar archivo TEX
+     * Descargar ZIP con archivo TEX, logo e imágenes
      */
     public function download($id)
     {
         Log::info('=== PimSheet Download ===');
         Log::info('ID recibido: ' . $id);
-        Log::info('Usuario: ' . (Auth::check() ? Auth::user()->email : 'No autenticado'));
 
         $sheet = PimSheet::where('id', $id)->first();
-
-        Log::info('Sheet encontrada: ' . ($sheet ? 'SI' : 'NO'));
 
         if (!$sheet) {
             Log::error('Hoja no encontrada para ID: ' . $id);
             abort(404, 'Hoja no encontrada.');
         }
 
-        Log::info('Título: ' . $sheet->title);
-        Log::info('Año: ' . $sheet->date_year);
-        Log::info('Tiene tex_sols: ' . (!empty($sheet->tex_sols) ? 'SI (' . strlen($sheet->tex_sols) . ' bytes)' : 'NO'));
-
         if (empty($sheet->tex_sols)) {
             Log::error('tex_sols vacío para sheet ID: ' . $id);
             abort(404, 'Archivo TEX no disponible.');
         }
 
-        // Generar nombre de archivo
-        $filename = str_replace(' ', '_', $sheet->title) . '_' . $sheet->date_year . '.tex';
-        Log::info('Nombre archivo: ' . $filename);
+        // Generar nombres de archivo
+        $baseName = str_replace(' ', '_', $sheet->title) . '_' . $sheet->date_year;
+        $texFilename = $baseName . '.tex';
+        $zipFilename = $baseName . '.zip';
 
-        // Crear archivo temporal
-        $tempPath = storage_path('app/temp_' . $id . '.tex');
-        file_put_contents($tempPath, $sheet->tex_sols);
+        // Crear archivo ZIP temporal
+        $zipPath = storage_path('app/temp_' . $id . '.zip');
+        $zip = new \ZipArchive();
 
-        Log::info('Archivo temporal creado: ' . $tempPath);
-        Log::info('=== Iniciando descarga ===');
+        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            abort(500, 'No se pudo crear el archivo ZIP.');
+        }
 
-        return response()->download($tempPath, $filename, [
-            'Content-Type' => 'application/x-tex',
+        // Añadir archivo TEX
+        $zip->addFromString($texFilename, $sheet->tex_sols);
+
+        // Añadir logo (intro_id = 0)
+        $logo = FigureInIntro::where('intro_id', 0)->first();
+        if ($logo && $logo->figure) {
+            $logoExtension = $this->detectImageExtension($logo->figure);
+            $zip->addFromString($logo->title, $logo->figure);
+            Log::info('Logo añadido: ' . $logo->title);
+        }
+
+        // Añadir imágenes de la hoja (intro_id = sheet id)
+        $imagenes = FigureInIntro::where('intro_id', $id)->get();
+        foreach ($imagenes as $imagen) {
+            if ($imagen->figure) {
+                $zip->addFromString($imagen->title, $imagen->figure);
+                Log::info('Imagen añadida: ' . $imagen->title);
+            }
+        }
+
+        $zip->close();
+
+        Log::info('ZIP creado con ' . (1 + ($logo ? 1 : 0) + count($imagenes)) . ' archivos');
+
+        return response()->download($zipPath, $zipFilename, [
+            'Content-Type' => 'application/zip',
         ])->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Detectar extensión de imagen por magic bytes
+     */
+    private function detectImageExtension($data)
+    {
+        $header = substr($data, 0, 4);
+
+        if (substr($header, 0, 2) === "\xFF\xD8") {
+            return 'jpg';
+        } elseif (substr($header, 0, 4) === "\x89PNG") {
+            return 'png';
+        } elseif (substr($header, 0, 4) === '%PDF') {
+            return 'pdf';
+        } elseif (substr($header, 0, 3) === 'GIF') {
+            return 'gif';
+        }
+
+        return 'png'; // fallback
     }
 
     /**

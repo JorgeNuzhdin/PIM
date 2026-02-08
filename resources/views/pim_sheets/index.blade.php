@@ -442,7 +442,7 @@
                         <td>{{ $sheet->tema->tema ?? '-' }}</td>
                         <td class="actions-cell">
                             <a href="{{ route('pim-sheets.show', ['id' => $sheet->id]) }}" class="btn-action view" title="Ver hoja">👁️</a>
-                            <a href="{{ route('pim-sheets.download', ['id' => $sheet->id]) }}" class="btn-action download" title="Descargar TEX">⬇️</a>
+                            <a href="{{ route('pim-sheets.download', ['id' => $sheet->id]) }}" class="btn-action download" title="Descargar ZIP">📦</a>
                             @auth
                                 @if(Auth::user()->isAdmin())
                                     <button class="btn-action btn-delete" onclick="eliminarHoja({{ $sheet->id }}, '{{ addslashes($sheet->title) }}')" title="Eliminar hoja">🗑️</button>
