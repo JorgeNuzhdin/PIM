@@ -140,60 +140,49 @@
 
     .problema-header {
         display: flex;
-        align-items: flex-start;
-        gap: 1rem;
+        justify-content: space-between;
+        align-items: center;
         margin-bottom: 1rem;
         padding-bottom: 0.75rem;
         border-bottom: 1px solid #e2e8f0;
+    }
+
+    .problema-title-section {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .reto-number {
+        color: #6366f1;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+
+    .problema-title {
+        margin: 0;
+        color: #2d3748;
+        font-size: 1.1rem;
+        font-weight: 600;
     }
 
     .difficulty-badge {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
         font-weight: bold;
-        padding: 0.5rem 0.75rem;
+        padding: 0.4rem 0.7rem;
         border-radius: 8px;
-        font-size: 0.9rem;
-        min-width: 40px;
+        font-size: 0.85rem;
+        min-width: 35px;
         text-align: center;
-    }
-
-    .problema-info {
-        flex: 1;
-    }
-
-    .problema-title-row {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .problema-title-row h3 {
-        margin: 0;
-        color: #2d3748;
-        font-size: 1.1rem;
+        flex-shrink: 0;
     }
 
     .year-badge {
         background: #e2e8f0;
         color: #4a5568;
         padding: 0.2rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.8rem;
-    }
-
-    .problema-tags {
-        margin-top: 0.5rem;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-
-    .tag {
-        background: #edf2f7;
-        color: #4a5568;
-        padding: 0.15rem 0.5rem;
         border-radius: 4px;
         font-size: 0.8rem;
     }
@@ -293,6 +282,10 @@
                 <input type="checkbox" name="mostrar[]" value="year" {{ in_array('year', $mostrarArray) ? 'checked' : '' }} onchange="this.form.submit()">
                 Año académico
             </label>
+            <label class="checkbox-option">
+                <input type="checkbox" name="mostrar[]" value="nivel" {{ in_array('nivel', $mostrarArray) ? 'checked' : '' }} onchange="this.form.submit()">
+                Nivel
+            </label>
         </div>
     </form>
 
@@ -313,34 +306,26 @@
     @endphp
 
     @if($problemas->count() > 0)
+        @php $retoNumber = 0; @endphp
         @foreach($problemas as $problema)
+            @php $retoNumber++; @endphp
             <div class="problema-card">
                 <div class="problema-header">
-                    @if($problema->difficulty)
+                    <div class="problema-title-section">
+                        <span class="reto-number">Reto {{ $retoNumber }}:</span>
+                        @if($problema->title)
+                            <h3 class="problema-title">{{ $problema->title }}</h3>
+                        @endif
+                        @if($problema->school_year && in_array('year', $mostrarArray))
+                            <span class="year-badge">📚 {{ $problema->school_year }}</span>
+                        @endif
+                    </div>
+
+                    @if($problema->difficulty && in_array('nivel', $mostrarArray))
                         <div class="difficulty-badge" title="Dificultad: {{ $problema->difficulty }}/10">
                             {{ $problema->difficulty }}
                         </div>
                     @endif
-
-                    <div class="problema-info">
-                        <div class="problema-title-row">
-                            <h3>{{ $problema->title ?: 'Problema #' . $problema->id }}</h3>
-
-                            @if($problema->school_year && in_array('year', $mostrarArray))
-                                <span class="year-badge">
-                                    📚 {{ $problema->school_year }}
-                                </span>
-                            @endif
-                        </div>
-
-                        @if($problema->tags && $problema->tags->count() > 0)
-                            <div class="problema-tags">
-                                @foreach($problema->tags as $tag)
-                                    <span class="tag">{{ $tag->tag }}</span>
-                                @endforeach
-                            </div>
-                        @endif
-                    </div>
                 </div>
 
                 <!-- Enunciado -->

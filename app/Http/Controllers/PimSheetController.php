@@ -207,9 +207,9 @@ class PimSheetController extends Controller
         }
 
         // Opciones de visualización (checkboxes)
-        $mostrarArray = $request->input('mostrar', ['pistas', 'solucion']);
+        $mostrarArray = $request->input('mostrar', ['pistas', 'solucion', 'nivel']);
         if (!is_array($mostrarArray)) {
-            $mostrarArray = ['pistas', 'solucion'];
+            $mostrarArray = ['pistas', 'solucion', 'nivel'];
         }
 
         return view('pim_sheets.show', compact('sheet', 'preambleHtml', 'problemas', 'mostrarArray'));

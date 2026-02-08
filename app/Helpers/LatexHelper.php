@@ -245,8 +245,9 @@ private static function getImSimple($filename)
             $idtitulo = self::extractBracedContent('\idtitulo', $t);
         }
 
-        // Eliminar patrones \+Mayúscula seguido de espacio (como \J , \R , \RM , etc.)
-        $t = preg_replace('/\\\\[A-Z]+\s+/', '', $t);
+        // Eliminar patrones \+Mayúscula (como \J, \R, \RM, \N\M, etc.)
+        // Incluye patrones seguidos de espacio, otro comando, o fin de línea
+        $t = preg_replace('/\\\\[A-Z]+(?=\s|\\\\|$)/', '', $t);
 
         // Comandos LaTeX que MathJax no reconoce - convertir a equivalentes
         $t = str_replace('\degree', '^\\circ', $t);  // \degree → ^∘
