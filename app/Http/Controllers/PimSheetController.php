@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\PimSheet;
+use App\Models\Problema;
 use App\Models\Tema;
+use App\Helpers\LatexHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -174,6 +176,43 @@ class PimSheetController extends Controller
         return response()->download($tempPath, $filename, [
             'Content-Type' => 'application/x-tex',
         ])->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Mostrar hoja de problemas (preámbulo + problemas)
+     */
+    public function show(Request $request, $id)
+    {
+        $sheet = PimSheet::with('tema')->find($id);
+
+        if (!$sheet) {
+            abort(404, 'Hoja no encontrada.');
+        }
+
+        // Procesar preámbulo con LatexHelper
+        $preambleHtml = '';
+        if (!empty($sheet->preambles)) {
+            $preambleHtml = LatexHelper::toHtml($sheet->preambles);
+        }
+
+        // Obtener los problemas de la hoja
+        $problemas = collect();
+        if (!empty($sheet->problems)) {
+            $problemIds = array_filter(array_map('trim', explode(',', $sheet->problems)));
+            if (!empty($problemIds)) {
+                $problemas = Problema::whereIn('id', $problemIds)
+                    ->orderByRaw('FIELD(id, ' . implode(',', $problemIds) . ')')
+                    ->get();
+            }
+        }
+
+        // Opciones de visualización (checkboxes)
+        $mostrarArray = $request->input('mostrar', ['pistas', 'solucion']);
+        if (!is_array($mostrarArray)) {
+            $mostrarArray = ['pistas', 'solucion'];
+        }
+
+        return view('pim_sheets.show', compact('sheet', 'preambleHtml', 'problemas', 'mostrarArray'));
     }
 
     /**

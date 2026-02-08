@@ -139,7 +139,29 @@
 
     .actions-cell {
         text-align: center;
-        width: 60px;
+        white-space: nowrap;
+    }
+
+    .btn-action {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.25rem 0.4rem;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+        font-size: 1.1rem;
+    }
+
+    .btn-action:hover {
+        background-color: #e2e8f0;
+    }
+
+    .btn-action.view:hover {
+        background-color: #bee3f8;
+    }
+
+    .btn-action.download:hover {
+        background-color: #c6f6d5;
     }
 
     .sheets-table-wrapper {
@@ -195,7 +217,6 @@
     }
 
     .sheets-table tbody tr {
-        cursor: pointer;
         transition: background-color 0.15s;
     }
 
@@ -407,34 +428,30 @@
                         Institución
                     </th>
                     <th>Tema</th>
-                    @auth
-                        @if(Auth::user()->isAdmin())
-                            <th class="actions-cell">Acciones</th>
-                        @endif
-                    @endauth
+                    <th class="actions-cell">Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($sheets as $sheet)
                     <tr>
-                        <td onclick="window.location.href='{{ route('pim-sheets.download', ['id' => $sheet->id]) }}'" style="cursor: pointer;"><strong>{{ $sheet->title }}</strong></td>
-                        <td onclick="window.location.href='{{ route('pim-sheets.download', ['id' => $sheet->id]) }}'" style="cursor: pointer;">{{ $sheet->date_year }}-{{ $sheet->date_year + 1 }}</td>
-                        <td onclick="window.location.href='{{ route('pim-sheets.download', ['id' => $sheet->id]) }}'" style="cursor: pointer;">{{ $sheet->planet ?? '-' }}</td>
-                        <td onclick="window.location.href='{{ route('pim-sheets.download', ['id' => $sheet->id]) }}'" style="cursor: pointer;">{{ $sheet->institution ?? '-' }}</td>
-                        <td onclick="window.location.href='{{ route('pim-sheets.download', ['id' => $sheet->id]) }}'" style="cursor: pointer;">{{ $sheet->tema->tema ?? '-' }}</td>
-                        @auth
-                            @if(Auth::user()->isAdmin())
-                                <td class="actions-cell">
-                                    <button class="btn-delete" onclick="eliminarHoja({{ $sheet->id }}, '{{ addslashes($sheet->title) }}')" title="Eliminar hoja">
-                                        🗑️
-                                    </button>
-                                </td>
-                            @endif
-                        @endauth
+                        <td><strong>{{ $sheet->title }}</strong></td>
+                        <td>{{ $sheet->date_year }}-{{ $sheet->date_year + 1 }}</td>
+                        <td>{{ $sheet->planet ?? '-' }}</td>
+                        <td>{{ $sheet->institution ?? '-' }}</td>
+                        <td>{{ $sheet->tema->tema ?? '-' }}</td>
+                        <td class="actions-cell">
+                            <a href="{{ route('pim-sheets.show', ['id' => $sheet->id]) }}" class="btn-action view" title="Ver hoja">👁️</a>
+                            <a href="{{ route('pim-sheets.download', ['id' => $sheet->id]) }}" class="btn-action download" title="Descargar TEX">⬇️</a>
+                            @auth
+                                @if(Auth::user()->isAdmin())
+                                    <button class="btn-action btn-delete" onclick="eliminarHoja({{ $sheet->id }}, '{{ addslashes($sheet->title) }}')" title="Eliminar hoja">🗑️</button>
+                                @endif
+                            @endauth
+                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="{{ Auth::check() && Auth::user()->isAdmin() ? '6' : '5' }}" style="text-align: center; padding: 2rem; color: #718096;">
+                        <td colspan="6" style="text-align: center; padding: 2rem; color: #718096;">
                             No se encontraron hojas de problemas.
                         </td>
                     </tr>

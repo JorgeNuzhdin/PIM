@@ -25,7 +25,6 @@
     padding: 1.5rem;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     margin-bottom: 2rem;
-    overflow: hidden;
 }
 
 .filtros-grid {
@@ -33,7 +32,6 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
     align-items: start;
-    overflow: hidden;
 }
 
 .form-group {
@@ -162,7 +160,7 @@
     border-radius: 4px;
     margin-top: 0.25rem;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    z-index: 100;
+    z-index: 1000;
     max-height: 250px;
     overflow-y: auto;
 }
