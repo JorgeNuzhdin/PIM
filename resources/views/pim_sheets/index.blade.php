@@ -150,6 +150,7 @@
         border-radius: 4px;
         transition: background-color 0.2s;
         font-size: 1.1rem;
+        text-decoration: none;
     }
 
     .btn-action:hover {

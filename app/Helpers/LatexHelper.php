@@ -460,6 +460,20 @@ $t = preg_replace('/\\\\definecolor\{[^}]+\}\{[^}]+\}\{[^}]+\}/', '', $t);
             $solution = self::extractBracedContent('\solution', $t);
         }
 
+        // Entorno ejer - Convertir a Reto o Reto resuelto según contexto
+        $ejer = self::fromAtoB('\begin{ejer}', '\end{ejer}', $t);
+        while ($ejer['inside'] != '') {
+            if (self::$isPreambleContext) {
+                self::$countRetoResuelto++;
+                $ejerHtml = '<div style="' . $style_reto_resuelto . '"><strong>Reto resuelto ' . self::$countRetoResuelto . ':</strong><br>' . $ejer['inside'] . '</div>';
+            } else {
+                self::$countReto++;
+                $ejerHtml = '<div style="' . $style_reto . '"><strong>Reto ' . self::$countReto . ':</strong><br>' . $ejer['inside'] . '</div>';
+            }
+            $t = $ejer['before'] . $ejerHtml . $ejer['after'];
+            $ejer = self::fromAtoB('\begin{ejer}', '\end{ejer}', $t);
+        }
+
         // Entorno tcolorbox - Eliminar el entorno pero mantener contenido con marco simple
         $tcolorbox = self::fromAtoB('\begin{tcolorbox}', '\end{tcolorbox}', $t);
         while ($tcolorbox['inside'] != '') {
