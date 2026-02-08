@@ -189,10 +189,10 @@ class PimSheetController extends Controller
             abort(404, 'Hoja no encontrada.');
         }
 
-        // Procesar preámbulo con LatexHelper
+        // Procesar preámbulo con LatexHelper (usa "Reto resuelto" para ejercicios)
         $preambleHtml = '';
         if (!empty($sheet->preambles)) {
-            $preambleHtml = LatexHelper::toHtml($sheet->preambles);
+            $preambleHtml = LatexHelper::toHtmlPreamble($sheet->preambles);
         }
 
         // Obtener los problemas de la hoja
