@@ -113,35 +113,48 @@ class LatexHelper
  
 private static function getIm($image)
 {
-      
-    $pattern = '/\\\\includegraphics\[(.*?)\]\{(.*?)\}/';
+
+    $pattern = '/\\\\includegraphics\s*\[(.*?)\]\s*\{(.*?)\}/';
     if (preg_match($pattern, $image, $matches)) {
-         
+
         $options = $matches[1];
         $filename = $matches[2];
-        
-        // Determinar el ancho
+
+        // Determinar el ancho (permite espacios alrededor de =)
         $width = 100;
-        
-        if (preg_match('/width=([\d.]+)/', $options, $widthMatch)) {
+
+        if (preg_match('/width\s*=\s*([\d.]+)/', $options, $widthMatch)) {
             $width = floatval($widthMatch[1]) * 100;
         }
-        elseif (preg_match('/scale=([\d.]+)/', $options, $scaleMatch)) {
+        elseif (preg_match('/scale\s*=\s*([\d.]+)/', $options, $scaleMatch)) {
             $width = floatval($scaleMatch[1]) * 100;
           }
         
         $imName = preg_replace('/\.(png|jpg|jpeg|gif|pdf)$/i', '', $filename);
         $imName = trim($imName);
-        
-        
+
+        // Buscar primero en pim_figures (problemas)
         $figure = \App\Models\Figure::where('title', $filename)->first();
-        
+
         if (!$figure) {
             $figure = \App\Models\Figure::where('title', $imName)->first();
         }
-        
+
         if (!$figure && !str_ends_with($filename, '.pdf')) {
             $figure = \App\Models\Figure::where('title', $imName . '.pdf')->first();
+        }
+
+        // Si no se encuentra, buscar en pim_figures_in_intros (preámbulos de hojas)
+        if (!$figure) {
+            $figure = \App\Models\FigureInIntro::where('title', $filename)->first();
+        }
+
+        if (!$figure) {
+            $figure = \App\Models\FigureInIntro::where('title', $imName)->first();
+        }
+
+        if (!$figure && !str_ends_with($filename, '.pdf')) {
+            $figure = \App\Models\FigureInIntro::where('title', $imName . '.pdf')->first();
         }
         
           if ($figure && $figure->figure) {
@@ -193,18 +206,32 @@ private static function getIm($image)
 
 private static function getImSimple($filename)
 {
-     $imName = preg_replace('/\.(png|jpg|jpeg|gif|pdf)$/i', '', $filename);
-    
+    $imName = preg_replace('/\.(png|jpg|jpeg|gif|pdf)$/i', '', $filename);
+
+    // Buscar primero en pim_figures (problemas)
     $figure = \App\Models\Figure::where('title', $filename)->first();
-    
+
     if (!$figure) {
         $figure = \App\Models\Figure::where('title', $imName)->first();
     }
-    
+
     if (!$figure && !str_ends_with($filename, '.pdf')) {
         $figure = \App\Models\Figure::where('title', $imName . '.pdf')->first();
     }
-    
+
+    // Si no se encuentra, buscar en pim_figures_in_intros (preámbulos de hojas)
+    if (!$figure) {
+        $figure = \App\Models\FigureInIntro::where('title', $filename)->first();
+    }
+
+    if (!$figure) {
+        $figure = \App\Models\FigureInIntro::where('title', $imName)->first();
+    }
+
+    if (!$figure && !str_ends_with($filename, '.pdf')) {
+        $figure = \App\Models\FigureInIntro::where('title', $imName . '.pdf')->first();
+    }
+
     if ($figure && $figure->figure) {
         try {
             $imgSrc = 'data:image/png;base64,' . base64_encode($figure->figure);
@@ -364,9 +391,9 @@ private static function getImSimple($filename)
 
       
     // Procesar \includegraphics ANTES de center para evitar conflictos
-// Con opciones: \includegraphics[...]{...}
+// Con opciones: \includegraphics[...]{...} (permite espacios antes de [ y alrededor de =)
 $t = preg_replace_callback(
-    '/\\\\includegraphics\[(.*?)\]\{(.*?)\}/',
+    '/\\\\includegraphics\s*\[(.*?)\]\s*\{(.*?)\}/',
     function($matches) {
         return self::getIm($matches[0]);
     },

@@ -144,6 +144,62 @@
     .form-group select:valid {
         border-color: #68d391;
     }
+
+    /* Sección de imágenes */
+    .images-section {
+        display: none;
+        background: #fffbeb;
+        border: 1px solid #f59e0b;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .images-section.visible {
+        display: block;
+    }
+
+    .images-section h3 {
+        margin: 0 0 1rem 0;
+        color: #92400e;
+        font-size: 1.1rem;
+    }
+
+    .images-list {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 1rem 0;
+    }
+
+    .images-list li {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 4px;
+        margin-bottom: 0.5rem;
+    }
+
+    .images-list .image-name {
+        flex: 1;
+        font-weight: 500;
+        color: #374151;
+    }
+
+    .images-list .image-status {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .images-list .image-status.uploaded {
+        color: #059669;
+    }
+
+    .images-list input[type="file"] {
+        max-width: 250px;
+    }
 </style>
 @endsection
 
@@ -228,6 +284,17 @@
                 <small>IDs de problemas extraídos automáticamente del archivo TEX (formato: 2804,2805,...)</small>
             </div>
 
+            <!-- Sección de imágenes del preámbulo -->
+            <div class="images-section" id="imagesSection">
+                <h3>📷 Imágenes detectadas en el preámbulo</h3>
+                <p style="color: #92400e; margin-bottom: 1rem;">
+                    Se han detectado las siguientes imágenes en el preámbulo. Por favor, sube los archivos correspondientes:
+                </p>
+                <ul class="images-list" id="imagesList">
+                    <!-- Se rellenará dinámicamente con JavaScript -->
+                </ul>
+            </div>
+
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">Subir Hoja de Problemas</button>
                 <a href="{{ route('pim-sheets.index') }}" class="btn btn-secondary">Cancelar</a>
@@ -309,6 +376,64 @@
         return '';
     }
 
+    // Función para extraer nombres de imágenes del preámbulo
+    function extractImageNames(preamble) {
+        // Buscar \includegraphics con o sin opciones, permitiendo espacios
+        const regex = /\\includegraphics\s*(?:\[[^\]]*\])?\s*\{([^}]+)\}/g;
+        const images = [];
+        let match;
+
+        while ((match = regex.exec(preamble)) !== null) {
+            const imageName = match[1].trim();
+            if (!images.includes(imageName)) {
+                images.push(imageName);
+            }
+        }
+
+        return images;
+    }
+
+    // Mostrar campos de subida de imágenes
+    function showImageUploadFields(imageNames) {
+        const section = document.getElementById('imagesSection');
+        const list = document.getElementById('imagesList');
+
+        if (imageNames.length === 0) {
+            section.classList.remove('visible');
+            list.innerHTML = '';
+            return;
+        }
+
+        list.innerHTML = '';
+
+        imageNames.forEach((imageName, index) => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <span class="image-name">📄 ${imageName}</span>
+                <input type="file" name="imagenes_preambulo[]" data-image-name="${imageName}" accept="image/*,.pdf" onchange="markImageUploaded(this)">
+                <span class="image-status" id="status_${index}">Pendiente</span>
+                <input type="hidden" name="imagenes_nombres[]" value="${imageName}">
+            `;
+            list.appendChild(li);
+        });
+
+        section.classList.add('visible');
+    }
+
+    // Marcar imagen como subida
+    function markImageUploaded(input) {
+        const li = input.closest('li');
+        const status = li.querySelector('.image-status');
+
+        if (input.files.length > 0) {
+            status.textContent = '✓ Subido';
+            status.classList.add('uploaded');
+        } else {
+            status.textContent = 'Pendiente';
+            status.classList.remove('uploaded');
+        }
+    }
+
     // Procesar archivo TEX con soluciones cuando se selecciona
     document.getElementById('tex_sols').addEventListener('change', function(e) {
         const file = e.target.files[0];
@@ -334,6 +459,13 @@
             if (preamble) {
                 document.getElementById('preambles').value = preamble;
                 document.getElementById('preambles').style.backgroundColor = '#c6f6d5'; // Verde claro
+
+                // Detectar imágenes en el preámbulo
+                const imageNames = extractImageNames(preamble);
+                showImageUploadFields(imageNames);
+            } else {
+                // Ocultar sección de imágenes si no hay preámbulo
+                document.getElementById('imagesSection').classList.remove('visible');
             }
         };
 

@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\PimSheet;
 use App\Models\Problema;
 use App\Models\Tema;
+use App\Models\FigureInIntro;
 use App\Helpers\LatexHelper;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -110,6 +112,7 @@ class PimSheetController extends Controller
             'problems' => 'nullable|string|max:2048',
             'preambles' => 'nullable|string',
             'tex_sols' => 'required|file|mimes:tex,txt|max:10240',
+            'imagenes_preambulo.*' => 'nullable|file|max:5120',
         ], [
             'title.required' => 'El título es obligatorio.',
             'date_year.required' => 'El año es obligatorio.',
@@ -118,21 +121,51 @@ class PimSheetController extends Controller
             'tex_sols.required' => 'El archivo TEX es obligatorio.',
         ]);
 
-        $data = [
-            'title' => $request->title,
-            'date_year' => $request->date_year,
-            'access' => $request->access ?? 0,
-            'planet' => $request->planet,
-            'institution' => $request->institution,
-            'problems' => $request->problems,
-            'preambles' => $request->preambles,
-            'theme' => $request->theme,
-            'tex_sols' => file_get_contents($request->file('tex_sols')->getRealPath()),
-        ];
+        DB::beginTransaction();
 
-        PimSheet::create($data);
+        try {
+            $data = [
+                'title' => $request->title,
+                'date_year' => $request->date_year,
+                'access' => $request->access ?? 0,
+                'planet' => $request->planet,
+                'institution' => $request->institution,
+                'problems' => $request->problems,
+                'preambles' => $request->preambles,
+                'theme' => $request->theme,
+                'tex_sols' => file_get_contents($request->file('tex_sols')->getRealPath()),
+            ];
 
-        return redirect()->route('pim-sheets.index')->with('success', 'Hoja de problemas subida correctamente.');
+            $sheet = PimSheet::create($data);
+
+            // Guardar imágenes del preámbulo
+            if ($request->hasFile('imagenes_preambulo')) {
+                $nombres = $request->input('imagenes_nombres', []);
+                $archivos = $request->file('imagenes_preambulo');
+
+                foreach ($archivos as $index => $archivo) {
+                    if ($archivo && $archivo->isValid()) {
+                        $nombreImagen = $nombres[$index] ?? $archivo->getClientOriginalName();
+                        $contenido = file_get_contents($archivo->getRealPath());
+
+                        FigureInIntro::create([
+                            'title' => $nombreImagen,
+                            'figure' => $contenido,
+                            'intro_id' => $sheet->id,
+                        ]);
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->route('pim-sheets.index')->with('success', 'Hoja de problemas subida correctamente.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al crear hoja de problemas: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Error al crear la hoja: ' . $e->getMessage());
+        }
     }
 
     /**

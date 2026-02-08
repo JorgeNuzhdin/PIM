@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PimSheet extends Model
 {
@@ -29,5 +30,13 @@ class PimSheet extends Model
     public function tema(): BelongsTo
     {
         return $this->belongsTo(Tema::class, 'theme', 'id');
+    }
+
+    /**
+     * Relación con las figuras del preámbulo
+     */
+    public function figures(): HasMany
+    {
+        return $this->hasMany(FigureInIntro::class, 'intro_id', 'id');
     }
 }
