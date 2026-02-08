@@ -322,6 +322,8 @@ private static function getImSimple($filename)
 
         // Convertir caracteres especiales de LaTeX
         $t = str_replace('~', '&nbsp;', $t);  // Espacio no separable
+        $t = str_replace('\quad', '&emsp;', $t);  // Espacio cuádruple (~1em)
+        $t = str_replace('\qquad', '&emsp;&emsp;', $t);  // Espacio doble cuádruple (~2em)
         $t = str_replace('---', '—', $t);     // Em dash (primero, más largo)
         $t = str_replace('--', '–', $t);      // En dash
 
@@ -393,7 +395,14 @@ $t=str_replace('\end{center}', '</div>', $t);
 
 // Eliminar \definecolor sueltos
 $t = preg_replace('/\\\\definecolor\{[^}]+\}\{[^}]+\}\{[^}]+\}/', '', $t);
-// paragraph
+// section* (como h2)
+        $section = self::fromAtoB('\section*{', '}', $t);
+        while ($section['inside'] != '') {
+            $t = $section['before'] . '<h2>' . $section['inside'] . '</h2>' . $section['after'];
+            $section = self::fromAtoB('\section*{', '}', $t);
+        }
+
+        // paragraph
         // paragraph con asterisco
         $par = self::fromAtoB('\paragraph*{', '}', $t);
         while ($par['inside'] != '') {
