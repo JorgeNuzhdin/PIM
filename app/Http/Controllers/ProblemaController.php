@@ -7,6 +7,7 @@ use App\Models\Tema;
 use App\Models\Topic;
 use App\Models\TopicTema;
 use App\Models\ProblemaTag;
+use App\Models\Figure;
 use Illuminate\Http\Request;
 use App\Helpers\SchoolYearHelper;
 use App\Helpers\SourceHelper;
