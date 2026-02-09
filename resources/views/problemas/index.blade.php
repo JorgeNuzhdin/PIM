@@ -180,6 +180,9 @@
 
 .checkbox-option input[type="checkbox"] {
     cursor: pointer;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
 }
 
 /* Botones de filtros */
@@ -741,6 +744,10 @@
                 <input type="checkbox" name="mostrar[]" value="year" {{ in_array('year', $mostrarArray) ? 'checked' : '' }} onchange="updateMostrarText()">
                 Año académico
             </label>
+            <label class="checkbox-option">
+                <input type="checkbox" name="mostrar[]" value="proponente" {{ in_array('proponente', $mostrarArray) ? 'checked' : '' }} onchange="updateMostrarText()">
+                Proponente
+            </label>
         </div>
     </div>
 </div>
@@ -958,6 +965,15 @@
                 <div class="problema-footer">
                     <small class="fuente-text">
                         📖 <strong>Fuente:</strong> {{ $problema->source }}
+                    </small>
+                </div>
+            @endif
+
+            {{-- Proponente --}}
+            @if($problema->proponent && in_array('proponente', $mostrarArray))
+                <div class="problema-footer">
+                    <small class="fuente-text">
+                        👤 <strong>Proponente:</strong> {{ $problema->proponent->name }}
                     </small>
                 </div>
             @endif
