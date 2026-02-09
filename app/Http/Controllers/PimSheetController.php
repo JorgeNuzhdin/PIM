@@ -99,6 +99,11 @@ class PimSheetController extends Controller
      */
     public function store(Request $request)
     {
+        Log::info('=== PimSheet Store ===');
+        Log::info('Request data: ' . json_encode($request->except(['tex_sols', 'imagenes_preambulo'])));
+        Log::info('Has tex_sols: ' . ($request->hasFile('tex_sols') ? 'yes' : 'no'));
+        Log::info('Has imagenes_preambulo: ' . ($request->hasFile('imagenes_preambulo') ? 'yes' : 'no'));
+
         // Solo editores y administradores pueden subir sheets
         if (!Auth::user()->canEditProblemas()) {
             abort(403, 'No tienes permiso para subir hojas de problemas.');
@@ -138,24 +143,33 @@ class PimSheetController extends Controller
             ];
 
             $sheet = PimSheet::create($data);
+            Log::info('Sheet creada con ID: ' . $sheet->id);
 
             // Guardar imágenes del preámbulo
             if ($request->hasFile('imagenes_preambulo')) {
                 $nombres = $request->input('imagenes_nombres', []);
                 $archivos = $request->file('imagenes_preambulo');
+                Log::info('Procesando ' . count($archivos) . ' imágenes');
+                Log::info('Nombres recibidos: ' . json_encode($nombres));
 
                 foreach ($archivos as $index => $archivo) {
                     if ($archivo && $archivo->isValid()) {
                         $nombreImagen = $nombres[$index] ?? $archivo->getClientOriginalName();
                         $contenido = file_get_contents($archivo->getRealPath());
+                        Log::info('Guardando imagen: ' . $nombreImagen . ' (' . strlen($contenido) . ' bytes)');
 
                         FigureInIntro::create([
                             'title' => $nombreImagen,
                             'figure' => $contenido,
                             'intro_id' => $sheet->id,
                         ]);
+                        Log::info('Imagen guardada correctamente');
+                    } else {
+                        Log::warning('Archivo no válido en índice: ' . $index);
                     }
                 }
+            } else {
+                Log::info('No hay imágenes de preámbulo en la request');
             }
 
             DB::commit();
