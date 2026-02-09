@@ -65,7 +65,7 @@
                     <tr>
                         <td>{{ $user->name }}</td>
                         <td>{{ $user->email }}</td>
-                        <td>{{ $user->created_at->format('d/m/Y H:i') }}</td>
+                        <td>{{ $user->created_at?->format('d/m/Y H:i') ?? '-' }}</td>
                         <td>
                             <span class="rol-badge rol-{{ $user->rol }}">
                                 {{ ucfirst($user->rol) }}
