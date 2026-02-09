@@ -698,12 +698,12 @@ $t = str_replace('\end{verbatim}', '</code></pre>', $t);
 
 
 
-        // Imágenes
+        // Imágenes (entorno figure)
         while (strpos($t, '\begin{figure}') !== false) {
             $im = self::fromAtoB('\begin{figure}', '\end{figure}', $t);
             $image = $im['inside'];
             $count = substr_count($image, '\begin{subfigure}');
-            
+
             if ($count > 0) {
                 $tAdd = '<table style="width:100%"><tr>';
                 for ($i = 0; $i < $count; $i++) {
@@ -713,7 +713,14 @@ $t = str_replace('\end{verbatim}', '</code></pre>', $t);
                 }
                 $tAdd .= '</tr></table>';
             } else {
-                $tAdd = self::getIm($image);
+                // Si el contenido ya tiene <img> (procesado antes), envolverlo en div centrado
+                if (strpos($image, '<img') !== false || strpos($image, '<embed') !== false) {
+                    // Limpiar \centering y espacios
+                    $image = str_replace('\centering', '', $image);
+                    $tAdd = '<div style="display:flex; justify-content:center; margin: 1rem 0;">' . trim($image) . '</div>';
+                } else {
+                    $tAdd = self::getIm($image);
+                }
             }
             $t = $im['before'] . $tAdd . $im['after'];
         }
