@@ -6,6 +6,7 @@ use App\Models\PimSheet;
 use App\Models\Problema;
 use App\Models\Tema;
 use App\Models\FigureInIntro;
+use App\Models\Figure;
 use App\Helpers\LatexHelper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -251,6 +252,24 @@ class PimSheetController extends Controller
             }
         }
 
+        // Añadir imágenes de los problemas (desde pim_figures por problem_id)
+        if (!empty($sheet->problems)) {
+            $problemIds = array_filter(array_map('trim', explode(',', $sheet->problems)));
+            if (!empty($problemIds)) {
+                // Buscar todas las figuras de los problemas de la hoja
+                $figurasProblemas = Figure::whereIn('problem_id', $problemIds)->get();
+
+                foreach ($figurasProblemas as $figura) {
+                    if ($figura->figure && !isset($imagenesAnadidas[$figura->title])) {
+                        $zip->addFromString($figura->title, $figura->figure);
+                        $imagenesAnadidas[$figura->title] = true;
+                        $contadorImagenes++;
+                        Log::info('Imagen añadida del problema ' . $figura->problem_id . ': ' . $figura->title);
+                    }
+                }
+            }
+        }
+
         $zip->close();
 
         Log::info('ZIP creado con ' . (1 + $contadorImagenes) . ' archivos');
@@ -262,13 +281,36 @@ class PimSheetController extends Controller
 
     /**
      * Extraer nombres de imágenes del contenido TEX
+     * Solo busca ANTES de \preambletrue y DENTRO del preámbulo (entre \preambletrue y \preamblefalse)
+     * NO busca en la sección de problemas (después de \preamblefalse)
      */
     private function extractImageNamesFromTex($texContent)
     {
         $images = [];
+        $searchArea = '';
+
+        // Buscar posición de \preambletrue
+        $preambleStart = strpos($texContent, '\\preambletrue');
+
+        if ($preambleStart !== false) {
+            // Incluir contenido ANTES de \preambletrue (logo, cabecera)
+            $searchArea = substr($texContent, 0, $preambleStart);
+
+            // Incluir contenido del preámbulo (entre \preambletrue y \preamblefalse)
+            $preambleEnd = strpos($texContent, '\\preamblefalse', $preambleStart);
+            if ($preambleEnd !== false) {
+                $searchArea .= substr($texContent, $preambleStart, $preambleEnd - $preambleStart);
+            } else {
+                // Si no hay \preamblefalse, incluir hasta el final del preámbulo marcado
+                $searchArea .= substr($texContent, $preambleStart);
+            }
+        } else {
+            // Sin marcadores de preámbulo, buscar en todo el contenido (fallback)
+            $searchArea = $texContent;
+        }
 
         // Buscar \includegraphics con o sin opciones, permitiendo espacios
-        if (preg_match_all('/\\\\includegraphics\s*(?:\[[^\]]*\])?\s*\{([^}]+)\}/', $texContent, $matches)) {
+        if (preg_match_all('/\\\\includegraphics\s*(?:\[[^\]]*\])?\s*\{([^}]+)\}/', $searchArea, $matches)) {
             foreach ($matches[1] as $imageName) {
                 $imageName = trim($imageName);
                 if (!in_array($imageName, $images)) {

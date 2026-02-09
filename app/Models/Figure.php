@@ -9,7 +9,7 @@ class Figure extends Model
     protected $table = 'pim_figures';
     public $timestamps = false;
     
-    protected $fillable = ['title', 'figure'];
+    protected $fillable = ['title', 'figure', 'problem_id'];
     
     // Accessor para obtener la imagen en base64
     public function getImageDataAttribute()
