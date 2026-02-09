@@ -212,6 +212,59 @@
 
 
 
+/* Existing images list (edit mode) */
+.existing-images-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.existing-image-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: #f7fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+}
+
+.existing-image-item .image-name {
+    flex: 1;
+    font-weight: 500;
+    color: #2d3748;
+}
+
+.existing-image-item .image-size {
+    color: #718096;
+    font-size: 0.85rem;
+}
+
+.tex-upload-container {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.btn-secondary {
+    background: #718096;
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.btn-secondary:hover {
+    background: #4a5568;
+}
+
+.btn-limpiar {
+    white-space: nowrap;
+}
+
 @media (max-width: 768px) {
     .form-container {
         padding: 1rem;

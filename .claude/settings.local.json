@@ -11,7 +11,12 @@
       "Bash(cd /d e:PIM)",
       "Read(//e/**)",
       "Bash(del \"database\\\\migrations\\\\2026_01_22_000000_add_institution_to_users_table.php\")",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git tag:*)",
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)",
+      "Bash(more:*)",
+      "Bash(Get-Content \"d:\\\\PIM\\\\storage\\\\logs\\\\laravel.log\" -Tail 100)"
     ]
   }
 }

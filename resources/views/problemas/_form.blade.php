@@ -161,9 +161,27 @@
     <input type="text" name="source" id="source" value="{{ old('source', $problema->source ?? '') }}" placeholder="Origen del problema">
 </div>
 
+{{-- Imágenes existentes (solo en edición) --}}
+@if(isset($problema) && isset($figuras) && $figuras->count() > 0)
+<div class="form-group">
+    <label>📷 Imágenes existentes</label>
+    <div class="existing-images-list">
+        @foreach($figuras as $figura)
+            <div class="existing-image-item">
+                <span class="image-name">📄 {{ $figura->title }}</span>
+                <span class="image-size">{{ number_format(strlen($figura->figure) / 1024, 1) }} KB</span>
+            </div>
+        @endforeach
+    </div>
+    <small style="color: #718096; margin-top: 0.5rem; display: block;">
+        Si subes una imagen con el mismo nombre, se sustituirá automáticamente.
+    </small>
+</div>
+@endif
+
 {{-- Imágenes --}}
 <div class="form-group">
-    <label>{{ isset($problema) ? 'Imágenes adicionales' : 'Imágenes' }}</label>
+    <label>{{ isset($problema) ? 'Añadir nuevas imágenes' : 'Imágenes' }}</label>
     <div class="image-upload-area" onclick="document.getElementById('imagenes').click()">
         <p>📁 Haz clic para {{ isset($problema) ? 'agregar más' : 'seleccionar' }} imágenes</p>
         <small>Formatos: JPG, PNG, GIF, PDF (máx. 5MB cada una)</small>

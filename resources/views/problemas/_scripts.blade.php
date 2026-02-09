@@ -60,6 +60,63 @@ function updatePreview(inputId, previewId) {
 // Los eventos se adjuntan en el segundo DOMContentLoaded más abajo
 
 
+// Función para mostrar nombres de archivos seleccionados
+function showFileNames(input) {
+    const fileList = document.getElementById('file-list');
+    if (!fileList) return;
+
+    if (input.files.length === 0) {
+        fileList.innerHTML = '';
+        return;
+    }
+
+    const names = Array.from(input.files).map(f => `📎 ${f.name}`).join('<br>');
+    fileList.innerHTML = names;
+}
+
+// Función para limpiar el formulario
+function limpiarFormulario() {
+    // Limpiar input de archivo
+    document.getElementById('tex-file').value = '';
+
+    // Limpiar campos del formulario
+    document.getElementById('difficulty').value = '';
+    document.getElementById('school_year').value = '';
+    document.getElementById('source').value = '';
+    document.getElementById('title').value = '';
+    document.getElementById('problem_tex').value = '';
+    document.getElementById('hints').value = '';
+    document.getElementById('solution_tex').value = '';
+    document.getElementById('comments').value = '';
+
+    // Limpiar tema si existe
+    const temaSelect = document.getElementById('tema_id');
+    if (temaSelect) {
+        temaSelect.value = '';
+    }
+
+    // Resetear tags a uno vacío
+    const container = document.getElementById('tags-container');
+    container.innerHTML = `
+        <div class="tag-input-row" style="position: relative;">
+            <input type="text" name="tags[]" class="tag-input" placeholder="Escribe un tag..." autocomplete="off">
+            <div class="tag-suggestions"></div>
+            <button type="button" class="btn-add-tag" onclick="addTagInput()">+</button>
+        </div>
+    `;
+    attachTagAutocomplete(container.querySelector('.tag-input'));
+
+    // Limpiar vistas previas
+    document.getElementById('problem_preview').innerHTML = '<p style="color: #a0aec0; font-style: italic;">La vista previa aparecerá aquí...</p>';
+    document.getElementById('solution_preview').innerHTML = '<p style="color: #a0aec0; font-style: italic;">La vista previa aparecerá aquí...</p>';
+
+    // Ocultar indicador de auto-detección si existe
+    const autoIndicator = document.getElementById('tema-auto-indicator');
+    if (autoIndicator) {
+        autoIndicator.style.display = 'none';
+    }
+}
+
 function procesarArchivoTex(input) {
     const file = input.files[0];
     if (!file) return;

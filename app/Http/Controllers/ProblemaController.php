@@ -121,16 +121,17 @@ class ProblemaController extends Controller
                 if ($request->hasFile('imagenes')) {
                     foreach ($request->file('imagenes') as $imagen) {
                         $contenido = file_get_contents($imagen->getRealPath());
-                        
+
                         Figure::create([
                             'title' => $imagen->getClientOriginalName(),
                             'figure' => $contenido,
+                            'problem_id' => $problema->id,
                         ]);
                     }
                 }
-                
+
                 DB::commit();
-                
+
                 // Si es una petición AJAX, devolver JSON
                 if ($request->expectsJson() || $request->ajax()) {
                     return response()->json([
@@ -166,8 +167,9 @@ class ProblemaController extends Controller
                 $problema = Problema::with('tags')->findOrFail($id);
                 $temas = Tema::all();
                 $schoolYears = SchoolYearHelper::getAllYears();
-                
-                return view('problemas.edit', compact('problema', 'temas', 'schoolYears'));
+                $figuras = Figure::where('problem_id', $id)->get();
+
+                return view('problemas.edit', compact('problema', 'temas', 'schoolYears', 'figuras'));
             }
 
             public function update(Request $request, $id)
@@ -256,20 +258,25 @@ class ProblemaController extends Controller
                         }
                     }
                     
-                    // Guardar nuevas imágenes si hay
+                    // Guardar/actualizar imágenes (si existe una con el mismo nombre, se sustituye)
                     if ($request->hasFile('imagenes')) {
                         foreach ($request->file('imagenes') as $imagen) {
                             $contenido = file_get_contents($imagen->getRealPath());
-                            
-                            Figure::create([
-                                'title' => $imagen->getClientOriginalName(),
-                                'figure' => $contenido,
-                            ]);
+
+                            Figure::updateOrCreate(
+                                [
+                                    'problem_id' => $problema->id,
+                                    'title' => $imagen->getClientOriginalName(),
+                                ],
+                                [
+                                    'figure' => $contenido,
+                                ]
+                            );
                         }
                     }
-                    
+
                     DB::commit();
-                    
+
                     return redirect()->route('problemas.index')->with('success', 'Problema actualizado exitosamente');
                     
                 } catch (\Exception $e) {
@@ -282,21 +289,19 @@ class ProblemaController extends Controller
             {
                 try {
                     $problema = Problema::findOrFail($id);
-                    
+
                     // Eliminar tags asociados
                     ProblemaTag::where('problem_id', $id)->delete();
-                    
+
                     // Eliminar el problema
                     $problema->delete();
-                    
+
                     return response()->json(['success' => true, 'message' => 'Problema eliminado exitosamente']);
-                    
+
                 } catch (\Exception $e) {
                     return response()->json(['success' => false, 'message' => 'Error al eliminar: ' . $e->getMessage()], 500);
                 }
             }
-
-
 
     public function index(Request $request)
 {
