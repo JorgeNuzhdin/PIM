@@ -204,30 +204,80 @@ class PimSheetController extends Controller
         // Añadir archivo TEX
         $zip->addFromString($texFilename, $sheet->tex_sols);
 
-        // Añadir logo (intro_id = 0)
-        $logo = FigureInIntro::where('intro_id', 0)->first();
-        if ($logo && $logo->figure) {
-            $logoExtension = $this->detectImageExtension($logo->figure);
-            $zip->addFromString($logo->title, $logo->figure);
-            Log::info('Logo añadido: ' . $logo->title);
+        // Extraer nombres de imágenes del contenido TEX
+        $imagenesEnTex = $this->extractImageNamesFromTex($sheet->tex_sols);
+        $imagenesAnadidas = [];
+        $contadorImagenes = 0;
+
+        // Buscar y añadir cada imagen encontrada en el TEX
+        foreach ($imagenesEnTex as $imageName) {
+            if (isset($imagenesAnadidas[$imageName])) {
+                continue; // Ya añadida
+            }
+
+            // Buscar primero en intro_id = 0 (logos/imágenes globales)
+            $figura = FigureInIntro::where('intro_id', 0)->where('title', $imageName)->first();
+
+            // Si no se encuentra, buscar en intro_id = sheet_id
+            if (!$figura) {
+                $figura = FigureInIntro::where('intro_id', $id)->where('title', $imageName)->first();
+            }
+
+            // Si no se encuentra, buscar sin extensión
+            if (!$figura) {
+                $imageNameSinExt = preg_replace('/\.(png|jpg|jpeg|gif|pdf)$/i', '', $imageName);
+                $figura = FigureInIntro::where('intro_id', 0)->where('title', $imageNameSinExt)->first();
+                if (!$figura) {
+                    $figura = FigureInIntro::where('intro_id', $id)->where('title', $imageNameSinExt)->first();
+                }
+            }
+
+            if ($figura && $figura->figure) {
+                $zip->addFromString($figura->title, $figura->figure);
+                $imagenesAnadidas[$imageName] = true;
+                $contadorImagenes++;
+                Log::info('Imagen añadida desde TEX: ' . $figura->title);
+            }
         }
 
-        // Añadir imágenes de la hoja (intro_id = sheet id)
-        $imagenes = FigureInIntro::where('intro_id', $id)->get();
-        foreach ($imagenes as $imagen) {
-            if ($imagen->figure) {
+        // Añadir también todas las imágenes de la hoja que no se hayan añadido ya
+        $imagenesHoja = FigureInIntro::where('intro_id', $id)->get();
+        foreach ($imagenesHoja as $imagen) {
+            if ($imagen->figure && !isset($imagenesAnadidas[$imagen->title])) {
                 $zip->addFromString($imagen->title, $imagen->figure);
-                Log::info('Imagen añadida: ' . $imagen->title);
+                $imagenesAnadidas[$imagen->title] = true;
+                $contadorImagenes++;
+                Log::info('Imagen añadida de la hoja: ' . $imagen->title);
             }
         }
 
         $zip->close();
 
-        Log::info('ZIP creado con ' . (1 + ($logo ? 1 : 0) + count($imagenes)) . ' archivos');
+        Log::info('ZIP creado con ' . (1 + $contadorImagenes) . ' archivos');
 
         return response()->download($zipPath, $zipFilename, [
             'Content-Type' => 'application/zip',
         ])->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Extraer nombres de imágenes del contenido TEX
+     */
+    private function extractImageNamesFromTex($texContent)
+    {
+        $images = [];
+
+        // Buscar \includegraphics con o sin opciones, permitiendo espacios
+        if (preg_match_all('/\\\\includegraphics\s*(?:\[[^\]]*\])?\s*\{([^}]+)\}/', $texContent, $matches)) {
+            foreach ($matches[1] as $imageName) {
+                $imageName = trim($imageName);
+                if (!in_array($imageName, $images)) {
+                    $images[] = $imageName;
+                }
+            }
+        }
+
+        return $images;
     }
 
     /**
