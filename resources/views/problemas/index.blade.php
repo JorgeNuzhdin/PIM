@@ -903,7 +903,7 @@
                 <div class="problema-actions">
                     @auth
                        @if(Auth::user()->canEditProblemas())
-                            <a href="{{ route('problemas.edit', $problema->id) }}" class="btn-icon" title="Editar problema">
+                            <a href="{{ route('problemas.edit', ['id' => $problema->id, 'return' => urlencode(request()->fullUrl())]) }}" class="btn-icon" title="Editar problema">
                                 ✏️
                             </a>
                             

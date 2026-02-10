@@ -336,6 +336,10 @@ private static function getImSimple($filename)
         $t = preg_replace('/\\\\newline\s*/', '<br>', $t);
         $t = preg_replace('/\\\\linebreak\s*/', '<br>', $t);
 
+        // Convertir \\ (doble backslash) a nuevo párrafo (fuera de tablas/matrices)
+        // Nota: Las tablas lo manejan aparte en su propio procesamiento
+        $t = preg_replace('/\\\\\\\\\s*/', '<br><br>', $t);
+
         // Eliminar \label{...} y \ref{...} que no funcionan en HTML
         $t = preg_replace('/\\\\label\{[^}]*\}/', '', $t);
 

@@ -162,7 +162,7 @@ class ProblemaController extends Controller
             }
         }
 
-            public function edit($id)
+            public function edit(Request $request, $id)
             {
                 $problema = Problema::with('tags')->findOrFail($id);
                 $temas = Tema::all();
@@ -175,7 +175,10 @@ class ProblemaController extends Controller
                     $proponents = \App\Models\User::orderBy('name')->get();
                 }
 
-                return view('problemas.edit', compact('problema', 'temas', 'schoolYears', 'figuras', 'proponents'));
+                // URL de retorno (para volver a la misma página/filtros)
+                $returnUrl = $request->get('return') ? urldecode($request->get('return')) : null;
+
+                return view('problemas.edit', compact('problema', 'temas', 'schoolYears', 'figuras', 'proponents', 'returnUrl'));
             }
 
             public function update(Request $request, $id)
@@ -291,8 +294,13 @@ class ProblemaController extends Controller
 
                     DB::commit();
 
+                    // Redirigir a la URL de retorno si existe, si no al índice
+                    $returnUrl = $request->input('return_url');
+                    if ($returnUrl) {
+                        return redirect($returnUrl)->with('success', 'Problema actualizado exitosamente');
+                    }
                     return redirect()->route('problemas.index')->with('success', 'Problema actualizado exitosamente');
-                    
+
                 } catch (\Exception $e) {
                     DB::rollBack();
                     return back()->withInput()->with('error', 'Error al actualizar el problema: ' . $e->getMessage());

@@ -29,6 +29,9 @@
     <form action="{{ route('problemas.update', $problema->id) }}" method="POST" enctype="multipart/form-data" id="problema-form">
         @csrf
         @method('PUT')
+        @if(isset($returnUrl))
+            <input type="hidden" name="return_url" value="{{ $returnUrl }}">
+        @endif
         @include('problemas._form')
     </form>
 </div>
