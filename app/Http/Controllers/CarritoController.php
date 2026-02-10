@@ -411,13 +411,24 @@ private function crearZip($texContent, $imagenesNombres)
     return redirect()->route('carrito.index')->with('error', 'Error al crear el archivo ZIP');
 }
 
+    public function presentacion()
+    {
+        $items = Carrito::where('user_id', Auth::id())
+                        ->with('problema')
+                        ->orderBy('orden')
+                        ->get();
+
+        if ($items->isEmpty()) {
+            return redirect()->route('carrito.index')->with('error', 'El carrito está vacío');
+        }
+
+        return view('carrito.presentacion', compact('items'));
+    }
+
     public function limpiar()
-{
-    Carrito::where('user_id', Auth::id())->delete();
-    
-    return redirect()->route('carrito.index')->with('success', 'Carrito vaciado correctamente');
-}
+    {
+        Carrito::where('user_id', Auth::id())->delete();
 
-
-    
+        return redirect()->route('carrito.index')->with('success', 'Carrito vaciado correctamente');
+    }
 }
