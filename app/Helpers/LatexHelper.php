@@ -279,6 +279,11 @@ private static function getImSimple($filename)
 
      $t = str_replace('\%', 'PCTG', $t);
 
+        // Proteger < y > del contenido original ANTES de generar HTML
+        // Se convertirán a &lt; y &gt; al final
+        $t = str_replace('<', '&&&LT&&&', $t);
+        $t = str_replace('>', '&&&GT&&&', $t);
+
         // Eliminar comentarios: tanto al inicio de línea como inline (después de %)
         $t = preg_replace('/^%.*$/m', '', $t);  // Comentarios al inicio de línea
         $t = preg_replace('/(?<!\\\\)%.*$/m', '', $t);  // Comentarios inline (% hasta fin de línea)
@@ -390,10 +395,6 @@ private static function getImSimple($filename)
             $ensuremath = self::fromAtoB('\ensuremath{', '}', $t);
         }
 
-       $t = str_replace('<', '&&&LT&&&', $t);
-    $t = str_replace('>', '&&&GT&&&', $t);
-
-      
     // Procesar \includegraphics ANTES de center para evitar conflictos
 // Con opciones: \includegraphics[...]{...} (permite espacios antes de [ y alrededor de =)
 $t = preg_replace_callback(
