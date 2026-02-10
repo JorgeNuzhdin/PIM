@@ -161,6 +161,21 @@
     <input type="text" name="source" id="source" value="{{ old('source', $problema->source ?? '') }}" placeholder="Origen del problema">
 </div>
 
+{{-- Proponente (solo admin en edición) --}}
+@if(isset($problema) && Auth::user()->isAdmin())
+<div class="form-group">
+    <label for="proponent_id">Proponente</label>
+    <select name="proponent_id" id="proponent_id">
+        <option value="">-- Sin proponente --</option>
+        @foreach($proponents ?? [] as $proponent)
+            <option value="{{ $proponent->id }}" {{ old('proponent_id', $problema->proponent_id) == $proponent->id ? 'selected' : '' }}>
+                {{ $proponent->name }}
+            </option>
+        @endforeach
+    </select>
+</div>
+@endif
+
 {{-- Imágenes existentes (solo en edición) --}}
 @if(isset($problema) && isset($figuras) && $figuras->count() > 0)
 <div class="form-group">

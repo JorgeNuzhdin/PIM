@@ -961,19 +961,19 @@
             @endif
             
             {{-- Fuente --}}
-            @if($problema->source && in_array('fuente', $mostrarArray))
+            @if(in_array('fuente', $mostrarArray))
                 <div class="problema-footer">
                     <small class="fuente-text">
-                        📖 <strong>Fuente:</strong> {{ $problema->source }}
+                        📖 <strong>Fuente:</strong> {{ $problema->source ?: 'desconocida' }}
                     </small>
                 </div>
             @endif
 
             {{-- Proponente --}}
-            @if($problema->proponent && in_array('proponente', $mostrarArray))
+            @if(in_array('proponente', $mostrarArray))
                 <div class="problema-footer">
                     <small class="fuente-text">
-                        👤 <strong>Proponente:</strong> {{ $problema->proponent->name }}
+                        👤 <strong>Proponente:</strong> {{ $problema->proponent?->name ?: 'desconocido' }}
                     </small>
                 </div>
             @endif

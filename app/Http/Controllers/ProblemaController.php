@@ -169,7 +169,13 @@ class ProblemaController extends Controller
                 $schoolYears = SchoolYearHelper::getAllYears();
                 $figuras = Figure::where('problem_id', $id)->get();
 
-                return view('problemas.edit', compact('problema', 'temas', 'schoolYears', 'figuras'));
+                // Lista de proponentes para admin
+                $proponents = [];
+                if (Auth::user()->isAdmin()) {
+                    $proponents = \App\Models\User::orderBy('name')->get();
+                }
+
+                return view('problemas.edit', compact('problema', 'temas', 'schoolYears', 'figuras', 'proponents'));
             }
 
             public function update(Request $request, $id)
@@ -199,8 +205,8 @@ class ProblemaController extends Controller
                     if ($validated['school_year']) {
                         $schoolYearText = SchoolYearHelper::getYearName($validated['school_year']);
                     }
-                    // Actualizar problema
-                    $problema->update([
+                    // Datos a actualizar
+                    $updateData = [
                         'difficulty' => $validated['difficulty'],
                         'school_year' => $schoolYearText,
                         'title' => $validated['title'],
@@ -211,7 +217,15 @@ class ProblemaController extends Controller
                         'solution_html' => $validated['solution_tex'],
                         'comments' => $validated['comments'],
                         'source' => $validated['source'],
-                    ]);
+                    ];
+
+                    // Solo admin puede cambiar el proponente
+                    if (Auth::user()->isAdmin() && $request->has('proponent_id')) {
+                        $updateData['proponent_id'] = $request->proponent_id ?: null;
+                    }
+
+                    // Actualizar problema
+                    $problema->update($updateData);
                     
                     // Eliminar tags antiguos y crear nuevos
                     ProblemaTag::where('problem_id', $problema->id)->delete();
