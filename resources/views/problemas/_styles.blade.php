@@ -175,7 +175,6 @@
 
 .latex-input {
     min-height: 250px;
-    height: 250px;
     font-family: 'Courier New', monospace;
     resize: vertical;
     flex: 1;
