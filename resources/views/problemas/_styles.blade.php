@@ -163,14 +163,12 @@
     flex: 0 0 calc(50% - 0.5rem);
     display: flex;
     flex-direction: column;
-    height: 100%;
 }
 
 .latex-editor-grid > div:last-child {
     flex: 1 0 calc(50% - 0.5rem);
     display: flex;
     flex-direction: column;
-    height: 100%;
 }
 
 .latex-input {
@@ -186,7 +184,6 @@
     background: #f7fafc;
     padding: 1rem;
     min-height: 250px;
-    height: 250px;
     overflow-y: auto;
     line-height: 1.8;
     flex: 1;
