@@ -302,6 +302,8 @@ private static function getImSimple($filename)
         // Comandos LaTeX que MathJax no reconoce - convertir a equivalentes
         $t = str_replace('\degree', '^\\circ', $t);  // \degree → ^∘
         $t = str_replace('\Vec', '\vec', $t);        // \Vec → \vec (MathJax usa minúscula)
+        $t = str_replace('\mcd', '\operatorname{mcd}', $t);  // \mcd → operatorname para MathJax
+        $t = str_replace('\mcm', '\operatorname{mcm}', $t);  // \mcm → operatorname para MathJax
 
         // Eliminar comandos LaTeX que no tienen equivalente en HTML
         // Comandos de espaciado vertical
