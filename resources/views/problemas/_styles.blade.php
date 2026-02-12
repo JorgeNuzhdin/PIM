@@ -154,13 +154,20 @@
 
 
 .latex-editor-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
     gap: 1rem;
     align-items: start;
 }
 
-.latex-editor-grid > div {
+.latex-editor-grid > div:first-child {
+    flex: 0 0 calc(50% - 0.5rem);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.latex-editor-grid > div:last-child {
+    flex: 1 0 calc(50% - 0.5rem);
     display: flex;
     flex-direction: column;
     height: 100%;

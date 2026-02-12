@@ -8,6 +8,7 @@
         max-width: 900px;
         margin: 0 auto;
         padding: 1rem;
+        padding-bottom: 80px; /* Espacio para la barra de navegacion fija */
         min-height: calc(100vh - 120px);
         display: flex;
         flex-direction: column;
@@ -103,16 +104,21 @@
         display: block;
     }
 
-    /* Navegacion */
+    /* Navegacion fija abajo */
     .navigation-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
         background: #2d3748;
-        border-radius: 12px;
-        padding: 1rem;
+        padding: 0.75rem 1rem;
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 0.5rem;
         flex-wrap: wrap;
+        z-index: 1000;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
     }
 
     .nav-arrow {
@@ -199,7 +205,7 @@
             padding: 1rem;
         }
         .navigation-bar {
-            padding: 0.75rem;
+            padding: 0.5rem 0.75rem;
         }
         .nav-number {
             min-width: 32px;
@@ -223,22 +229,24 @@
         </div>
     </div>
 
-    {{-- Barra de navegacion --}}
-    <div class="navigation-bar">
-        <button class="nav-arrow" id="btn-prev" onclick="prevPage()" title="Anterior">
-            &larr;
-        </button>
 
-        <div class="nav-numbers" id="nav-numbers">
-            {{-- Numeros de problemas generados por JS --}}
-        </div>
+</div>
 
-        <button class="nav-arrow" id="btn-next" onclick="nextPage()" title="Siguiente">
-            &rarr;
-        </button>
+{{-- Barra de navegacion fija abajo --}}
+<div class="navigation-bar">
+    <button class="nav-arrow" id="btn-prev" onclick="prevPage()" title="Anterior">
+        &larr;
+    </button>
 
-        <a href="{{ route('carrito.index') }}" class="btn-volver">Volver</a>
+    <div class="nav-numbers" id="nav-numbers">
+        {{-- Numeros de problemas generados por JS --}}
     </div>
+
+    <button class="nav-arrow" id="btn-next" onclick="nextPage()" title="Siguiente">
+        &rarr;
+    </button>
+
+    <a href="{{ route('carrito.index') }}" class="btn-volver">Volver</a>
 </div>
 
 {{-- Datos de los problemas (ocultos) --}}
