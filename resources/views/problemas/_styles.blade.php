@@ -156,7 +156,7 @@
 .latex-editor-grid {
     display: flex;
     gap: 1rem;
-    align-items: start;
+    align-items: stretch;
 }
 
 .latex-editor-grid > div:first-child {
