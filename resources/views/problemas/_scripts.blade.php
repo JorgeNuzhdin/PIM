@@ -150,9 +150,20 @@ function procesarArchivoTex(input) {
             rellenarFormulario(ejercicios[0]);
             alert('✅ Archivo cargado. Revisa los campos y haz clic en "Crear Problema"');
         } else {
-            // Múltiples ejercicios: preguntar si importar todos
+            // Múltiples ejercicios: verificar imágenes primero
             if (confirm(`Se encontraron ${ejercicios.length} ejercicios. ¿Deseas importarlos todos automáticamente?`)) {
-                importarMultiplesEjercicios(ejercicios);
+                // Extraer todas las imágenes referenciadas en el contenido
+                const imagenesRequeridas = extraerNombresImagenes(contenido);
+
+                if (imagenesRequeridas.length > 0) {
+                    // Mostrar modal para subir imágenes
+                    mostrarModalImagenes(imagenesRequeridas, () => {
+                        importarMultiplesEjercicios(ejercicios);
+                    });
+                } else {
+                    // No hay imágenes, importar directamente
+                    importarMultiplesEjercicios(ejercicios);
+                }
             } else {
                 rellenarFormulario(ejercicios[0]);
                 alert(`Se cargó el primer ejercicio. Hay ${ejercicios.length - 1} más en el archivo.`);
@@ -321,24 +332,28 @@ function rellenarFormulario(ejercicio) {
     }
 }
 
-// Convertir nombre de curso a índice
+// Convertir nombre de curso a índice (case-insensitive)
 function convertirCursoAIndice(curso) {
+    // Normalizar: quitar espacios extra, convertir a mayúsculas
+    const cursoNorm = curso.trim().toUpperCase().replace(/\s+/g, ' ');
+
+    // Mapa de cursos normalizados (todo en mayúsculas)
     const cursos = {
-        '1 Primaria': 1, '1º Primaria': 1, '1Primaria': 1, '1ºPrimaria': 1,
-        '2 Primaria': 2, '2º Primaria': 2, '2Primaria': 2, '2ºPrimaria': 2,
-        '3 Primaria': 3, '3º Primaria': 3, '3Primaria': 3, '3ºPrimaria': 3,
-        '4 Primaria': 4, '4º Primaria': 4, '4Primaria': 4, '4ºPrimaria': 4,
-        '5 Primaria': 5, '5º Primaria': 5, '5Primaria': 5, '5ºPrimaria': 5,
-        '6 Primaria': 6, '6º Primaria': 6, '6Primaria': 6, '6ºPrimaria': 6,
+        '1 PRIMARIA': 1, '1º PRIMARIA': 1, '1PRIMARIA': 1, '1ºPRIMARIA': 1,
+        '2 PRIMARIA': 2, '2º PRIMARIA': 2, '2PRIMARIA': 2, '2ºPRIMARIA': 2,
+        '3 PRIMARIA': 3, '3º PRIMARIA': 3, '3PRIMARIA': 3, '3ºPRIMARIA': 3,
+        '4 PRIMARIA': 4, '4º PRIMARIA': 4, '4PRIMARIA': 4, '4ºPRIMARIA': 4,
+        '5 PRIMARIA': 5, '5º PRIMARIA': 5, '5PRIMARIA': 5, '5ºPRIMARIA': 5,
+        '6 PRIMARIA': 6, '6º PRIMARIA': 6, '6PRIMARIA': 6, '6ºPRIMARIA': 6,
         '1 ESO': 7, '1º ESO': 7, '1ESO': 7, '1ºESO': 7,
         '2 ESO': 8, '2º ESO': 8, '2ESO': 8, '2ºESO': 8,
         '3 ESO': 9, '3º ESO': 9, '3ESO': 9, '3ºESO': 9,
         '4 ESO': 10, '4º ESO': 10, '4ESO': 10, '4ºESO': 10,
-        '1 Bachillerato': 11, '1º Bachillerato': 11, '1 BACH': 11, '1º BACH': 11, '1Bachillerato': 11, '1ºBachillerato': 11, '1BACH': 11, '1ºBACH': 11,
-        '2 Bachillerato': 12, '2º Bachillerato': 12, '2 BACH': 12, '2º BACH': 12, '2Bachillerato': 12, '2ºBachillerato': 12, '2BACH': 12, '2ºBACH': 12
+        '1 BACHILLERATO': 11, '1º BACHILLERATO': 11, '1 BACH': 11, '1º BACH': 11, '1BACHILLERATO': 11, '1ºBACHILLERATO': 11, '1BACH': 11, '1ºBACH': 11,
+        '2 BACHILLERATO': 12, '2º BACHILLERATO': 12, '2 BACH': 12, '2º BACH': 12, '2BACHILLERATO': 12, '2ºBACHILLERATO': 12, '2BACH': 12, '2ºBACH': 12
     };
 
-    return cursos[curso] || null;
+    return cursos[cursoNorm] || null;
 }
 
 // Cargar tags en el formulario
@@ -384,7 +399,132 @@ function cargarTagsEnFormulario(tags) {
     });
 }
 
-// Importar múltiples ejercicios automáticamente
+// Variable global para almacenar imágenes subidas para importación masiva
+let imagenesParaImportar = {};
+
+// Extraer nombres de archivos de imagen de \includegraphics
+function extraerNombresImagenes(contenido) {
+    const imagenes = new Set();
+
+    // Buscar \includegraphics[...]{nombre} o \includegraphics{nombre}
+    const regex = /\\includegraphics(?:\[[^\]]*\])?\{([^}]+)\}/g;
+    let match;
+
+    while ((match = regex.exec(contenido)) !== null) {
+        let nombreArchivo = match[1].trim();
+        // Quitar ruta si existe (solo queremos el nombre del archivo)
+        nombreArchivo = nombreArchivo.split('/').pop().split('\\').pop();
+        // Añadir extensión .png si no tiene extensión
+        if (!nombreArchivo.includes('.')) {
+            nombreArchivo += '.png';
+        }
+        imagenes.add(nombreArchivo);
+    }
+
+    return Array.from(imagenes);
+}
+
+// Mostrar modal para subir imágenes requeridas
+function mostrarModalImagenes(imagenesRequeridas, callback) {
+    // Crear modal
+    const modal = document.createElement('div');
+    modal.id = 'modal-imagenes';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;';
+
+    const contenido = document.createElement('div');
+    contenido.style.cssText = 'background: white; padding: 2rem; border-radius: 8px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;';
+
+    contenido.innerHTML = `
+        <h2 style="margin-top: 0; color: #2d3748;">📷 Imágenes Requeridas</h2>
+        <p style="color: #718096;">Se encontraron referencias a las siguientes imágenes en el archivo .tex. Por favor, súbelas antes de continuar:</p>
+
+        <div id="lista-imagenes-requeridas" style="margin: 1rem 0;">
+            ${imagenesRequeridas.map(img => `
+                <div class="imagen-requerida" data-nombre="${img}" style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; margin-bottom: 0.5rem; background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 4px;">
+                    <span class="estado-imagen" style="font-size: 1.2rem;">⏳</span>
+                    <span style="flex: 1; font-weight: 500;">${img}</span>
+                    <input type="file" accept="image/*,.pdf" style="display: none;" onchange="procesarImagenSubida(this, '${img}')">
+                    <button type="button" onclick="this.previousElementSibling.click()" style="background: #4299e1; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Seleccionar</button>
+                </div>
+            `).join('')}
+        </div>
+
+        <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
+            <p style="color: #718096; font-size: 0.9rem; margin-bottom: 1rem;">
+                <strong>Nota:</strong> Las imágenes se asociarán a cada problema que las referencie.
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button type="button" id="btn-cancelar-imagenes" style="background: #718096; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">Cancelar</button>
+                <button type="button" id="btn-continuar-importacion" style="background: #48bb78; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;" disabled>Continuar Importación</button>
+            </div>
+        </div>
+    `;
+
+    modal.appendChild(contenido);
+    document.body.appendChild(modal);
+
+    // Eventos de los botones
+    document.getElementById('btn-cancelar-imagenes').onclick = () => {
+        document.body.removeChild(modal);
+        imagenesParaImportar = {};
+    };
+
+    document.getElementById('btn-continuar-importacion').onclick = () => {
+        document.body.removeChild(modal);
+        callback();
+    };
+
+    // Verificar si no hay imágenes requeridas
+    if (imagenesRequeridas.length === 0) {
+        document.getElementById('btn-continuar-importacion').disabled = false;
+    }
+}
+
+// Procesar imagen subida
+function procesarImagenSubida(input, nombreEsperado) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        // Guardar la imagen con el nombre esperado
+        imagenesParaImportar[nombreEsperado] = {
+            file: file,
+            data: e.target.result,
+            originalName: file.name
+        };
+
+        // Actualizar UI
+        const item = input.closest('.imagen-requerida');
+        const estado = item.querySelector('.estado-imagen');
+        estado.textContent = '✅';
+        estado.style.color = '#48bb78';
+
+        // Verificar si todas las imágenes están subidas
+        verificarImagenesCompletas();
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+// Verificar si todas las imágenes requeridas están subidas
+function verificarImagenesCompletas() {
+    const items = document.querySelectorAll('.imagen-requerida');
+    let todasSubidas = true;
+
+    items.forEach(item => {
+        const nombre = item.dataset.nombre;
+        if (!imagenesParaImportar[nombre]) {
+            todasSubidas = false;
+        }
+    });
+
+    const btnContinuar = document.getElementById('btn-continuar-importacion');
+    if (btnContinuar) {
+        btnContinuar.disabled = !todasSubidas;
+    }
+}
+
+// Importar múltiples ejercicios automáticamente (con soporte de imágenes)
 
 async function importarMultiplesEjercicios(ejercicios) {
     let exitosos = 0;
@@ -445,7 +585,20 @@ async function importarMultiplesEjercicios(ejercicios) {
                     formData.append('tags[]', tag);
                 });
             }
-            
+
+            // Buscar imágenes referenciadas en este ejercicio
+            const contenidoEjercicio = (ejercicio.enunciado || '') + (ejercicio.solucion || '') + (ejercicio.pistas || '');
+            const imagenesEjercicio = extraerNombresImagenes(contenidoEjercicio);
+
+            // Añadir imágenes al formData
+            imagenesEjercicio.forEach(nombreImg => {
+                if (imagenesParaImportar[nombreImg]) {
+                    const imgData = imagenesParaImportar[nombreImg];
+                    const blob = new Blob([imgData.data], { type: imgData.file.type });
+                    formData.append('imagenes[]', blob, nombreImg);
+                }
+            });
+
             console.log(`Enviando ejercicio ${i + 1}:`, {
                 titulo: ejercicio.titulo || '(vacío)',
                 difficulty: ejercicio.dificultad,
@@ -501,6 +654,9 @@ async function importarMultiplesEjercicios(ejercicios) {
     }
     
     alert(mensaje);
+
+    // Limpiar imágenes temporales
+    imagenesParaImportar = {};
 
     // No redirigir automáticamente - dejar al usuario en la página de creación
     // para que pueda seguir importando o creando más problemas

@@ -434,6 +434,27 @@ $t = preg_replace('/\\\\definecolor\{[^}]+\}\{[^}]+\}\{[^}]+\}/', '', $t);
             $section = self::fromAtoB('\section*{', '}', $t);
         }
 
+        // section sin asterisco (como h2)
+        $section = self::fromAtoB('\section{', '}', $t);
+        while ($section['inside'] != '') {
+            $t = $section['before'] . '<h2>' . $section['inside'] . '</h2>' . $section['after'];
+            $section = self::fromAtoB('\section{', '}', $t);
+        }
+
+        // subsection* (como h3)
+        $subsection = self::fromAtoB('\subsection*{', '}', $t);
+        while ($subsection['inside'] != '') {
+            $t = $subsection['before'] . '<h3>' . $subsection['inside'] . '</h3>' . $subsection['after'];
+            $subsection = self::fromAtoB('\subsection*{', '}', $t);
+        }
+
+        // subsection sin asterisco (como h3)
+        $subsection = self::fromAtoB('\subsection{', '}', $t);
+        while ($subsection['inside'] != '') {
+            $t = $subsection['before'] . '<h3>' . $subsection['inside'] . '</h3>' . $subsection['after'];
+            $subsection = self::fromAtoB('\subsection{', '}', $t);
+        }
+
         // paragraph
         // paragraph con asterisco
         $par = self::fromAtoB('\paragraph*{', '}', $t);
@@ -704,6 +725,10 @@ $t = str_replace('\end{verbatim}', '</code></pre>', $t);
 
 
         // Imágenes (entorno figure)
+        // Eliminar opciones de posicionamiento como [H], [h], [t], [b], [p], [htbp], etc.
+        $t = preg_replace('/\\\\begin\{figure\}\s*\[[^\]]*\]/', '\begin{figure}', $t);
+        $t = preg_replace('/\\\\begin\{subfigure\}\s*\[[^\]]*\]/', '\begin{subfigure}', $t);
+
         while (strpos($t, '\begin{figure}') !== false) {
             $im = self::fromAtoB('\begin{figure}', '\end{figure}', $t);
             $image = $im['inside'];
