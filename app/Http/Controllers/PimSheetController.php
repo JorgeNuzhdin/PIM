@@ -317,9 +317,8 @@ class PimSheetController extends Controller
         $result = $compiler->compile($sheet->tex_sols, $images);
 
         if (!$result['pdf']) {
-            Log::error("Error compilando PDF para sheet {$id}");
-            Log::error("Log de pdflatex: " . substr($result['log'], -2000));
-            $compiler->cleanup($result['tempDir']);
+            Log::error("Error compilando PDF para sheet {$id}. Temp dir: {$result['tempDir']}");
+            // No limpiar para poder inspeccionar el log: $result['tempDir']/document.log
             return back()->with('error', 'Error al compilar el PDF. Revisa el archivo TEX.');
         }
 

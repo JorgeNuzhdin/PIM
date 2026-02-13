@@ -49,6 +49,24 @@ class LatexCompilerService
             $logContent = file_get_contents($texLog);
         }
 
+        // Extraer líneas de error del log (empiezan con !)
+        if (!file_exists($pdfPath) && $logContent) {
+            $errorLines = [];
+            $lines = explode("\n", $logContent);
+            foreach ($lines as $i => $line) {
+                if (str_starts_with(trim($line), '!')) {
+                    // Incluir la línea de error y las 2 siguientes para contexto
+                    $errorLines[] = trim($line);
+                    if (isset($lines[$i + 1])) $errorLines[] = trim($lines[$i + 1]);
+                    if (isset($lines[$i + 2])) $errorLines[] = trim($lines[$i + 2]);
+                    $errorLines[] = '---';
+                }
+            }
+            if (!empty($errorLines)) {
+                Log::error("Errores LaTeX encontrados:\n" . implode("\n", $errorLines));
+            }
+        }
+
         return [
             'pdf' => file_exists($pdfPath) ? $pdfPath : null,
             'tempDir' => $tempDir,
