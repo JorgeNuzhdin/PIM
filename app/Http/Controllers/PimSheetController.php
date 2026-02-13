@@ -309,12 +309,16 @@ class PimSheetController extends Controller
             abort(404, 'Archivo TEX no disponible.');
         }
 
+        // Preprocesar TEX: corregir \def\group sin valor
+        $texContent = $sheet->tex_sols;
+        $texContent = preg_replace('/\\\\def\\\\group\s*\n/', "\\def\\group{0}\n", $texContent);
+
         // Recopilar imágenes
         $images = $this->gatherImages($sheet);
 
         // Compilar
         $compiler = new LatexCompilerService();
-        $result = $compiler->compile($sheet->tex_sols, $images);
+        $result = $compiler->compile($texContent, $images);
 
         if (!$result['pdf']) {
             Log::error("Error compilando PDF para sheet {$id}. Temp dir: {$result['tempDir']}");
