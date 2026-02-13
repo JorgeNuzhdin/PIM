@@ -378,12 +378,32 @@ class PimSheetController extends Controller
                 }
             }
 
+            // Buscar con variantes (sin guiones bajos, con guiones bajos)
+            if (!$figura) {
+                $sinGuiones = str_replace('_', '', $imageName);
+                $figura = FigureInIntro::where('intro_id', 0)->where('title', $sinGuiones)->first();
+                if (!$figura) {
+                    $figura = FigureInIntro::where('intro_id', $sheet->id)->where('title', $sinGuiones)->first();
+                }
+                if (!$figura) {
+                    $sinExtSinGuiones = preg_replace('/\.(png|jpg|jpeg|gif|pdf)$/i', '', $sinGuiones);
+                    $figura = FigureInIntro::where('intro_id', 0)->where('title', $sinExtSinGuiones)->first();
+                    if (!$figura) {
+                        $figura = FigureInIntro::where('intro_id', $sheet->id)->where('title', $sinExtSinGuiones)->first();
+                    }
+                }
+            }
+
             // Buscar en pim_figures (imágenes de problemas)
             if (!$figura) {
                 $figura = Figure::where('title', $imageName)->first();
                 if (!$figura) {
                     $sinExt = preg_replace('/\.(png|jpg|jpeg|gif|pdf)$/i', '', $imageName);
                     $figura = Figure::where('title', $sinExt)->first();
+                }
+                if (!$figura) {
+                    $sinGuiones = str_replace('_', '', $imageName);
+                    $figura = Figure::where('title', $sinGuiones)->first();
                 }
             }
 
