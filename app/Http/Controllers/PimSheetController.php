@@ -445,10 +445,22 @@ class PimSheetController extends Controller
      */
     private function extractAllImageNamesFromTex(string $texContent): array
     {
+        // Extraer macros \def\nombre{valor} para resolver referencias
+        $macros = [];
+        if (preg_match_all('/\\\\def\\\\(\w+)\{([^}]+)\}/', $texContent, $defMatches)) {
+            foreach ($defMatches[1] as $i => $macroName) {
+                $macros[$macroName] = $defMatches[2][$i];
+            }
+        }
+
         $images = [];
         if (preg_match_all('/\\\\includegraphics\s*(?:\[[^\]]*\])?\s*\{([^}]+)\}/', $texContent, $matches)) {
             foreach ($matches[1] as $imageName) {
                 $imageName = trim($imageName);
+                // Resolver macros: \logo -> valor de \def\logo{...}
+                if (preg_match('/^\\\\(\w+)$/', $imageName, $m) && isset($macros[$m[1]])) {
+                    $imageName = $macros[$m[1]];
+                }
                 if (!in_array($imageName, $images)) {
                     $images[] = $imageName;
                 }
