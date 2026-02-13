@@ -311,7 +311,7 @@ class PimSheetController extends Controller
 
         // Preprocesar TEX: corregir \def\group sin valor
         $texContent = $sheet->tex_sols;
-        $texContent = preg_replace('/\\\\def\\\\group\s*\n/', "\\def\\group{0}\n", $texContent);
+        $texContent = preg_replace('/\\\\def\\\\group(?!\{)\s*/', '\\\\def\\\\group{0}', $texContent);
 
         // Recopilar imágenes
         $images = $this->gatherImages($sheet);
