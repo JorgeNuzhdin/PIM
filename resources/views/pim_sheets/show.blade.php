@@ -252,6 +252,9 @@
             <a href="{{ route('pim-sheets.download', ['id' => $sheet->id]) }}" class="btn btn-primary">
                 📦 Descargar ZIP
             </a>
+            <a href="{{ route('pim-sheets.download-pdf', ['id' => $sheet->id]) }}" class="btn btn-primary" style="background-color: #e53e3e;">
+                📄 Descargar PDF
+            </a>
             <a href="{{ route('pim-sheets.index') }}" class="btn btn-secondary">
                 ← Volver al listado
             </a>

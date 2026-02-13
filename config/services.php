@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'latex' => [
+        'pdflatex_path' => env('PDFLATEX_PATH', 'pdflatex'),
+    ],
+
 ];

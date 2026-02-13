@@ -8,6 +8,7 @@ use App\Models\Tema;
 use App\Models\FigureInIntro;
 use App\Models\Figure;
 use App\Helpers\LatexHelper;
+use App\Services\LatexCompilerService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -291,6 +292,140 @@ class PimSheetController extends Controller
         return response()->download($zipPath, $zipFilename, [
             'Content-Type' => 'application/zip',
         ])->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Descargar PDF compilado con pdflatex
+     */
+    public function downloadPdf($id)
+    {
+        $sheet = PimSheet::where('id', $id)->first();
+
+        if (!$sheet) {
+            abort(404, 'Hoja no encontrada.');
+        }
+
+        if (empty($sheet->tex_sols)) {
+            abort(404, 'Archivo TEX no disponible.');
+        }
+
+        // Recopilar imágenes
+        $images = $this->gatherImages($sheet);
+
+        // Compilar
+        $compiler = new LatexCompilerService();
+        $result = $compiler->compile($sheet->tex_sols, $images);
+
+        if (!$result['pdf']) {
+            Log::error("Error compilando PDF para sheet {$id}");
+            Log::error("Log de pdflatex: " . substr($result['log'], -2000));
+            $compiler->cleanup($result['tempDir']);
+            return back()->with('error', 'Error al compilar el PDF. Revisa el archivo TEX.');
+        }
+
+        $baseName = str_replace(' ', '_', $sheet->title) . '_' . $sheet->date_year . '.pdf';
+
+        // Copiar PDF fuera del tempDir para poder limpiarlo
+        $pdfTempPath = storage_path('app/temp/pdf_' . uniqid() . '.pdf');
+        if (!is_dir(dirname($pdfTempPath))) {
+            mkdir(dirname($pdfTempPath), 0755, true);
+        }
+        copy($result['pdf'], $pdfTempPath);
+        $compiler->cleanup($result['tempDir']);
+
+        return response()->download($pdfTempPath, $baseName, [
+            'Content-Type' => 'application/pdf',
+        ])->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Recopilar todas las imágenes asociadas a una sheet.
+     * Devuelve array asociativo [nombre => datos_binarios]
+     */
+    private function gatherImages(PimSheet $sheet): array
+    {
+        $images = [];
+        $texContent = $sheet->tex_sols ?? '';
+
+        // Extraer nombres de imágenes del TEX (todo el contenido para PDF)
+        $imageNames = $this->extractAllImageNamesFromTex($texContent);
+
+        // Buscar cada imagen
+        foreach ($imageNames as $imageName) {
+            if (isset($images[$imageName])) {
+                continue;
+            }
+
+            // Buscar en intro_id = 0 (logos/imágenes globales)
+            $figura = FigureInIntro::where('intro_id', 0)->where('title', $imageName)->first();
+
+            // Si no, buscar en intro_id = sheet_id
+            if (!$figura) {
+                $figura = FigureInIntro::where('intro_id', $sheet->id)->where('title', $imageName)->first();
+            }
+
+            // Buscar sin extensión
+            if (!$figura) {
+                $sinExt = preg_replace('/\.(png|jpg|jpeg|gif|pdf)$/i', '', $imageName);
+                $figura = FigureInIntro::where('intro_id', 0)->where('title', $sinExt)->first();
+                if (!$figura) {
+                    $figura = FigureInIntro::where('intro_id', $sheet->id)->where('title', $sinExt)->first();
+                }
+            }
+
+            // Buscar en pim_figures (imágenes de problemas)
+            if (!$figura) {
+                $figura = Figure::where('title', $imageName)->first();
+                if (!$figura) {
+                    $sinExt = preg_replace('/\.(png|jpg|jpeg|gif|pdf)$/i', '', $imageName);
+                    $figura = Figure::where('title', $sinExt)->first();
+                }
+            }
+
+            if ($figura && $figura->figure) {
+                $images[$imageName] = $figura->figure;
+            }
+        }
+
+        // Añadir también imágenes de la hoja que no estén ya
+        $imagenesHoja = FigureInIntro::where('intro_id', $sheet->id)->get();
+        foreach ($imagenesHoja as $imagen) {
+            if ($imagen->figure && !isset($images[$imagen->title])) {
+                $images[$imagen->title] = $imagen->figure;
+            }
+        }
+
+        // Añadir imágenes de los problemas
+        if (!empty($sheet->problems)) {
+            $problemIds = array_filter(array_map('trim', explode(',', $sheet->problems)));
+            if (!empty($problemIds)) {
+                $figurasProblemas = Figure::whereIn('problem_id', $problemIds)->get();
+                foreach ($figurasProblemas as $figura) {
+                    if ($figura->figure && !isset($images[$figura->title])) {
+                        $images[$figura->title] = $figura->figure;
+                    }
+                }
+            }
+        }
+
+        return $images;
+    }
+
+    /**
+     * Extraer nombres de imágenes de todo el contenido TEX (para compilación PDF)
+     */
+    private function extractAllImageNamesFromTex(string $texContent): array
+    {
+        $images = [];
+        if (preg_match_all('/\\\\includegraphics\s*(?:\[[^\]]*\])?\s*\{([^}]+)\}/', $texContent, $matches)) {
+            foreach ($matches[1] as $imageName) {
+                $imageName = trim($imageName);
+                if (!in_array($imageName, $images)) {
+                    $images[] = $imageName;
+                }
+            }
+        }
+        return $images;
     }
 
     /**

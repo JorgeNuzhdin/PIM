@@ -75,6 +75,7 @@ Route::middleware('auth')->prefix('pim-sheets')->name('pim-sheets.')->group(func
 
     // Descarga de hojas
     Route::get('/{id}/download', [PimSheetController::class, 'download'])->name('download');
+    Route::get('/{id}/download-pdf', [PimSheetController::class, 'downloadPdf'])->name('download-pdf');
 });
 
 // Rutas de Editor de Tags (solo admin/editor pueden ver, solo admin puede editar/borrar)
