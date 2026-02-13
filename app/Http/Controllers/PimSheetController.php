@@ -383,8 +383,12 @@ class PimSheetController extends Controller
 
             if ($figura && $figura->figure) {
                 $images[$imageName] = $figura->figure;
+            } else {
+                Log::warning("Imagen no encontrada en BD para PDF: {$imageName}");
             }
         }
+
+        Log::info("PDF: " . count($imageNames) . " imágenes en TEX, " . count($images) . " encontradas en BD");
 
         // Añadir también imágenes de la hoja que no estén ya
         $imagenesHoja = FigureInIntro::where('intro_id', $sheet->id)->get();

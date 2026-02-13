@@ -29,7 +29,7 @@ class LatexCompilerService
         // Ruta a pdflatex
         $pdflatex = config('services.latex.pdflatex_path', 'pdflatex');
         $escapedDir = escapeshellarg($tempDir);
-        $cmd = "cd {$escapedDir} && {$pdflatex} -interaction=nonstopmode -halt-on-error document.tex 2>&1";
+        $cmd = "cd {$escapedDir} && {$pdflatex} -interaction=nonstopmode document.tex 2>&1";
 
         // Primera pasada
         exec($cmd, $output1, $returnCode1);
