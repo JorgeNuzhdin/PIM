@@ -118,6 +118,14 @@
     box-shadow: 0 4px 12px rgba(99, 179, 237, 0.4);
 }
 
+.btn-pdf {
+    background: #e53e3e;
+}
+.btn-pdf:hover {
+    background: #c53030;
+    box-shadow: 0 4px 12px rgba(229, 62, 62, 0.4);
+}
+
 .btn-html {
     background: #90cdf4;
     color: #2a4365;
@@ -165,7 +173,10 @@
                 @endif
             @endauth
             <a href="{{ route('carrito.descargar.tex') }}" class="btn-carrito btn-tex">
-                 TEX <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF"><path d="M480-328.46 309.23-499.23l42.16-43.38L450-444v-336h60v336l98.61-98.61 42.16 43.38L480-328.46ZM252.31-180Q222-180 201-201q-21-21-21-51.31v-108.46h60v108.46q0 4.62 3.85 8.46 3.84 3.85 8.46 3.85h455.38q4.62 0 8.46-3.85 3.85-3.84 3.85-8.46v-108.46h60v108.46Q780-222 759-201q-21 21-51.31 21H252.31Z"/></svg>
+                 TEX ⤓
+            </a>
+            <a href="{{ route('carrito.descargar.pdf') }}" class="btn-carrito btn-pdf">
+                 PDF ⤓
             </a>
             <a href="{{ route('carrito.presentacion') }}" class="btn-carrito btn-html">
                  HTML
@@ -184,7 +195,37 @@
                     <div class="item-content">
                         <div class="item-title">Problema #{{ $item->problema->id }}</div>
                         <div class="item-preview">
-                            {{ Str::limit(strip_tags($item->problema->problem_html_processed), 150) }}
+                            @php
+                                $text = strip_tags($item->problema->problem_html_processed);
+                                // Quitar bloques TikZ completos
+                                $text = preg_replace('/\\\\begin\{tikzpicture\}.*?\\\\end\{tikzpicture\}/s', '[figura]', $text);
+                                // Truncar respetando delimitadores MathJax
+                                $limit = 150;
+                                if (strlen($text) > $limit) {
+                                    $cut = substr($text, 0, $limit);
+                                    // Si cortamos dentro de $...$ inline, extender hasta el cierre
+                                    $dollarCount = substr_count($cut, '$') - substr_count($cut, '\\$');
+                                    if ($dollarCount % 2 !== 0) {
+                                        $nextDollar = strpos($text, '$', $limit);
+                                        if ($nextDollar !== false && $nextDollar < $limit + 100) {
+                                            $cut = substr($text, 0, $nextDollar + 1);
+                                        } else {
+                                            // No se encuentra cierre, cortar antes del $ abierto
+                                            $lastDollar = strrpos($cut, '$');
+                                            $cut = substr($text, 0, $lastDollar);
+                                        }
+                                    }
+                                    // Si cortamos dentro de \(...\), extender hasta \)
+                                    if (substr_count($cut, '\\(') > substr_count($cut, '\\)')) {
+                                        $nextClose = strpos($text, '\\)', strlen($cut));
+                                        if ($nextClose !== false && $nextClose < $limit + 100) {
+                                            $cut = substr($text, 0, $nextClose + 2);
+                                        }
+                                    }
+                                    $text = $cut . '...';
+                                }
+                            @endphp
+                            {!! $text !!}
                         </div>
                     </div>
                     <button class="btn-remove" onclick="removeFromCarrito({{ $item->problema_id }}, this)">

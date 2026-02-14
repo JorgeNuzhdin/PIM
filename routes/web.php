@@ -32,6 +32,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/carrito/update-order', [App\Http\Controllers\CarritoController::class, 'updateOrder'])->name('carrito.updateOrder');
     Route::get('/carrito/count', [App\Http\Controllers\CarritoController::class, 'count'])->name('carrito.count');
     Route::get('/carrito/descargar-tex', [App\Http\Controllers\CarritoController::class, 'descargarTex'])->name('carrito.descargar.tex');
+    Route::get('/carrito/descargar-pdf', [App\Http\Controllers\CarritoController::class, 'descargarPdf'])->name('carrito.descargar.pdf');
     Route::get('/carrito/presentacion', [App\Http\Controllers\CarritoController::class, 'presentacion'])->name('carrito.presentacion');
     Route::post('/carrito/limpiar', [App\Http\Controllers\CarritoController::class, 'limpiar'])->name('carrito.limpiar');
     Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');

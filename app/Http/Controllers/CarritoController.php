@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Carrito;
 use App\Models\Problema;
+use App\Models\Figure;
+use App\Services\LatexCompilerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
 
@@ -423,6 +426,100 @@ private function crearZip($texContent, $imagenesNombres)
         }
 
         return view('carrito.presentacion', compact('items'));
+    }
+
+    public function descargarPdf()
+    {
+        $items = Carrito::where('user_id', Auth::id())
+                        ->with('problema')
+                        ->orderBy('orden')
+                        ->get();
+
+        if ($items->isEmpty()) {
+            return redirect()->route('carrito.index')->with('error', 'El carrito está vacío');
+        }
+
+        // Recopilar paquetes, contenido e imágenes (igual que descargarTex)
+        $packages = [];
+        $imagenes = [];
+        $contenido = '';
+
+        foreach ($items as $item) {
+            $problema = $item->problema;
+
+            if ($problema->packages) {
+                $packagesText = preg_replace('/u([0-9a-fA-F]{4})/', '', $problema->packages);
+                $pkgs = preg_split('/[\n,]+/', $packagesText);
+                foreach ($pkgs as $pkg) {
+                    $pkg = trim($pkg);
+                    if ($pkg && !in_array($pkg, $packages)) {
+                        $packages[] = $pkg;
+                    }
+                }
+            }
+
+            $titulo = $problema->title ?? 'sin-titulo';
+            $contenido .= "\n\\idtitulo{\\#" . $problema->id . ": " . $titulo . "}\n";
+            $contenido .= "\\exercise{";
+            $contenido .= $problema->problem_tex ?? $problema->problem_html;
+            $contenido .= "}\n";
+
+            if ($problema->hints) {
+                $contenido .= "\n\\pistas{" . $problema->hints . "}\n";
+            }
+
+            if ($problema->solution_tex || $problema->solution_html) {
+                $contenido .= "\n\\solution{";
+                $contenido .= $problema->solution_tex ?? $problema->solution_html;
+                $contenido .= "}\n";
+            }
+
+            // Recopilar imágenes
+            $texToSearch = ($problema->problem_tex ?? '') . ' ' . ($problema->solution_tex ?? '');
+            preg_match_all('/\\\\includegraphics(?:\[.*?\])?\{([^}]+)\}/', $texToSearch, $matches);
+            foreach ($matches[1] as $imgName) {
+                if (!isset($imagenes[$imgName])) {
+                    $imagenes[$imgName] = true;
+                }
+            }
+        }
+
+        $preambulo = $this->generarPreambulo($packages);
+        $texContent = $preambulo . "\n\n\\begin{document}\n\n" . $contenido . "\n\\end{document}";
+
+        // Recopilar datos binarios de imágenes
+        $imageData = [];
+        foreach (array_keys($imagenes) as $imgName) {
+            $imgNameClean = preg_replace('/\.(png|jpg|jpeg|gif|pdf)$/i', '', $imgName);
+            $figure = Figure::where('title', $imgName)
+                            ->orWhere('title', $imgNameClean)
+                            ->first();
+
+            if ($figure && $figure->figure) {
+                $imageData[$imgName] = $figure->figure;
+            }
+        }
+
+        // Compilar PDF
+        $compiler = new LatexCompilerService();
+        $result = $compiler->compile($texContent, $imageData);
+
+        if (!$result['pdf']) {
+            Log::error("Error compilando PDF del carrito. Temp dir: {$result['tempDir']}");
+            return back()->with('error', 'Error al compilar el PDF. Revisa los problemas seleccionados.');
+        }
+
+        $baseName = 'problemas_' . date('Y-m-d_His') . '.pdf';
+        $pdfTempPath = storage_path('app/temp/pdf_' . uniqid() . '.pdf');
+        if (!is_dir(dirname($pdfTempPath))) {
+            mkdir(dirname($pdfTempPath), 0755, true);
+        }
+        copy($result['pdf'], $pdfTempPath);
+        $compiler->cleanup($result['tempDir']);
+
+        return response()->download($pdfTempPath, $baseName, [
+            'Content-Type' => 'application/pdf',
+        ])->deleteFileAfterSend(true);
     }
 
     public function limpiar()
