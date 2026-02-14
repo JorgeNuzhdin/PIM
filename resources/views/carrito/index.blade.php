@@ -222,6 +222,19 @@
                                             $cut = substr($text, 0, $nextClose + 2);
                                         }
                                     }
+                                    // Si cortamos dentro de \[...\], extender hasta \]
+                                    if (substr_count($cut, '\\[') > substr_count($cut, '\\]')) {
+                                        $nextClose = strpos($text, '\\]', strlen($cut));
+                                        if ($nextClose !== false && $nextClose < $limit + 200) {
+                                            $cut = substr($text, 0, $nextClose + 2);
+                                        } else {
+                                            // Fórmula display muy larga, cortar antes del \[
+                                            $lastOpen = strrpos($cut, '\\[');
+                                            if ($lastOpen !== false) {
+                                                $cut = substr($text, 0, $lastOpen);
+                                            }
+                                        }
+                                    }
                                     $text = $cut . '...';
                                 }
                             @endphp
