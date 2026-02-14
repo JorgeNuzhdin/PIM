@@ -378,18 +378,19 @@ class PimSheetController extends Controller
                 }
             }
 
-            // Buscar con variantes (sin guiones bajos, con guiones bajos)
+            // Buscar con LIKE (underscores como comodín)
             if (!$figura) {
-                $sinGuiones = str_replace('_', '', $imageName);
-                $figura = FigureInIntro::where('intro_id', 0)->where('title', $sinGuiones)->first();
+                $likePattern = str_replace('_', '%', $imageName);
+                $figura = FigureInIntro::where('intro_id', 0)->where('title', 'LIKE', $likePattern)->first();
                 if (!$figura) {
-                    $figura = FigureInIntro::where('intro_id', $sheet->id)->where('title', $sinGuiones)->first();
+                    $figura = FigureInIntro::where('intro_id', $sheet->id)->where('title', 'LIKE', $likePattern)->first();
                 }
                 if (!$figura) {
-                    $sinExtSinGuiones = preg_replace('/\.(png|jpg|jpeg|gif|pdf)$/i', '', $sinGuiones);
-                    $figura = FigureInIntro::where('intro_id', 0)->where('title', $sinExtSinGuiones)->first();
+                    $sinExt = preg_replace('/\.(png|jpg|jpeg|gif|pdf)$/i', '', $imageName);
+                    $likePatternSinExt = str_replace('_', '%', $sinExt);
+                    $figura = FigureInIntro::where('intro_id', 0)->where('title', 'LIKE', $likePatternSinExt)->first();
                     if (!$figura) {
-                        $figura = FigureInIntro::where('intro_id', $sheet->id)->where('title', $sinExtSinGuiones)->first();
+                        $figura = FigureInIntro::where('intro_id', $sheet->id)->where('title', 'LIKE', $likePatternSinExt)->first();
                     }
                 }
             }
