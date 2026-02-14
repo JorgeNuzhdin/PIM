@@ -376,7 +376,8 @@
         return '';
     }
 
-    // Función para extraer nombres de imágenes de TODO el contenido TEX
+    // Función para extraer nombres de imágenes ANTES y DENTRO del preámbulo
+    // (las imágenes después del preámbulo son de problemas, ya están en la BD)
     function extractImageNames(texContent) {
         // Extraer macros \def\nombre{valor} para resolver referencias
         const macros = {};
@@ -386,12 +387,18 @@
             macros[defMatch[1]] = defMatch[2];
         }
 
+        // Solo buscar imágenes ANTES de \preamblefalse (o en todo si no existe)
+        const preambleEndIdx = texContent.indexOf('\\preamblefalse');
+        const searchContent = preambleEndIdx !== -1
+            ? texContent.substring(0, preambleEndIdx)
+            : texContent.substring(0, texContent.indexOf('\\begin{document}') || texContent.length);
+
         // Buscar \includegraphics con o sin opciones
         const regex = /\\includegraphics\s*(?:\[[^\]]*\])?\s*\{([^}]+)\}/g;
         const images = [];
         let match;
 
-        while ((match = regex.exec(texContent)) !== null) {
+        while ((match = regex.exec(searchContent)) !== null) {
             let imageName = match[1].trim();
             // Resolver macros: \logo -> valor de \def\logo{...}
             const macroMatch = imageName.match(/^\\(\w+)$/);
