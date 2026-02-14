@@ -21,8 +21,19 @@ class LatexCompilerService
         // Escribir archivo .tex
         file_put_contents($tempDir . '/document.tex', $texContent);
 
-        // Escribir imágenes
+        // Escribir imágenes (re-codificar PNGs para compatibilidad con libpng)
         foreach ($images as $name => $binaryData) {
+            if (str_ends_with(strtolower($name), '.png')) {
+                $img = @imagecreatefromstring($binaryData);
+                if ($img) {
+                    imagealphablending($img, false);
+                    imagesavealpha($img, true);
+                    ob_start();
+                    imagepng($img);
+                    $binaryData = ob_get_clean();
+                    imagedestroy($img);
+                }
+            }
             file_put_contents($tempDir . '/' . $name, $binaryData);
         }
 
