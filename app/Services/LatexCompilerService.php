@@ -32,6 +32,9 @@ class LatexCompilerService
                     imagepng($img);
                     $binaryData = ob_get_clean();
                     imagedestroy($img);
+                } else {
+                    Log::warning("Imagen PNG corrupta o truncada, omitida: {$name} (" . strlen($binaryData) . " bytes)");
+                    continue; // No escribir PNGs corruptos
                 }
             }
             file_put_contents($tempDir . '/' . $name, $binaryData);
