@@ -165,6 +165,10 @@
         background-color: #c6f6d5;
     }
 
+    .btn-action.download-pdf:hover {
+        background-color: #fed7d7;
+    }
+
     .sheets-table-wrapper {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
@@ -442,7 +446,8 @@
                         <td>{{ $sheet->tema->tema ?? '-' }}</td>
                         <td class="actions-cell">
                             <a href="{{ route('pim-sheets.show', ['id' => $sheet->id]) }}" class="btn-action view" title="Ver hoja">👁️</a>
-                            <a href="{{ route('pim-sheets.download', ['id' => $sheet->id]) }}" class="btn-action download" title="Descargar TEX">⤓</a>
+                            <a href="{{ route('pim-sheets.download', ['id' => $sheet->id]) }}" class="btn-action download" title="Descargar TEX+IMG (ZIP)">⤓</a>
+                            <a href="{{ route('pim-sheets.download-pdf', ['id' => $sheet->id]) }}" class="btn-action download-pdf" title="Descargar PDF" style="color: #e53e3e; font-weight: bold;">PDF</a>
                             @auth
                                 @if(Auth::user()->isAdmin())
                                     <button class="btn-action btn-delete" onclick="eliminarHoja({{ $sheet->id }}, '{{ addslashes($sheet->title) }}')" title="Eliminar hoja">🗑️</button>

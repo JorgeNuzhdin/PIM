@@ -249,11 +249,11 @@
             @endif
         </div>
         <div class="sheet-actions">
-            <a href="{{ route('pim-sheets.download', ['id' => $sheet->id]) }}" class="btn btn-primary">
-                📦 Descargar ZIP
+            <a href="{{ route('pim-sheets.download', ['id' => $sheet->id]) }}" class="btn btn-primary" title="Descargar TEX + imágenes">
+                TEX ⤓
             </a>
-            <a href="{{ route('pim-sheets.download-pdf', ['id' => $sheet->id]) }}" class="btn btn-primary" style="background-color: #e53e3e;">
-                📄 Descargar PDF
+            <a href="{{ route('pim-sheets.download-pdf', ['id' => $sheet->id]) }}" class="btn btn-primary" style="background-color: #e53e3e;" title="Descargar PDF compilado">
+                PDF ⤓
             </a>
             <a href="{{ route('pim-sheets.index') }}" class="btn btn-secondary">
                 ← Volver al listado
