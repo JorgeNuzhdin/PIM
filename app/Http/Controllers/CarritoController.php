@@ -243,9 +243,13 @@ private function generarPreambulo($packages)
 \DeclareMathOperator{\mcd}{mcd}
 \renewcommand{\min}{\textup{m\'in}\,}
 \usetikzlibrary{positioning}
+\usetikzlibrary{intersections}
+\usetikzlibrary{through}
+\usetikzlibrary{calc}
 \usepackage{amsthm}
 \usepackage{subcaption}
 \usetikzlibrary{patterns}
+\usepackage{tkz-euclide}
 \usepackage{tikz-cd}
 \usepackage{float}
 \usepackage{tikz}
@@ -354,6 +358,24 @@ private function generarPreambulo($packages)
 
 
 LATEX;
+
+    // Añadir paquetes específicos de los problemas
+    if (!empty($packages)) {
+        $preambulo .= "\n% Paquetes de problemas\n";
+        foreach ($packages as $pkg) {
+            $pkg = trim($pkg);
+            if ($pkg && !str_starts_with($pkg, '%')) {
+                // Evitar duplicados: comprobar si ya está en el preámbulo
+                $pkgName = $pkg;
+                if (preg_match('/\\\\usepackage(?:\[.*?\])?\{(.+?)\}/', $pkg, $m)) {
+                    $pkgName = $m[1];
+                }
+                if (strpos($preambulo, $pkgName) === false) {
+                    $preambulo .= $pkg . "\n";
+                }
+            }
+        }
+    }
 
     return $preambulo;
 }
