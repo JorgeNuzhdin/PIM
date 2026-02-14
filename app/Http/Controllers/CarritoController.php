@@ -125,20 +125,18 @@ class CarritoController extends Controller
         $contenido .= "\n\\idtitulo{\\#" . $problema->id . ": " . $titulo . "}\n";
 
         $contenido .= "\\exercise{";
-        $contenido .= $problema->problem_tex ?? $problema->problem_html;
+        $contenido .= $this->sanitizeTexForMacroArg($problema->problem_tex ?? $problema->problem_html);
         $contenido .= "}\n";
 
         // Pistas
         if ($problema->hints) {
-            $contenido .= "\n\\pistas{";
-            $contenido .= $problema->hints;
-            $contenido .= "}\n";
+            $contenido .= "\n\\pistas{" . $this->sanitizeTexForMacroArg($problema->hints) . "}\n";
         }
 
         // Solución
         if ($problema->solution_tex || $problema->solution_html) {
             $contenido .= "\n\\solution{";
-            $contenido .= $problema->solution_tex ?? $problema->solution_html;
+            $contenido .= $this->sanitizeTexForMacroArg($problema->solution_tex ?? $problema->solution_html);
             $contenido .= "}\n";
         }
         
@@ -483,16 +481,16 @@ private function crearZip($texContent, $imagenesNombres)
             $titulo = $problema->title ?? 'sin-titulo';
             $contenido .= "\n\\idtitulo{\\#" . $problema->id . ": " . $titulo . "}\n";
             $contenido .= "\\exercise{";
-            $contenido .= $problema->problem_tex ?? $problema->problem_html;
+            $contenido .= $this->sanitizeTexForMacroArg($problema->problem_tex ?? $problema->problem_html);
             $contenido .= "}\n";
 
             if ($problema->hints) {
-                $contenido .= "\n\\pistas{" . $problema->hints . "}\n";
+                $contenido .= "\n\\pistas{" . $this->sanitizeTexForMacroArg($problema->hints) . "}\n";
             }
 
             if ($problema->solution_tex || $problema->solution_html) {
                 $contenido .= "\n\\solution{";
-                $contenido .= $problema->solution_tex ?? $problema->solution_html;
+                $contenido .= $this->sanitizeTexForMacroArg($problema->solution_tex ?? $problema->solution_html);
                 $contenido .= "}\n";
             }
 
@@ -527,8 +525,18 @@ private function crearZip($texContent, $imagenesNombres)
         $result = $compiler->compile($texContent, $imageData);
 
         if (!$result['pdf']) {
-            Log::error("Error compilando PDF del carrito. Temp dir: {$result['tempDir']}");
-            return back()->with('error', 'Error al compilar el PDF. Revisa los problemas seleccionados.');
+            // Extraer errores del log para mostrar al usuario
+            $errorLines = [];
+            if ($result['log']) {
+                foreach (explode("\n", $result['log']) as $line) {
+                    if (str_starts_with(trim($line), '!')) {
+                        $errorLines[] = trim($line);
+                    }
+                }
+            }
+            $errorSummary = !empty($errorLines) ? implode(' | ', array_slice($errorLines, 0, 3)) : 'Error desconocido';
+            Log::error("Error compilando PDF del carrito. IDs: " . $items->pluck('problema_id')->implode(',') . ". Errores: {$errorSummary}");
+            return back()->with('error', 'Error al compilar el PDF: ' . $errorSummary);
         }
 
         $baseName = 'problemas_' . date('Y-m-d_His') . '.pdf';
@@ -549,5 +557,37 @@ private function crearZip($texContent, $imagenesNombres)
         Carrito::where('user_id', Auth::id())->delete();
 
         return redirect()->route('carrito.index')->with('success', 'Carrito vaciado correctamente');
+    }
+
+    /**
+     * Sanitiza contenido LaTeX para que pueda usarse dentro de argumentos de macros.
+     * Reemplaza \verb y \begin{verbatim} que no pueden ir dentro de \exercise{...}.
+     */
+    private function sanitizeTexForMacroArg(string $tex): string
+    {
+        // Reemplazar \verb|...|, \verb+...+, \verb*|...| etc. con \texttt{...}
+        $tex = preg_replace_callback('/\\\\verb\*?(.)(.+?)\1/', function ($matches) {
+            $content = $matches[2];
+            // Escapar caracteres especiales de LaTeX para \texttt
+            $content = str_replace(
+                ['\\', '{', '}', '$', '&', '#', '^', '_', '~', '%'],
+                ['\\textbackslash{}', '\\{', '\\}', '\\$', '\\&', '\\#', '\\^{}', '\\_', '\\~{}', '\\%'],
+                $content
+            );
+            return '\\texttt{' . $content . '}';
+        }, $tex);
+
+        // Reemplazar \begin{verbatim}...\end{verbatim} con \begin{quote}\ttfamily ...\end{quote}
+        $tex = preg_replace_callback('/\\\\begin\{verbatim\}(.*?)\\\\end\{verbatim\}/s', function ($matches) {
+            $content = $matches[1];
+            $content = str_replace(
+                ['\\', '{', '}', '$', '&', '#', '^', '_', '~', '%'],
+                ['\\textbackslash{}', '\\{', '\\}', '\\$', '\\&', '\\#', '\\^{}', '\\_', '\\~{}', '\\%'],
+                $content
+            );
+            return '\\begin{quote}\\ttfamily ' . $content . '\\end{quote}';
+        }, $tex);
+
+        return $tex;
     }
 }

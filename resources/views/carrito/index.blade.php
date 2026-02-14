@@ -235,6 +235,27 @@
                                             }
                                         }
                                     }
+                                    // Si cortamos dentro de \begin{env}...\end{env}, extender o cortar antes
+                                    if (preg_match_all('/\\\\begin\{([^}]+)\}/', $cut, $beginMatches, PREG_SET_ORDER)) {
+                                        foreach ($beginMatches as $m) {
+                                            $envName = $m[1];
+                                            $endTag = '\\end{' . $envName . '}';
+                                            $beginCount = substr_count($cut, '\\begin{' . $envName . '}');
+                                            $endCount = substr_count($cut, $endTag);
+                                            if ($beginCount > $endCount) {
+                                                $nextEnd = strpos($text, $endTag, strlen($cut));
+                                                if ($nextEnd !== false && $nextEnd < $limit + 300) {
+                                                    $cut = substr($text, 0, $nextEnd + strlen($endTag));
+                                                } else {
+                                                    // Entorno muy largo, cortar antes del \begin
+                                                    $lastBegin = strrpos($cut, '\\begin{' . $envName . '}');
+                                                    if ($lastBegin !== false) {
+                                                        $cut = substr($text, 0, $lastBegin);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
                                     $text = $cut . '...';
                                 }
                             @endphp
