@@ -206,7 +206,7 @@ private function generarPreambulo($packages)
 \usepackage{mathtools}
 \usepackage{float}
 \usepackage{amsthm}
-\usepackage{graphicx,amssymb,latexsym,amsmath,verbatim, amsthm}
+\usepackage{graphicx,amssymb,latexsym,amsmath, amsthm}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.15}
 \usepackage{mathrsfs}
@@ -535,7 +535,8 @@ private function crearZip($texContent, $imagenesNombres)
                 }
             }
             $errorSummary = !empty($errorLines) ? implode(' | ', array_slice($errorLines, 0, 3)) : 'Error desconocido';
-            Log::error("Error compilando PDF del carrito. IDs: " . $items->pluck('problema_id')->implode(',') . ". Errores: {$errorSummary}");
+            Log::error("Error compilando PDF del carrito. IDs: " . $items->pluck('problema_id')->implode(',') . ". Errores: {$errorSummary}. Temp dir: {$result['tempDir']}");
+            // No limpiar tempDir para poder depurar el .tex generado
             return back()->with('error', 'Error al compilar el PDF: ' . $errorSummary);
         }
 
@@ -587,6 +588,9 @@ private function crearZip($texContent, $imagenesNombres)
             );
             return '\\begin{quote}\\ttfamily ' . $content . '\\end{quote}';
         }, $tex);
+
+        // Eliminar \begin{comment}...\end{comment} (del paquete verbatim, no puede ir en argumentos)
+        $tex = preg_replace('/\\\\begin\{comment\}.*?\\\\end\{comment\}/s', '', $tex);
 
         return $tex;
     }
