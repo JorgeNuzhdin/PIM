@@ -376,16 +376,29 @@
         return '';
     }
 
-    // Función para extraer nombres de imágenes del preámbulo
-    function extractImageNames(preamble) {
-        // Buscar \includegraphics con o sin opciones, permitiendo espacios
+    // Función para extraer nombres de imágenes de TODO el contenido TEX
+    function extractImageNames(texContent) {
+        // Extraer macros \def\nombre{valor} para resolver referencias
+        const macros = {};
+        const defRegex = /\\def\\(\w+)\{([^}]+)\}/g;
+        let defMatch;
+        while ((defMatch = defRegex.exec(texContent)) !== null) {
+            macros[defMatch[1]] = defMatch[2];
+        }
+
+        // Buscar \includegraphics con o sin opciones
         const regex = /\\includegraphics\s*(?:\[[^\]]*\])?\s*\{([^}]+)\}/g;
         const images = [];
         let match;
 
-        while ((match = regex.exec(preamble)) !== null) {
-            const imageName = match[1].trim();
-            if (!images.includes(imageName)) {
+        while ((match = regex.exec(texContent)) !== null) {
+            let imageName = match[1].trim();
+            // Resolver macros: \logo -> valor de \def\logo{...}
+            const macroMatch = imageName.match(/^\\(\w+)$/);
+            if (macroMatch && macros[macroMatch[1]]) {
+                imageName = macros[macroMatch[1]];
+            }
+            if (!images.includes(imageName) && !imageName.startsWith('\\')) {
                 images.push(imageName);
             }
         }
@@ -459,14 +472,11 @@
             if (preamble) {
                 document.getElementById('preambles').value = preamble;
                 document.getElementById('preambles').style.backgroundColor = '#c6f6d5'; // Verde claro
-
-                // Detectar imágenes en el preámbulo
-                const imageNames = extractImageNames(preamble);
-                showImageUploadFields(imageNames);
-            } else {
-                // Ocultar sección de imágenes si no hay preámbulo
-                document.getElementById('imagesSection').classList.remove('visible');
             }
+
+            // Detectar imágenes en TODO el contenido TEX (incluye logo, etc.)
+            const imageNames = extractImageNames(texContent);
+            showImageUploadFields(imageNames);
         };
 
         reader.onerror = function() {
