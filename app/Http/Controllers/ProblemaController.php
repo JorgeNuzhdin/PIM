@@ -363,12 +363,22 @@ class ProblemaController extends Controller
     }
     
     // Filtro por topic específico (tag)
-    if ($request->filled('topic_title')) {
-        $problemIds = ProblemaTag::where('tag', $request->topic_title)
+    $tagFilter = $request->filled('topic_title') ? $request->topic_title : ($request->filled('topic_display') ? $request->topic_display : null);
+    if ($tagFilter) {
+        // Intentar match exacto primero, luego LIKE
+        $problemIds = ProblemaTag::where('tag', $tagFilter)
                                 ->distinct()
                                 ->pluck('problem_id')
                                 ->toArray();
-        
+
+        if (empty($problemIds)) {
+            // Fallback: búsqueda parcial
+            $problemIds = ProblemaTag::where('tag', 'LIKE', "%{$tagFilter}%")
+                                    ->distinct()
+                                    ->pluck('problem_id')
+                                    ->toArray();
+        }
+
         if (!empty($problemIds)) {
             $query->whereIn('id', $problemIds);
         } else {

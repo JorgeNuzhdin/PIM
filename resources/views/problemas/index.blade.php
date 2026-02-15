@@ -893,7 +893,7 @@
                     @if($problema->tags && $problema->tags->count() > 0)
                         <div class="problema-tags">
                             @foreach($problema->tags as $tag)
-                                <span class="tag">{{ $tag->tag }}</span>
+                                <a href="{{ route('problemas.index', ['topic_title' => $tag->tag, 'topic_display' => $tag->tag]) }}" class="tag" style="text-decoration:none;color:white;cursor:pointer;">{{ $tag->tag }}</a>
                             @endforeach
                         </div>
                     @endif
