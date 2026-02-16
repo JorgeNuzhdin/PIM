@@ -629,6 +629,13 @@ $t = preg_replace('/\\\\definecolor\{[^}]+\}\{[^}]+\}\{[^}]+\}/', '', $t);
             $bold = self::fromAtoB('{\bf', '}', $t);
         }
 
+        // Italic 2 ({\it ...})
+        $it = self::fromAtoB('{\it', '}', $t);
+        while ($it['inside'] != '') {
+            $t = $it['before'] . '<i>' . $it['inside'] . '</i>' . $it['after'];
+            $it = self::fromAtoB('{\it', '}', $t);
+        }
+
         // Monospace / código
         $tt = self::fromAtoB('\texttt{', '}', $t);
         while ($tt['inside'] != '') {

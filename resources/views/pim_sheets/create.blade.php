@@ -200,6 +200,63 @@
     .images-list input[type="file"] {
         max-width: 250px;
     }
+
+    /* Sección de métodos */
+    .methods-section {
+        display: none;
+        background: #eff6ff;
+        border: 1px solid #3b82f6;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .methods-section.visible {
+        display: block;
+    }
+
+    .methods-section h3 {
+        margin: 0 0 1rem 0;
+        color: #1e40af;
+        font-size: 1.1rem;
+    }
+
+    .methods-list {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 1rem 0;
+    }
+
+    .methods-list li {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 4px;
+        margin-bottom: 0.5rem;
+    }
+
+    .methods-list .method-title {
+        flex: 1;
+        font-weight: 500;
+        color: #374151;
+    }
+
+    .methods-list .method-subtema {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .methods-list .method-subtema.resolved {
+        color: #059669;
+        font-weight: 600;
+    }
+
+    .methods-list .method-subtema.unresolved {
+        color: #dc2626;
+    }
 </style>
 @endsection
 
@@ -295,6 +352,22 @@
                 </ul>
             </div>
 
+            <!-- Sección de métodos detectados en el preámbulo -->
+            <div class="methods-section" id="methodsSection">
+                <h3>Métodos detectados en el preámbulo</h3>
+                <p style="color: #1e40af; margin-bottom: 1rem;">
+                    Se han detectado los siguientes métodos (secciones) en el preámbulo del archivo TEX:
+                </p>
+                <ul class="methods-list" id="methodsList">
+                    <!-- Se rellenará dinámicamente con JavaScript -->
+                </ul>
+                <p id="methodsTemaWarning" style="display:none; color: #dc2626; font-weight: 600;">
+                    Selecciona un Tema arriba para poder asignar subtemas a los métodos.
+                </p>
+            </div>
+
+            <input type="hidden" name="metodos_json" id="metodos_json" value="">
+
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">Subir Hoja de Problemas</button>
                 <a href="{{ route('pim-sheets.index') }}" class="btn btn-secondary">Cancelar</a>
@@ -341,6 +414,14 @@
         }
         if (!texFile) {
             errors.push('El archivo TEX es obligatorio.');
+        }
+
+        // Validar métodos extraídos
+        if (window._extractedMethods && window._extractedMethods.length > 0) {
+            const sinSubtema = window._extractedMethods.filter(m => !m.subtema_id);
+            if (sinSubtema.length > 0) {
+                errors.push('Hay ' + sinSubtema.length + ' método(s) sin subtema asignado.');
+            }
         }
 
         if (errors.length > 0) {
@@ -454,6 +535,247 @@
         }
     }
 
+    // === Métodos: extracción y resolución de subtemas ===
+
+    // Estado global de métodos extraídos
+    window._extractedMethods = [];
+    window._pendingMethods = null;
+    window._availableSubtemas = [];
+
+    // Extraer métodos (secciones) del preámbulo
+    function extractMethodsFromPreamble(preambleText) {
+        if (!preambleText || !preambleText.trim()) return [];
+
+        const methods = [];
+        const sectionRegex = /\\section\*?\{([^}]+)\}/g;
+        const matches = [];
+        let m;
+
+        while ((m = sectionRegex.exec(preambleText)) !== null) {
+            matches.push({
+                title: m[1].trim(),
+                startIndex: m.index,
+                endOfMatch: m.index + m[0].length
+            });
+        }
+
+        if (matches.length === 0) return [];
+
+        for (let i = 0; i < matches.length; i++) {
+            const contentStart = matches[i].endOfMatch;
+            const contentEnd = (i + 1 < matches.length)
+                ? matches[i + 1].startIndex
+                : preambleText.length;
+
+            const content = preambleText.substring(contentStart, contentEnd).trim();
+            const subtemaMatch = content.match(/\\subtema\{([^}]+)\}/);
+            const subtemaNombre = subtemaMatch ? subtemaMatch[1].trim() : null;
+
+            methods.push({
+                title: matches[i].title,
+                content: content,
+                subtema_nombre: subtemaNombre,
+                subtema_id: null
+            });
+        }
+
+        return methods;
+    }
+
+    // Resolver subtemas contra la lista del API
+    function resolveSubtemas(methods, subtemasFromApi) {
+        const resolved = [];
+        const unresolved = [];
+
+        methods.forEach(method => {
+            if (method.subtema_nombre) {
+                const match = subtemasFromApi.find(
+                    s => s.nombre.trim().toLowerCase() === method.subtema_nombre.toLowerCase()
+                );
+                if (match) {
+                    method.subtema_id = match.id;
+                    resolved.push(method);
+                } else {
+                    unresolved.push(method);
+                }
+            } else {
+                unresolved.push(method);
+            }
+        });
+
+        return { resolved, unresolved };
+    }
+
+    // Fetch subtemas y resolver
+    function fetchSubtemasAndResolve(temaId, methods) {
+        fetch(`/api/subtemas/${temaId}`)
+            .then(response => response.json())
+            .then(subtemas => {
+                window._availableSubtemas = subtemas;
+                const result = resolveSubtemas(methods, subtemas);
+
+                window._extractedMethods = [...result.resolved, ...result.unresolved];
+                window._pendingMethods = null;
+
+                displayExtractedMethods(window._extractedMethods);
+
+                if (result.unresolved.length > 0) {
+                    showSubtemaModal(result.unresolved, subtemas);
+                } else {
+                    updateMethodsHiddenField(window._extractedMethods);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching subtemas:', error);
+            });
+    }
+
+    // Mostrar lista de métodos detectados
+    function displayExtractedMethods(methods) {
+        const section = document.getElementById('methodsSection');
+        const list = document.getElementById('methodsList');
+
+        if (!methods || methods.length === 0) {
+            section.classList.remove('visible');
+            list.innerHTML = '';
+            return;
+        }
+
+        list.innerHTML = '';
+
+        methods.forEach((method, index) => {
+            const li = document.createElement('li');
+            const statusClass = method.subtema_id ? 'resolved' : 'unresolved';
+            let statusText;
+            if (method.subtema_id) {
+                const sub = window._availableSubtemas.find(s => s.id === method.subtema_id);
+                statusText = 'Subtema: ' + (sub ? sub.nombre : method.subtema_nombre);
+            } else if (method.subtema_nombre) {
+                statusText = 'Subtema no encontrado: "' + method.subtema_nombre + '"';
+            } else {
+                statusText = 'Sin subtema asignado';
+            }
+
+            li.innerHTML = `
+                <span class="method-title">${index + 1}. ${escapeHtml(method.title)}</span>
+                <span class="method-subtema ${statusClass}">${statusText}</span>
+            `;
+            list.appendChild(li);
+        });
+
+        section.classList.add('visible');
+        document.getElementById('methodsTemaWarning').style.display = 'none';
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Serializar métodos al campo hidden
+    function updateMethodsHiddenField(methods) {
+        const data = methods.filter(m => m.subtema_id).map(m => ({
+            title: m.title,
+            method_tex: m.content,
+            subtema_id: m.subtema_id
+        }));
+        document.getElementById('metodos_json').value = JSON.stringify(data);
+    }
+
+    // Modal para asignar subtemas faltantes
+    function showSubtemaModal(unresolvedMethods, subtemas) {
+        const existing = document.getElementById('subtemaModal');
+        if (existing) existing.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'subtemaModal';
+        modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;';
+
+        let optionsHtml = '<option value="">-- Seleccionar subtema --</option>';
+        subtemas.forEach(s => {
+            optionsHtml += `<option value="${s.id}">${escapeHtml(s.nombre)}</option>`;
+        });
+
+        let rowsHtml = '';
+        unresolvedMethods.forEach(method => {
+            const hint = method.subtema_nombre
+                ? ` (TEX indica: "${escapeHtml(method.subtema_nombre)}")`
+                : '';
+
+            rowsHtml += `
+                <div style="margin-bottom:1rem;padding:0.75rem;background:#f9fafb;border-radius:4px;border:1px solid #e5e7eb;">
+                    <div style="font-weight:600;margin-bottom:0.5rem;">
+                        ${escapeHtml(method.title)}${hint}
+                    </div>
+                    <select class="subtema-modal-select"
+                            style="width:100%;padding:0.5rem;border:1px solid #cbd5e0;border-radius:4px;">
+                        ${optionsHtml}
+                    </select>
+                </div>
+            `;
+        });
+
+        const content = document.createElement('div');
+        content.style.cssText = 'background:white;padding:2rem;border-radius:8px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;';
+        content.innerHTML = `
+            <h2 style="margin-top:0;color:#1e40af;">Asignar Subtemas a Métodos</h2>
+            <p style="color:#4b5563;margin-bottom:1.5rem;">
+                Los siguientes métodos no tienen un subtema asignado en el archivo TEX.
+                Selecciona un subtema para cada uno:
+            </p>
+            ${rowsHtml}
+            <div style="display:flex;gap:1rem;justify-content:flex-end;margin-top:1.5rem;">
+                <button type="button" id="btnCancelSubtemaModal"
+                        style="background:#718096;color:white;border:none;padding:0.75rem 1.5rem;border-radius:4px;cursor:pointer;font-weight:600;">
+                    Cancelar
+                </button>
+                <button type="button" id="btnConfirmSubtemaModal"
+                        style="background:#4299e1;color:white;border:none;padding:0.75rem 1.5rem;border-radius:4px;cursor:pointer;font-weight:600;">
+                    Confirmar
+                </button>
+            </div>
+        `;
+
+        modal.appendChild(content);
+        document.body.appendChild(modal);
+
+        document.getElementById('btnCancelSubtemaModal').onclick = () => modal.remove();
+
+        document.getElementById('btnConfirmSubtemaModal').onclick = () => {
+            const selects = content.querySelectorAll('.subtema-modal-select');
+            let allFilled = true;
+
+            selects.forEach(sel => {
+                if (!sel.value) {
+                    allFilled = false;
+                    sel.style.borderColor = '#e53e3e';
+                } else {
+                    sel.style.borderColor = '#cbd5e0';
+                }
+            });
+
+            if (!allFilled) {
+                alert('Por favor, selecciona un subtema para cada método.');
+                return;
+            }
+
+            selects.forEach((sel, i) => {
+                const method = unresolvedMethods[i];
+                method.subtema_id = parseInt(sel.value);
+                method.subtema_nombre = sel.options[sel.selectedIndex].textContent.trim();
+            });
+
+            displayExtractedMethods(window._extractedMethods);
+            updateMethodsHiddenField(window._extractedMethods);
+            modal.remove();
+        };
+
+        modal.addEventListener('click', e => {
+            if (e.target === modal) modal.remove();
+        });
+    }
+
     // Procesar archivo TEX con soluciones cuando se selecciona
     document.getElementById('tex_sols').addEventListener('change', function(e) {
         const file = e.target.files[0];
@@ -484,6 +806,26 @@
             // Detectar imágenes en TODO el contenido TEX (incluye logo, etc.)
             const imageNames = extractImageNames(texContent);
             showImageUploadFields(imageNames);
+
+            // Extraer métodos del preámbulo
+            const methods = extractMethodsFromPreamble(preamble);
+            if (methods.length > 0) {
+                window._extractedMethods = methods;
+                displayExtractedMethods(methods);
+
+                const temaId = document.getElementById('theme').value;
+                if (temaId) {
+                    fetchSubtemasAndResolve(temaId, methods);
+                } else {
+                    window._pendingMethods = methods;
+                    document.getElementById('methodsTemaWarning').style.display = 'block';
+                }
+            } else {
+                window._extractedMethods = [];
+                window._pendingMethods = null;
+                document.getElementById('methodsSection').classList.remove('visible');
+                document.getElementById('metodos_json').value = '';
+            }
         };
 
         reader.onerror = function() {
@@ -491,6 +833,16 @@
         };
 
         reader.readAsText(file);
+    });
+
+    // Al cambiar tema, resolver subtemas de métodos pendientes
+    document.getElementById('theme').addEventListener('change', function() {
+        const temaId = this.value;
+        if (temaId && window._extractedMethods && window._extractedMethods.length > 0) {
+            // Resetear subtema_id de todos los métodos para re-resolver
+            window._extractedMethods.forEach(m => m.subtema_id = null);
+            fetchSubtemasAndResolve(temaId, window._extractedMethods);
+        }
     });
 
 </script>

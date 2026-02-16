@@ -7,6 +7,8 @@ use App\Models\Problema;
 use App\Models\Tema;
 use App\Models\FigureInIntro;
 use App\Models\Figure;
+use App\Models\Metodo;
+use App\Models\Subtema;
 use App\Helpers\LatexHelper;
 use App\Services\LatexCompilerService;
 use Illuminate\Support\Facades\DB;
@@ -120,6 +122,7 @@ class PimSheetController extends Controller
             'preambles' => 'nullable|string',
             'tex_sols' => 'required|file|mimes:tex,txt|max:10240',
             'imagenes_preambulo.*' => 'nullable|file|max:5120',
+            'metodos_json' => 'nullable|string',
         ], [
             'title.required' => 'El título es obligatorio.',
             'date_year.required' => 'El año es obligatorio.',
@@ -171,6 +174,42 @@ class PimSheetController extends Controller
                 }
             } else {
                 Log::info('No hay imágenes de preámbulo en la request');
+            }
+
+            // Guardar métodos extraídos del preámbulo
+            if ($request->filled('metodos_json')) {
+                $metodosData = json_decode($request->metodos_json, true);
+
+                if (is_array($metodosData) && count($metodosData) > 0) {
+                    Log::info('Procesando ' . count($metodosData) . ' métodos del preámbulo');
+
+                    foreach ($metodosData as $metodoItem) {
+                        if (empty($metodoItem['title']) || empty($metodoItem['method_tex']) || empty($metodoItem['subtema_id'])) {
+                            Log::warning('Método inválido, saltando: ' . json_encode($metodoItem));
+                            continue;
+                        }
+
+                        $subtema = Subtema::where('id', $metodoItem['subtema_id'])
+                                          ->where('tema_id', $request->theme)
+                                          ->first();
+
+                        if (!$subtema) {
+                            Log::warning('Subtema ID ' . $metodoItem['subtema_id'] . ' no encontrado para tema ' . $request->theme);
+                            continue;
+                        }
+
+                        Metodo::create([
+                            'title'       => $metodoItem['title'],
+                            'method_tex'  => $metodoItem['method_tex'],
+                            'method_html' => $metodoItem['method_tex'],
+                            'subtema_id'  => $subtema->id,
+                            'tema_id'     => (int) $request->theme,
+                            'user_id'     => Auth::id(),
+                        ]);
+
+                        Log::info('Método creado: ' . $metodoItem['title']);
+                    }
+                }
             }
 
             DB::commit();
