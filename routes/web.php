@@ -40,6 +40,7 @@ Route::middleware('auth')->group(function () {
 
     // API subtemas (para dropdown dinámico)
     Route::get('/api/subtemas/{tema_id}', [MetodoController::class, 'apiSubtemas'])->name('api.subtemas');
+    Route::post('/api/subtemas', [MetodoController::class, 'apiStoreSubtema'])->name('api.subtemas.store');
 
     // Rutas de problemas (solo para admin/editor)
     Route::middleware('can.edit.problemas')->group(function () {

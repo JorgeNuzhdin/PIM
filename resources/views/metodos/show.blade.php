@@ -108,7 +108,9 @@
         </div>
         <div class="metodo-tags">
             <a href="{{ route('metodos.index', ['tema_id' => $metodo->tema_id]) }}" class="tag">{{ $metodo->tema->tema }}</a>
-            <a href="{{ route('metodos.index', ['tema_id' => $metodo->tema_id, 'subtema_id' => $metodo->subtema_id]) }}" class="tag">{{ $metodo->subtema->nombre }}</a>
+            @foreach($metodo->subtemas as $subtema)
+                <a href="{{ route('metodos.index', ['tema_id' => $metodo->tema_id, 'subtema_id' => $subtema->id]) }}" class="tag">{{ $subtema->nombre }}</a>
+            @endforeach
         </div>
         @if($metodo->user)
             <div class="metodo-proponente">Proponente: {{ $metodo->user->name }}</div>

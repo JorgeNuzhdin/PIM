@@ -184,17 +184,32 @@ class PimSheetController extends Controller
                     Log::info('Procesando ' . count($metodosData) . ' métodos del preámbulo');
 
                     foreach ($metodosData as $metodoItem) {
-                        if (empty($metodoItem['title']) || empty($metodoItem['method_tex']) || empty($metodoItem['subtema_id'])) {
+                        if (empty($metodoItem['title']) || empty($metodoItem['method_tex'])) {
                             Log::warning('Método inválido, saltando: ' . json_encode($metodoItem));
                             continue;
                         }
 
-                        $subtema = Subtema::where('id', $metodoItem['subtema_id'])
-                                          ->where('tema_id', $request->theme)
-                                          ->first();
+                        // Soportar subtema_ids (array) o subtema_id (legacy single)
+                        $subtemaIds = [];
+                        if (!empty($metodoItem['subtema_ids']) && is_array($metodoItem['subtema_ids'])) {
+                            $subtemaIds = $metodoItem['subtema_ids'];
+                        } elseif (!empty($metodoItem['subtema_id'])) {
+                            $subtemaIds = [$metodoItem['subtema_id']];
+                        }
 
-                        if (!$subtema) {
-                            Log::warning('Subtema ID ' . $metodoItem['subtema_id'] . ' no encontrado para tema ' . $request->theme);
+                        if (empty($subtemaIds)) {
+                            Log::warning('Método sin subtemas, saltando: ' . json_encode($metodoItem));
+                            continue;
+                        }
+
+                        // Validar que los subtemas existen para este tema
+                        $validIds = Subtema::whereIn('id', $subtemaIds)
+                                           ->where('tema_id', $request->theme)
+                                           ->pluck('id')
+                                           ->toArray();
+
+                        if (empty($validIds)) {
+                            Log::warning('Ningún subtema válido para método: ' . $metodoItem['title']);
                             continue;
                         }
 
@@ -202,7 +217,7 @@ class PimSheetController extends Controller
                             'title'       => $metodoItem['title'],
                             'method_tex'  => $metodoItem['method_tex'],
                             'method_html' => $metodoItem['method_tex'],
-                            'subtema_id'  => $subtema->id,
+                            'subtema_ids' => implode(',', $validIds),
                             'tema_id'     => (int) $request->theme,
                             'user_id'     => Auth::id(),
                         ]);

@@ -141,6 +141,52 @@
         padding-left: 1.5rem;
     }
 
+    .subtema-checkboxes {
+        border: 1px solid #cbd5e0;
+        border-radius: 4px;
+        padding: 0.75rem;
+        max-height: 200px;
+        overflow-y: auto;
+        background: #f7fafc;
+    }
+
+    .subtema-checkboxes label {
+        display: block;
+        font-weight: normal;
+        padding: 0.25rem 0;
+        cursor: pointer;
+    }
+
+    .subtema-checkboxes label:hover {
+        background: #edf2f7;
+    }
+
+    .subtema-checkboxes input[type="checkbox"] {
+        margin-right: 0.5rem;
+    }
+
+    .subtema-placeholder {
+        color: #a0aec0;
+        font-style: italic;
+        padding: 0.5rem 0;
+    }
+
+    .add-subtema-btn {
+        display: inline-block;
+        margin-top: 0.5rem;
+        background: none;
+        border: 1px dashed #4299e1;
+        color: #4299e1;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.875rem;
+    }
+
+    .add-subtema-btn:hover {
+        background: #ebf8ff;
+    }
+
     @media (max-width: 768px) {
         .form-row {
             grid-template-columns: 1fr;
@@ -177,26 +223,28 @@
                 <input type="text" name="title" id="title" value="{{ old('title') }}" required placeholder="Título del método">
             </div>
 
-            {{-- Tema y Subtema --}}
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="tema_id">Tema *</label>
-                    <select name="tema_id" id="tema_id" required>
-                        <option value="">-- Seleccionar tema --</option>
-                        @foreach($temas as $tema)
-                            <option value="{{ $tema->id }}" {{ old('tema_id') == $tema->id ? 'selected' : '' }}>
-                                {{ $tema->tema }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+            {{-- Tema --}}
+            <div class="form-group">
+                <label for="tema_id">Tema *</label>
+                <select name="tema_id" id="tema_id" required>
+                    <option value="">-- Seleccionar tema --</option>
+                    @foreach($temas as $tema)
+                        <option value="{{ $tema->id }}" {{ old('tema_id') == $tema->id ? 'selected' : '' }}>
+                            {{ $tema->tema }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
 
-                <div class="form-group">
-                    <label for="subtema_id">Subtema *</label>
-                    <select name="subtema_id" id="subtema_id" required>
-                        <option value="">-- Selecciona un tema primero --</option>
-                    </select>
+            {{-- Subtemas (checkboxes) --}}
+            <div class="form-group">
+                <label>Subtemas *</label>
+                <div class="subtema-checkboxes" id="subtema_checkboxes">
+                    <span class="subtema-placeholder">Selecciona un tema primero</span>
                 </div>
+                @if(Auth::user()->isAdmin())
+                    <button type="button" class="add-subtema-btn" id="addSubtemaBtn" style="display:none;" onclick="promptNewSubtema()">+ Nuevo subtema</button>
+                @endif
             </div>
 
             {{-- Editor LaTeX --}}
@@ -226,46 +274,85 @@
 
 @section('scripts')
 <script>
-// Cargar subtemas dinámicamente al cambiar tema
+const csrfToken = '{{ csrf_token() }}';
+const isAdmin = {{ Auth::user()->isAdmin() ? 'true' : 'false' }};
+
+// Cargar subtemas como checkboxes al cambiar tema
 document.getElementById('tema_id').addEventListener('change', function() {
     const temaId = this.value;
-    const subtemaSelect = document.getElementById('subtema_id');
-
-    subtemaSelect.innerHTML = '<option value="">Cargando...</option>';
+    const container = document.getElementById('subtema_checkboxes');
+    const addBtn = document.getElementById('addSubtemaBtn');
 
     if (!temaId) {
-        subtemaSelect.innerHTML = '<option value="">-- Selecciona un tema primero --</option>';
+        container.innerHTML = '<span class="subtema-placeholder">Selecciona un tema primero</span>';
+        if (addBtn) addBtn.style.display = 'none';
         return;
     }
+
+    container.innerHTML = '<span class="subtema-placeholder">Cargando...</span>';
 
     fetch(`/api/subtemas/${temaId}`)
         .then(response => response.json())
         .then(data => {
             if (data.length === 0) {
-                subtemaSelect.innerHTML = '<option value="">-- No hay subtemas para este tema --</option>';
-                return;
+                container.innerHTML = '<span class="subtema-placeholder">No hay subtemas para este tema</span>';
+            } else {
+                container.innerHTML = '';
+                const oldIds = {!! json_encode(old('subtema_ids', [])) !!};
+                data.forEach(s => {
+                    const checked = oldIds.includes(String(s.id)) ? 'checked' : '';
+                    container.innerHTML += `<label><input type="checkbox" name="subtema_ids[]" value="${s.id}" ${checked}> ${s.nombre}</label>`;
+                });
             }
-            let options = '<option value="">-- Seleccionar subtema --</option>';
-            data.forEach(s => {
-                options += `<option value="${s.id}">${s.nombre}</option>`;
-            });
-            subtemaSelect.innerHTML = options;
-
-            // Restaurar valor old() si existe
-            const oldSubtema = '{{ old("subtema_id") }}';
-            if (oldSubtema) {
-                subtemaSelect.value = oldSubtema;
-            }
+            if (addBtn) addBtn.style.display = 'inline-block';
         })
         .catch(error => {
             console.error('Error cargando subtemas:', error);
-            subtemaSelect.innerHTML = '<option value="">-- Error al cargar --</option>';
+            container.innerHTML = '<span class="subtema-placeholder">Error al cargar</span>';
         });
 });
 
 // Cargar subtemas al inicio si hay un tema preseleccionado
 if (document.getElementById('tema_id').value) {
     document.getElementById('tema_id').dispatchEvent(new Event('change'));
+}
+
+// Crear nuevo subtema (admin)
+function promptNewSubtema() {
+    const nombre = prompt('Nombre del nuevo subtema:');
+    if (!nombre || !nombre.trim()) return;
+
+    const temaId = document.getElementById('tema_id').value;
+    if (!temaId) {
+        alert('Selecciona un tema primero.');
+        return;
+    }
+
+    fetch('/api/subtemas', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        body: JSON.stringify({ nombre: nombre.trim(), tema_id: temaId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert('Error: ' + data.error);
+            return;
+        }
+        const container = document.getElementById('subtema_checkboxes');
+        // Remove placeholder if present
+        const placeholder = container.querySelector('.subtema-placeholder');
+        if (placeholder) placeholder.remove();
+
+        container.innerHTML += `<label><input type="checkbox" name="subtema_ids[]" value="${data.id}" checked> ${data.nombre}</label>`;
+    })
+    .catch(error => {
+        console.error('Error creando subtema:', error);
+        alert('Error al crear subtema.');
+    });
 }
 
 // Vista previa LaTeX en tiempo real
@@ -288,7 +375,7 @@ document.getElementById('method_tex').addEventListener('input', function() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                'X-CSRF-TOKEN': csrfToken
             },
             body: JSON.stringify({ latex: texContent })
         })

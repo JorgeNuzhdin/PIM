@@ -149,7 +149,11 @@
                     <tr>
                         <td><a href="{{ route('metodos.show', $metodo->id) }}" class="metodo-link">{{ $metodo->title }}</a></td>
                         <td><span class="tag">{{ $metodo->tema->tema }}</span></td>
-                        <td><span class="tag">{{ $metodo->subtema->nombre }}</span></td>
+                        <td>
+                            @foreach($metodo->subtemas as $subtema)
+                                <span class="tag" style="margin: 2px;">{{ $subtema->nombre }}</span>
+                            @endforeach
+                        </td>
                         <td>{{ $metodo->user->name ?? '—' }}</td>
                     </tr>
                 @endforeach

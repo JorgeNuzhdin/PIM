@@ -39,6 +39,7 @@ class SubtemaSeeder extends Seeder
                 'Ecuaciones diofánticas',
                 'Fracciones continuas',
                 'Racionalidad e irracionalidad',
+                'Algoritmo de Euclides',
             ],
             'Combinatoria' => [
                 'Regla del producto',

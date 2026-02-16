@@ -20,14 +20,14 @@ class MetodoController extends Controller
     {
         $temas = Tema::all();
 
-        $query = Metodo::with(['tema', 'subtema', 'user']);
+        $query = Metodo::with(['tema', 'user']);
 
         if ($request->filled('tema_id')) {
             $query->where('tema_id', $request->tema_id);
         }
 
         if ($request->filled('subtema_id')) {
-            $query->where('subtema_id', $request->subtema_id);
+            $query->whereRaw('FIND_IN_SET(?, subtema_ids)', [$request->subtema_id]);
         }
 
         $metodos = $query->orderBy('id', 'desc')->get();
@@ -41,7 +41,7 @@ class MetodoController extends Controller
 
     public function show($id)
     {
-        $metodo = Metodo::with(['tema', 'subtema', 'user'])->findOrFail($id);
+        $metodo = Metodo::with(['tema', 'user'])->findOrFail($id);
 
         return view('metodos.show', compact('metodo'));
     }
@@ -59,14 +59,15 @@ class MetodoController extends Controller
             'title' => 'required|string|max:255',
             'method_tex' => 'required|string',
             'tema_id' => 'required|exists:temas,id',
-            'subtema_id' => 'required|exists:subtemas,id',
+            'subtema_ids' => 'required|array|min:1',
+            'subtema_ids.*' => 'exists:subtemas,id',
         ]);
 
         Metodo::create([
             'title' => $request->title,
             'method_tex' => $request->method_tex,
             'method_html' => $request->method_tex,
-            'subtema_id' => $request->subtema_id,
+            'subtema_ids' => implode(',', $request->subtema_ids),
             'tema_id' => $request->tema_id,
             'user_id' => Auth::id(),
         ]);
@@ -103,14 +104,15 @@ class MetodoController extends Controller
             'title' => 'required|string|max:255',
             'method_tex' => 'required|string',
             'tema_id' => 'required|exists:temas,id',
-            'subtema_id' => 'required|exists:subtemas,id',
+            'subtema_ids' => 'required|array|min:1',
+            'subtema_ids.*' => 'exists:subtemas,id',
         ]);
 
         $metodo->update([
             'title' => $request->title,
             'method_tex' => $request->method_tex,
             'method_html' => $request->method_tex,
-            'subtema_id' => $request->subtema_id,
+            'subtema_ids' => implode(',', $request->subtema_ids),
             'tema_id' => $request->tema_id,
         ]);
 
@@ -124,5 +126,24 @@ class MetodoController extends Controller
                            ->get(['id', 'nombre']);
 
         return response()->json($subtemas);
+    }
+
+    public function apiStoreSubtema(Request $request)
+    {
+        if (!Auth::user()->isAdmin()) {
+            return response()->json(['error' => 'No autorizado'], 403);
+        }
+
+        $request->validate([
+            'nombre' => 'required|string|max:255',
+            'tema_id' => 'required|exists:temas,id',
+        ]);
+
+        $subtema = Subtema::firstOrCreate([
+            'nombre' => $request->nombre,
+            'tema_id' => $request->tema_id,
+        ]);
+
+        return response()->json(['id' => $subtema->id, 'nombre' => $subtema->nombre]);
     }
 }

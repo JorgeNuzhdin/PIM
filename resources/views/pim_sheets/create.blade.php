@@ -418,7 +418,7 @@
 
         // Validar métodos extraídos
         if (window._extractedMethods && window._extractedMethods.length > 0) {
-            const sinSubtema = window._extractedMethods.filter(m => !m.subtema_id);
+            const sinSubtema = window._extractedMethods.filter(m => !m.subtema_ids || m.subtema_ids.length === 0);
             if (sinSubtema.length > 0) {
                 errors.push('Hay ' + sinSubtema.length + ' método(s) sin subtema asignado.');
             }
@@ -575,7 +575,7 @@
                 title: matches[i].title,
                 content: content,
                 subtema_nombre: subtemaNombre,
-                subtema_id: null
+                subtema_ids: []
             });
         }
 
@@ -593,7 +593,7 @@
                     s => s.nombre.trim().toLowerCase() === method.subtema_nombre.toLowerCase()
                 );
                 if (match) {
-                    method.subtema_id = match.id;
+                    method.subtema_ids = [match.id];
                     resolved.push(method);
                 } else {
                     unresolved.push(method);
@@ -645,11 +645,15 @@
 
         methods.forEach((method, index) => {
             const li = document.createElement('li');
-            const statusClass = method.subtema_id ? 'resolved' : 'unresolved';
+            const hasSubtemas = method.subtema_ids && method.subtema_ids.length > 0;
+            const statusClass = hasSubtemas ? 'resolved' : 'unresolved';
             let statusText;
-            if (method.subtema_id) {
-                const sub = window._availableSubtemas.find(s => s.id === method.subtema_id);
-                statusText = 'Subtema: ' + (sub ? sub.nombre : method.subtema_nombre);
+            if (hasSubtemas) {
+                const names = method.subtema_ids.map(id => {
+                    const sub = window._availableSubtemas.find(s => s.id === id);
+                    return sub ? sub.nombre : '?';
+                });
+                statusText = 'Subtemas: ' + names.join(', ');
             } else if (method.subtema_nombre) {
                 statusText = 'Subtema no encontrado: "' + method.subtema_nombre + '"';
             } else {
@@ -675,10 +679,10 @@
 
     // Serializar métodos al campo hidden
     function updateMethodsHiddenField(methods) {
-        const data = methods.filter(m => m.subtema_id).map(m => ({
+        const data = methods.filter(m => m.subtema_ids && m.subtema_ids.length > 0).map(m => ({
             title: m.title,
             method_tex: m.content,
-            subtema_id: m.subtema_id
+            subtema_ids: m.subtema_ids
         }));
         document.getElementById('metodos_json').value = JSON.stringify(data);
     }
@@ -692,13 +696,13 @@
         modal.id = 'subtemaModal';
         modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;';
 
-        let optionsHtml = '<option value="">-- Seleccionar subtema --</option>';
+        let checkboxesHtml = '';
         subtemas.forEach(s => {
-            optionsHtml += `<option value="${s.id}">${escapeHtml(s.nombre)}</option>`;
+            checkboxesHtml += `<label style="display:block;padding:0.25rem 0;cursor:pointer;"><input type="checkbox" value="${s.id}" style="margin-right:0.5rem;"> ${escapeHtml(s.nombre)}</label>`;
         });
 
         let rowsHtml = '';
-        unresolvedMethods.forEach(method => {
+        unresolvedMethods.forEach((method, idx) => {
             const hint = method.subtema_nombre
                 ? ` (TEX indica: "${escapeHtml(method.subtema_nombre)}")`
                 : '';
@@ -708,10 +712,10 @@
                     <div style="font-weight:600;margin-bottom:0.5rem;">
                         ${escapeHtml(method.title)}${hint}
                     </div>
-                    <select class="subtema-modal-select"
-                            style="width:100%;padding:0.5rem;border:1px solid #cbd5e0;border-radius:4px;">
-                        ${optionsHtml}
-                    </select>
+                    <div class="subtema-modal-checkboxes" data-method-index="${idx}"
+                         style="max-height:150px;overflow-y:auto;border:1px solid #cbd5e0;border-radius:4px;padding:0.5rem;background:white;">
+                        ${checkboxesHtml}
+                    </div>
                 </div>
             `;
         });
@@ -722,7 +726,7 @@
             <h2 style="margin-top:0;color:#1e40af;">Asignar Subtemas a Métodos</h2>
             <p style="color:#4b5563;margin-bottom:1.5rem;">
                 Los siguientes métodos no tienen un subtema asignado en el archivo TEX.
-                Selecciona un subtema para cada uno:
+                Selecciona uno o más subtemas para cada uno:
             </p>
             ${rowsHtml}
             <div style="display:flex;gap:1rem;justify-content:flex-end;margin-top:1.5rem;">
@@ -743,27 +747,28 @@
         document.getElementById('btnCancelSubtemaModal').onclick = () => modal.remove();
 
         document.getElementById('btnConfirmSubtemaModal').onclick = () => {
-            const selects = content.querySelectorAll('.subtema-modal-select');
+            const groups = content.querySelectorAll('.subtema-modal-checkboxes');
             let allFilled = true;
 
-            selects.forEach(sel => {
-                if (!sel.value) {
+            groups.forEach(group => {
+                const checked = group.querySelectorAll('input[type="checkbox"]:checked');
+                if (checked.length === 0) {
                     allFilled = false;
-                    sel.style.borderColor = '#e53e3e';
+                    group.style.borderColor = '#e53e3e';
                 } else {
-                    sel.style.borderColor = '#cbd5e0';
+                    group.style.borderColor = '#cbd5e0';
                 }
             });
 
             if (!allFilled) {
-                alert('Por favor, selecciona un subtema para cada método.');
+                alert('Por favor, selecciona al menos un subtema para cada método.');
                 return;
             }
 
-            selects.forEach((sel, i) => {
+            groups.forEach((group, i) => {
                 const method = unresolvedMethods[i];
-                method.subtema_id = parseInt(sel.value);
-                method.subtema_nombre = sel.options[sel.selectedIndex].textContent.trim();
+                const checked = group.querySelectorAll('input[type="checkbox"]:checked');
+                method.subtema_ids = Array.from(checked).map(cb => parseInt(cb.value));
             });
 
             displayExtractedMethods(window._extractedMethods);
@@ -839,8 +844,8 @@
     document.getElementById('theme').addEventListener('change', function() {
         const temaId = this.value;
         if (temaId && window._extractedMethods && window._extractedMethods.length > 0) {
-            // Resetear subtema_id de todos los métodos para re-resolver
-            window._extractedMethods.forEach(m => m.subtema_id = null);
+            // Resetear subtema_ids de todos los métodos para re-resolver
+            window._extractedMethods.forEach(m => m.subtema_ids = []);
             fetchSubtemasAndResolve(temaId, window._extractedMethods);
         }
     });
