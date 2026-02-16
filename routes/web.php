@@ -50,8 +50,9 @@ Route::middleware('auth')->group(function () {
         Route::delete('/problemas/{id}', [App\Http\Controllers\ProblemaController::class, 'destroy'])->name('problemas.destroy');
     });
 
-    // Métodos: listado visible para todos los autenticados
+    // Métodos: listado y detalle visible para todos los autenticados
     Route::get('/metodos', [MetodoController::class, 'index'])->name('metodos.index');
+    Route::get('/metodos/{id}', [MetodoController::class, 'show'])->name('metodos.show')->where('id', '[0-9]+');
 
     // Crear/guardar métodos: solo para admin/editor
     Route::middleware('can.edit.problemas')->group(function () {

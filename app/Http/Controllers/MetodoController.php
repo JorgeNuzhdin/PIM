@@ -12,15 +12,37 @@ class MetodoController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-        $this->middleware('can.edit.problemas');
+        $this->middleware('can.edit.problemas')->only(['create', 'store']);
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $metodos = Metodo::with(['tema', 'subtema'])->get();
         $temas = Tema::all();
 
-        return view('metodos.index', compact('metodos', 'temas'));
+        $query = Metodo::with(['tema', 'subtema']);
+
+        if ($request->filled('tema_id')) {
+            $query->where('tema_id', $request->tema_id);
+        }
+
+        if ($request->filled('subtema_id')) {
+            $query->where('subtema_id', $request->subtema_id);
+        }
+
+        $metodos = $query->orderBy('id', 'desc')->get();
+
+        $subtemas = $request->filled('tema_id')
+            ? Subtema::where('tema_id', $request->tema_id)->orderBy('id')->get()
+            : collect();
+
+        return view('metodos.index', compact('metodos', 'temas', 'subtemas'));
+    }
+
+    public function show($id)
+    {
+        $metodo = Metodo::with(['tema', 'subtema'])->findOrFail($id);
+
+        return view('metodos.show', compact('metodo'));
     }
 
     public function create()
