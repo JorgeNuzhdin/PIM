@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('subtemas', function (Blueprint $table) {
             $table->id();
             $table->string('nombre');
-            $table->unsignedBigInteger('tema_id');
+            $table->unsignedInteger('tema_id');
             $table->foreign('tema_id')->references('id')->on('temas')->onDelete('cascade');
         });
     }
