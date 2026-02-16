@@ -141,6 +141,7 @@
                     <th>Título</th>
                     <th>Tema</th>
                     <th>Subtema</th>
+                    <th>Proponente</th>
                 </tr>
             </thead>
             <tbody>
@@ -149,6 +150,7 @@
                         <td><a href="{{ route('metodos.show', $metodo->id) }}" class="metodo-link">{{ $metodo->title }}</a></td>
                         <td><span class="tag">{{ $metodo->tema->tema }}</span></td>
                         <td><span class="tag">{{ $metodo->subtema->nombre }}</span></td>
+                        <td>{{ $metodo->user->name ?? '—' }}</td>
                     </tr>
                 @endforeach
             </tbody>

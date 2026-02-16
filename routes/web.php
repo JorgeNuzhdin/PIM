@@ -54,10 +54,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/metodos', [MetodoController::class, 'index'])->name('metodos.index');
     Route::get('/metodos/{id}', [MetodoController::class, 'show'])->name('metodos.show')->where('id', '[0-9]+');
 
-    // Crear/guardar métodos: solo para admin/editor
+    // Crear/editar/guardar métodos: solo para admin/editor
     Route::middleware('can.edit.problemas')->group(function () {
         Route::get('/metodos/crear', [MetodoController::class, 'create'])->name('metodos.create');
         Route::post('/metodos', [MetodoController::class, 'store'])->name('metodos.store');
+        Route::get('/metodos/{id}/editar', [MetodoController::class, 'edit'])->name('metodos.edit')->where('id', '[0-9]+');
+        Route::put('/metodos/{id}', [MetodoController::class, 'update'])->name('metodos.update')->where('id', '[0-9]+');
     });
 
 });

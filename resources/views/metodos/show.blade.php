@@ -62,6 +62,34 @@
     .metodo-back:hover {
         text-decoration: underline;
     }
+
+    .metodo-title-row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .metodo-title-row h1 {
+        margin: 0;
+    }
+
+    .edit-icon {
+        color: #4299e1;
+        font-size: 1.2rem;
+        text-decoration: none;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+    }
+
+    .edit-icon:hover {
+        opacity: 1;
+    }
+
+    .metodo-proponente {
+        color: #718096;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
 </style>
 @endsection
 
@@ -70,11 +98,21 @@
     <a href="{{ route('metodos.index') }}" class="metodo-back">&larr; Volver a métodos</a>
 
     <div class="metodo-header">
-        <h1>{{ $metodo->title }}</h1>
+        <div class="metodo-title-row">
+            <h1>{{ $metodo->title }}</h1>
+            @auth
+                @if(Auth::user()->isAdmin() || (Auth::user()->canEditProblemas() && $metodo->user_id === Auth::id()))
+                    <a href="{{ route('metodos.edit', $metodo->id) }}" class="edit-icon" title="Editar método">&#9998;</a>
+                @endif
+            @endauth
+        </div>
         <div class="metodo-tags">
             <a href="{{ route('metodos.index', ['tema_id' => $metodo->tema_id]) }}" class="tag">{{ $metodo->tema->tema }}</a>
             <a href="{{ route('metodos.index', ['tema_id' => $metodo->tema_id, 'subtema_id' => $metodo->subtema_id]) }}" class="tag">{{ $metodo->subtema->nombre }}</a>
         </div>
+        @if($metodo->user)
+            <div class="metodo-proponente">Proponente: {{ $metodo->user->name }}</div>
+        @endif
     </div>
 
     <div class="metodo-content">

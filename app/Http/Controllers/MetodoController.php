@@ -6,6 +6,7 @@ use App\Models\Metodo;
 use App\Models\Tema;
 use App\Models\Subtema;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class MetodoController extends Controller
 {
@@ -19,7 +20,7 @@ class MetodoController extends Controller
     {
         $temas = Tema::all();
 
-        $query = Metodo::with(['tema', 'subtema']);
+        $query = Metodo::with(['tema', 'subtema', 'user']);
 
         if ($request->filled('tema_id')) {
             $query->where('tema_id', $request->tema_id);
@@ -40,7 +41,7 @@ class MetodoController extends Controller
 
     public function show($id)
     {
-        $metodo = Metodo::with(['tema', 'subtema'])->findOrFail($id);
+        $metodo = Metodo::with(['tema', 'subtema', 'user'])->findOrFail($id);
 
         return view('metodos.show', compact('metodo'));
     }
@@ -67,9 +68,53 @@ class MetodoController extends Controller
             'method_html' => $request->method_tex,
             'subtema_id' => $request->subtema_id,
             'tema_id' => $request->tema_id,
+            'user_id' => Auth::id(),
         ]);
 
         return redirect()->route('metodos.index')->with('success', 'Método creado correctamente.');
+    }
+
+    public function edit($id)
+    {
+        $metodo = Metodo::findOrFail($id);
+
+        // Solo el proponente (editor) o un admin pueden editar
+        $user = Auth::user();
+        if (!($user->isAdmin() || ($user->canEditProblemas() && $metodo->user_id === $user->id))) {
+            abort(403);
+        }
+
+        $temas = Tema::all();
+        $subtemas = Subtema::where('tema_id', $metodo->tema_id)->orderBy('id')->get();
+
+        return view('metodos.edit', compact('metodo', 'temas', 'subtemas'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $metodo = Metodo::findOrFail($id);
+
+        $user = Auth::user();
+        if (!($user->isAdmin() || ($user->canEditProblemas() && $metodo->user_id === $user->id))) {
+            abort(403);
+        }
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'method_tex' => 'required|string',
+            'tema_id' => 'required|exists:temas,id',
+            'subtema_id' => 'required|exists:subtemas,id',
+        ]);
+
+        $metodo->update([
+            'title' => $request->title,
+            'method_tex' => $request->method_tex,
+            'method_html' => $request->method_tex,
+            'subtema_id' => $request->subtema_id,
+            'tema_id' => $request->tema_id,
+        ]);
+
+        return redirect()->route('metodos.show', $metodo->id)->with('success', 'Método actualizado correctamente.');
     }
 
     public function apiSubtemas($temaId)
