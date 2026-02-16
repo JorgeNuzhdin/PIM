@@ -14,7 +14,7 @@ return new class extends Migration
             $table->longText('method_tex');
             $table->longText('method_html')->nullable();
             $table->unsignedBigInteger('subtema_id');
-            $table->unsignedInteger('tema_id');
+            $table->integer('tema_id');
             $table->foreign('subtema_id')->references('id')->on('subtemas')->onDelete('cascade');
             $table->foreign('tema_id')->references('id')->on('temas')->onDelete('cascade');
         });
