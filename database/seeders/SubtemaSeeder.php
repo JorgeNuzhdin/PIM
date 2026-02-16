@@ -91,7 +91,7 @@ class SubtemaSeeder extends Seeder
                 'Distribuciones',
                 'Paradojas de probabilidad',
             ],
-            'Métodos de solución' => [
+            'Métodos' => [
                 'Coloración',
                 'Palomar',
                 'Paridad',
@@ -115,7 +115,7 @@ class SubtemaSeeder extends Seeder
             }
 
             foreach ($subtemas as $subtema) {
-                Subtema::create([
+                Subtema::firstOrCreate([
                     'nombre' => $subtema,
                     'tema_id' => $tema->id,
                 ]);
