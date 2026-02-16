@@ -8,6 +8,7 @@ use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\HojaController;
 use App\Http\Controllers\PimSheetController;
 use App\Http\Controllers\TagController;
+use App\Http\Controllers\MetodoController;
 
 
 Route::get('/', [HomePageController::class, 'index'])->name('homepage');
@@ -37,6 +38,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/carrito/limpiar', [App\Http\Controllers\CarritoController::class, 'limpiar'])->name('carrito.limpiar');
     Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
+    // API subtemas (para dropdown dinámico)
+    Route::get('/api/subtemas/{tema_id}', [MetodoController::class, 'apiSubtemas'])->name('api.subtemas');
+
     // Rutas de problemas (solo para admin/editor)
     Route::middleware('can.edit.problemas')->group(function () {
         Route::get('/problemas/crear', [App\Http\Controllers\ProblemaController::class, 'create'])->name('problemas.create');
@@ -44,6 +48,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/problemas/{id}/editar', [App\Http\Controllers\ProblemaController::class, 'edit'])->name('problemas.edit');
         Route::put('/problemas/{id}', [App\Http\Controllers\ProblemaController::class, 'update'])->name('problemas.update');
         Route::delete('/problemas/{id}', [App\Http\Controllers\ProblemaController::class, 'destroy'])->name('problemas.destroy');
+    });
+
+    // Métodos: listado visible para todos los autenticados
+    Route::get('/metodos', [MetodoController::class, 'index'])->name('metodos.index');
+
+    // Crear/guardar métodos: solo para admin/editor
+    Route::middleware('can.edit.problemas')->group(function () {
+        Route::get('/metodos/crear', [MetodoController::class, 'create'])->name('metodos.create');
+        Route::post('/metodos', [MetodoController::class, 'store'])->name('metodos.store');
     });
 
 });

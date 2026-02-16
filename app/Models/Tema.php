@@ -16,4 +16,9 @@ class Tema extends Model
     {
         return $this->hasMany(TopicTema::class, 'tema_id');
     }
+
+    public function subtemas()
+    {
+        return $this->hasMany(Subtema::class, 'tema_id');
+    }
 }

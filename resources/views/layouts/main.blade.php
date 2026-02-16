@@ -135,27 +135,26 @@ window.MathJax = {
     display: block;
 }
 
-.sheets-dropdown {
+.nav-dropdown {
     position: relative;
     display: inline-block;
 }
 
-.sheets-dropdown-btn {
-    background: transparent;
-    border: none;
+.nav-dropdown-btn {
     color: white;
-    cursor: pointer;
-    font-size: inherit;
+    text-decoration: none;
     font-weight: 600;
     padding: 0.5rem 1rem;
     margin: 0;
+    cursor: pointer;
+    display: inline-block;
 }
 
-.sheets-dropdown-btn:hover {
+.nav-dropdown-btn:hover {
     color: #cbd5e0;
 }
 
-.sheets-dropdown-content {
+.nav-dropdown-content {
     display: none;
     position: absolute;
     left: 0;
@@ -170,7 +169,7 @@ window.MathJax = {
     padding-top: 0.25rem;
 }
 
-.sheets-dropdown-content::before {
+.nav-dropdown-content::before {
     content: '';
     position: absolute;
     top: -0.25rem;
@@ -179,18 +178,18 @@ window.MathJax = {
     height: 0.25rem;
 }
 
-.sheets-dropdown-content a {
+.nav-dropdown-content a {
     color: #333 !important;
     padding: 0.75rem 1rem;
     display: block;
     text-decoration: none;
 }
 
-.sheets-dropdown-content a:hover {
+.nav-dropdown-content a:hover {
     background-color: #f5f5f5;
 }
 
-.sheets-dropdown:hover .sheets-dropdown-content {
+.nav-dropdown:hover .nav-dropdown-content {
     display: block;
 }
 
@@ -326,23 +325,53 @@ window.MathJax = {
         
         
         <div>
-            <a href="{{ route('problemas.index') }}">Ver Problemas</a>
+            {{-- Problemas: link for all, dropdown for editors --}}
             @auth
                 @if(Auth::user()->canEditProblemas())
-                    <a href="{{ route('problemas.create') }}">Añadir Problema</a>
-                @endif
-
-                <div class="sheets-dropdown">
-                    <button class="sheets-dropdown-btn">
-                        Hojas de problemas ▾
-                    </button>
-                    <div class="sheets-dropdown-content">
-                        <a href="{{ route('pim-sheets.index') }}">Ver hojas</a>
-                        @if(Auth::user()->canEditProblemas())
-                            <a href="{{ route('pim-sheets.create') }}">Subir una hoja</a>
-                        @endif
+                    <div class="nav-dropdown">
+                        <a href="{{ route('problemas.index') }}" class="nav-dropdown-btn">Problemas ▾</a>
+                        <div class="nav-dropdown-content">
+                            <a href="{{ route('problemas.index') }}">Ver problemas</a>
+                            <a href="{{ route('problemas.create') }}">Añadir problema</a>
+                        </div>
                     </div>
-                </div>
+                @else
+                    <a href="{{ route('problemas.index') }}">Problemas</a>
+                @endif
+            @else
+                <a href="{{ route('problemas.index') }}">Problemas</a>
+            @endauth
+
+            {{-- Métodos: link for all, dropdown for editors --}}
+            @auth
+                @if(Auth::user()->canEditProblemas())
+                    <div class="nav-dropdown">
+                        <a href="{{ route('metodos.index') }}" class="nav-dropdown-btn">Métodos ▾</a>
+                        <div class="nav-dropdown-content">
+                            <a href="{{ route('metodos.index') }}">Ver métodos</a>
+                            <a href="{{ route('metodos.create') }}">Añadir método</a>
+                        </div>
+                    </div>
+                @else
+                    <a href="{{ route('metodos.index') }}">Métodos</a>
+                @endif
+            @else
+                <a href="{{ route('metodos.index') }}">Métodos</a>
+            @endauth
+
+            {{-- Hojas: link for all auth, dropdown for editors --}}
+            @auth
+                @if(Auth::user()->canEditProblemas())
+                    <div class="nav-dropdown">
+                        <a href="{{ route('pim-sheets.index') }}" class="nav-dropdown-btn">Hojas ▾</a>
+                        <div class="nav-dropdown-content">
+                            <a href="{{ route('pim-sheets.index') }}">Ver hojas</a>
+                            <a href="{{ route('pim-sheets.create') }}">Subir una hoja</a>
+                        </div>
+                    </div>
+                @else
+                    <a href="{{ route('pim-sheets.index') }}">Hojas</a>
+                @endif
 
                 @if(Auth::user()->canEditProblemas())
                     <a href="{{ route('tags.index') }}">Tags</a>
