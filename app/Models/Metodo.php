@@ -10,7 +10,7 @@ class Metodo extends Model
     protected $table = 'metodos';
     public $timestamps = false;
 
-    protected $fillable = ['title', 'method_tex', 'subtema_ids', 'tema_id', 'user_id'];
+    protected $fillable = ['title', 'method_tex', 'subtema_ids', 'tema_id', 'user_id', 'institution'];
 
     public function tema()
     {

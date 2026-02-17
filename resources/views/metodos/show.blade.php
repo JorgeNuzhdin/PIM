@@ -112,6 +112,7 @@
                 <a href="{{ route('metodos.index', ['tema_id' => $metodo->tema_id, 'subtema_id' => $subtema->id]) }}" class="tag">{{ $subtema->nombre }}</a>
             @endforeach
         </div>
+        <div class="metodo-proponente">Institución: {{ $metodo->institution ?? 'PIM' }}</div>
         @if($metodo->user)
             <div class="metodo-proponente">Proponente: {{ $metodo->user->name }}</div>
         @endif

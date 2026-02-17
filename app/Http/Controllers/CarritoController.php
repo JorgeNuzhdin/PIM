@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Carrito;
+use App\Models\Metodo;
 use App\Models\Problema;
 use App\Models\Figure;
 use App\Services\LatexCompilerService;
@@ -22,39 +23,63 @@ class CarritoController extends Controller
     public function index()
     {
         $items = Carrito::where('user_id', Auth::id())
-                        ->with('problema')
+                        ->with(['problema', 'metodo'])
                         ->orderBy('orden')
                         ->get();
-        
+
         return view('carrito.index', compact('items'));
     }
     
     public function toggle(Request $request)
-{
-    $problemaId = $request->problema_id;
-    $accion = $request->accion; // 'añadir' o null
-    
-    $item = Carrito::where('user_id', Auth::id())
-                  ->where('problema_id', $problemaId)
-                  ->first();
-    
-    if ($item) {
-        // Si accion es 'añadir', no hacer nada (ya existe)
-        if ($accion === 'añadir') {
-            return response()->json(['status' => 'exists', 'count' => $this->getCount()]);
+    {
+        $accion = $request->accion; // 'añadir' o null
+
+        // Determinar si es un problema o un metodo
+        if ($request->filled('metodo_id')) {
+            $metodoId = $request->metodo_id;
+            $item = Carrito::where('user_id', Auth::id())
+                          ->where('metodo_id', $metodoId)
+                          ->first();
+
+            if ($item) {
+                if ($accion === 'añadir') {
+                    return response()->json(['status' => 'exists', 'count' => $this->getCount()]);
+                }
+                $item->delete();
+                return response()->json(['status' => 'removed', 'count' => $this->getCount()]);
+            } else {
+                // Metodos van ANTES de todo: incrementar orden de existentes e insertar con orden 0
+                Carrito::where('user_id', Auth::id())->increment('orden');
+                Carrito::create([
+                    'user_id' => Auth::id(),
+                    'metodo_id' => $metodoId,
+                    'orden' => 0
+                ]);
+                return response()->json(['status' => 'added', 'count' => $this->getCount()]);
+            }
+        } else {
+            $problemaId = $request->problema_id;
+            $item = Carrito::where('user_id', Auth::id())
+                          ->where('problema_id', $problemaId)
+                          ->first();
+
+            if ($item) {
+                if ($accion === 'añadir') {
+                    return response()->json(['status' => 'exists', 'count' => $this->getCount()]);
+                }
+                $item->delete();
+                return response()->json(['status' => 'removed', 'count' => $this->getCount()]);
+            } else {
+                $maxOrden = Carrito::where('user_id', Auth::id())->max('orden') ?? 0;
+                Carrito::create([
+                    'user_id' => Auth::id(),
+                    'problema_id' => $problemaId,
+                    'orden' => $maxOrden + 1
+                ]);
+                return response()->json(['status' => 'added', 'count' => $this->getCount()]);
+            }
         }
-        $item->delete();
-        return response()->json(['status' => 'removed', 'count' => $this->getCount()]);
-    } else {
-        $maxOrden = Carrito::where('user_id', Auth::id())->max('orden') ?? 0;
-        Carrito::create([
-            'user_id' => Auth::id(),
-            'problema_id' => $problemaId,
-            'orden' => $maxOrden + 1
-        ]);
-        return response()->json(['status' => 'added', 'count' => $this->getCount()]);
     }
-}
     
     public function updateOrder(Request $request)
     {
@@ -74,7 +99,8 @@ class CarritoController extends Controller
         $items = Carrito::where('user_id', Auth::id())->get();
         return response()->json([
             'count' => $items->count(),
-            'problema_ids' => $items->pluck('problema_id')->toArray()
+            'problema_ids' => $items->whereNotNull('problema_id')->pluck('problema_id')->values()->toArray(),
+            'metodo_ids' => $items->whereNotNull('metodo_id')->pluck('metodo_id')->values()->toArray(),
         ]);
     }
 
@@ -85,79 +111,91 @@ class CarritoController extends Controller
 
 
     public function descargarTex()
-{
-    $items = Carrito::where('user_id', Auth::id())
-                    ->with('problema')
-                    ->orderBy('orden')
-                    ->get();
-    
-    if ($items->isEmpty()) {
-        return redirect()->route('carrito.index')->with('error', 'El carrito está vacío');
+    {
+        $items = Carrito::where('user_id', Auth::id())
+                        ->with(['problema', 'metodo'])
+                        ->orderBy('orden')
+                        ->get();
+
+        if ($items->isEmpty()) {
+            return redirect()->route('carrito.index')->with('error', 'El carrito está vacío');
+        }
+
+        $result = $this->buildTexContent($items);
+
+        // Crear el preámbulo
+        $preambulo = $this->generarPreambulo($result['packages']);
+
+        // Contenido completo del TEX
+        $texContent = $preambulo . "\n\n\\begin{document}\n\n" . $result['contenido'] . "\n\\end{document}";
+
+        // Crear ZIP con TEX e imágenes
+        return $this->crearZip($texContent, array_keys($result['imagenes']));
     }
-    
-    // Recopilar todos los paquetes únicos
-    $packages = [];
-    $imagenes = [];
-    $contenido = '';
-    
-    foreach ($items as $index => $item) {
-        $problema = $item->problema;
 
-        // Agregar paquetes y comandos
-        if ($problema->packages) {
-            // Decodificar escapes Unicode primero
-            $packagesText = preg_replace('/u([0-9a-fA-F]{4})/', '', $problema->packages);
+    private function buildTexContent($items): array
+    {
+        $packages = [];
+        $imagenes = [];
+        $contenido = '';
 
-            // Dividir por saltos de línea o comas
-            $pkgs = preg_split('/[\n,]+/', $packagesText);
+        foreach ($items as $item) {
+            if ($item->isMetodo()) {
+                $metodo = $item->metodo;
+                $contenido .= "\n% --- Método: " . $metodo->title . " ---\n";
+                $contenido .= $metodo->method_tex . "\n";
 
-            foreach ($pkgs as $pkg) {
-                $pkg = trim($pkg);
-                if ($pkg && !in_array($pkg, $packages)) {
-                    $packages[] = $pkg;
+                // Recopilar imágenes del método
+                preg_match_all('/\\\\includegraphics(?:\[.*?\])?\{([^}]+)\}/', $metodo->method_tex, $matches);
+                foreach ($matches[1] as $imgName) {
+                    if (!isset($imagenes[$imgName])) {
+                        $imagenes[$imgName] = true;
+                    }
+                }
+            } else {
+                $problema = $item->problema;
+
+                // Agregar paquetes del problema
+                if ($problema->packages) {
+                    $packagesText = preg_replace('/u([0-9a-fA-F]{4})/', '', $problema->packages);
+                    $pkgs = preg_split('/[\n,]+/', $packagesText);
+                    foreach ($pkgs as $pkg) {
+                        $pkg = trim($pkg);
+                        if ($pkg && !in_array($pkg, $packages)) {
+                            $packages[] = $pkg;
+                        }
+                    }
+                }
+
+                $titulo = $problema->title ?? 'sin-titulo';
+                $contenido .= "\n\\idtitulo{\\#" . $problema->id . ": " . $titulo . "}\n";
+                $contenido .= "\\exercise{";
+                $contenido .= $this->sanitizeTexForMacroArg($problema->problem_tex);
+                $contenido .= "}\n";
+
+                if ($problema->hints) {
+                    $contenido .= "\n\\pistas{" . $this->sanitizeTexForMacroArg($problema->hints) . "}\n";
+                }
+
+                if ($problema->solution_tex) {
+                    $contenido .= "\n\\solution{";
+                    $contenido .= $this->sanitizeTexForMacroArg($problema->solution_tex);
+                    $contenido .= "}\n";
+                }
+
+                // Recopilar imágenes del problema
+                $texToSearch = ($problema->problem_tex ?? '') . ' ' . ($problema->solution_tex ?? '');
+                preg_match_all('/\\\\includegraphics(?:\[.*?\])?\{([^}]+)\}/', $texToSearch, $matches);
+                foreach ($matches[1] as $imgName) {
+                    if (!isset($imagenes[$imgName])) {
+                        $imagenes[$imgName] = true;
+                    }
                 }
             }
         }
 
-        // Construir el contenido del problema
-        // Agregar \idtitulo con el ID y título del problema
-        $titulo = $problema->title ?? 'sin-titulo';
-        $contenido .= "\n\\idtitulo{\\#" . $problema->id . ": " . $titulo . "}\n";
-
-        $contenido .= "\\exercise{";
-        $contenido .= $this->sanitizeTexForMacroArg($problema->problem_tex);
-        $contenido .= "}\n";
-
-        // Pistas
-        if ($problema->hints) {
-            $contenido .= "\n\\pistas{" . $this->sanitizeTexForMacroArg($problema->hints) . "}\n";
-        }
-
-        // Solución
-        if ($problema->solution_tex) {
-            $contenido .= "\n\\solution{";
-            $contenido .= $this->sanitizeTexForMacroArg($problema->solution_tex);
-            $contenido .= "}\n";
-        }
-        
-        // Recopilar imágenes mencionadas en el problema
-        preg_match_all('/\\\\includegraphics(?:\[.*?\])?\{([^}]+)\}/', $problema->problem_tex . ' ' . $problema->solution_tex, $matches);
-        foreach ($matches[1] as $imgName) {
-            if (!isset($imagenes[$imgName])) {
-                $imagenes[$imgName] = true;
-            }
-        }
+        return ['packages' => $packages, 'imagenes' => $imagenes, 'contenido' => $contenido];
     }
-    
-    // Crear el preámbulo
-    $preambulo = $this->generarPreambulo($packages);
-    
-    // Contenido completo del TEX
-    $texContent = $preambulo . "\n\n\\begin{document}\n\n" . $contenido . "\n\\end{document}";
-    
-    // Crear ZIP con TEX e imágenes
-    return $this->crearZip($texContent, array_keys($imagenes));
-}
 
 private function generarPreambulo($packages)
 {
@@ -437,7 +475,7 @@ private function crearZip($texContent, $imagenesNombres)
     public function presentacion()
     {
         $items = Carrito::where('user_id', Auth::id())
-                        ->with('problema')
+                        ->with(['problema', 'metodo'])
                         ->orderBy('orden')
                         ->get();
 
@@ -451,7 +489,7 @@ private function crearZip($texContent, $imagenesNombres)
     public function descargarPdf()
     {
         $items = Carrito::where('user_id', Auth::id())
-                        ->with('problema')
+                        ->with(['problema', 'metodo'])
                         ->orderBy('orden')
                         ->get();
 
@@ -459,53 +497,11 @@ private function crearZip($texContent, $imagenesNombres)
             return redirect()->route('carrito.index')->with('error', 'El carrito está vacío');
         }
 
-        // Recopilar paquetes, contenido e imágenes (igual que descargarTex)
-        $packages = [];
-        $imagenes = [];
-        $contenido = '';
+        $result = $this->buildTexContent($items);
+        $imagenes = $result['imagenes'];
 
-        foreach ($items as $item) {
-            $problema = $item->problema;
-
-            if ($problema->packages) {
-                $packagesText = preg_replace('/u([0-9a-fA-F]{4})/', '', $problema->packages);
-                $pkgs = preg_split('/[\n,]+/', $packagesText);
-                foreach ($pkgs as $pkg) {
-                    $pkg = trim($pkg);
-                    if ($pkg && !in_array($pkg, $packages)) {
-                        $packages[] = $pkg;
-                    }
-                }
-            }
-
-            $titulo = $problema->title ?? 'sin-titulo';
-            $contenido .= "\n\\idtitulo{\\#" . $problema->id . ": " . $titulo . "}\n";
-            $contenido .= "\\exercise{";
-            $contenido .= $this->sanitizeTexForMacroArg($problema->problem_tex);
-            $contenido .= "}\n";
-
-            if ($problema->hints) {
-                $contenido .= "\n\\pistas{" . $this->sanitizeTexForMacroArg($problema->hints) . "}\n";
-            }
-
-            if ($problema->solution_tex) {
-                $contenido .= "\n\\solution{";
-                $contenido .= $this->sanitizeTexForMacroArg($problema->solution_tex);
-                $contenido .= "}\n";
-            }
-
-            // Recopilar imágenes
-            $texToSearch = ($problema->problem_tex ?? '') . ' ' . ($problema->solution_tex ?? '');
-            preg_match_all('/\\\\includegraphics(?:\[.*?\])?\{([^}]+)\}/', $texToSearch, $matches);
-            foreach ($matches[1] as $imgName) {
-                if (!isset($imagenes[$imgName])) {
-                    $imagenes[$imgName] = true;
-                }
-            }
-        }
-
-        $preambulo = $this->generarPreambulo($packages);
-        $texContent = $preambulo . "\n\n\\begin{document}\n\n" . $contenido . "\n\\end{document}";
+        $preambulo = $this->generarPreambulo($result['packages']);
+        $texContent = $preambulo . "\n\n\\begin{document}\n\n" . $result['contenido'] . "\n\\end{document}";
 
         // Recopilar datos binarios de imágenes
         $imageData = [];
@@ -535,7 +531,8 @@ private function crearZip($texContent, $imagenesNombres)
                 }
             }
             $errorSummary = !empty($errorLines) ? implode(' | ', array_slice($errorLines, 0, 3)) : 'Error desconocido';
-            Log::error("Error compilando PDF del carrito. IDs: " . $items->pluck('problema_id')->implode(',') . ". Errores: {$errorSummary}. Temp dir: {$result['tempDir']}");
+            $ids = $items->map(fn($i) => $i->problema_id ? "P{$i->problema_id}" : "M{$i->metodo_id}")->implode(',');
+            Log::error("Error compilando PDF del carrito. IDs: {$ids}. Errores: {$errorSummary}. Temp dir: {$result['tempDir']}");
             // No limpiar tempDir para poder depurar el .tex generado
             return back()->with('error', 'Error al compilar el PDF: ' . $errorSummary);
         }

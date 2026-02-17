@@ -183,18 +183,15 @@ function cerrarModalHoja() {
 }
 
 function guardarHoja() {
-    // Obtener los problema_id de los items del carrito
+    // Obtener solo los problema_id (filtrar métodos)
     const items = document.querySelectorAll('.carrito-item');
-    const problemas = Array.from(items).map(item => {
-        // Extraer problema_id del botón remove
-        const btn = item.querySelector('.btn-remove');
-        const onclickAttr = btn.getAttribute('onclick');
-        const match = onclickAttr.match(/removeFromCarrito\((\d+)/);
-        return match ? parseInt(match[1]) : null;
-    }).filter(id => id !== null);
-    
+    const problemas = Array.from(items)
+        .filter(item => item.dataset.tipo === 'problema')
+        .map(item => parseInt(item.dataset.problemaId))
+        .filter(id => id && !isNaN(id));
+
     if (problemas.length === 0) {
-        alert('El carrito está vacío');
+        alert('No hay problemas en el carrito para guardar como hoja (los métodos no se incluyen en las hojas).');
         return;
     }
 

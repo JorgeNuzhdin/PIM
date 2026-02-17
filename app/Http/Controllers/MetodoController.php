@@ -23,7 +23,7 @@ class MetodoController extends Controller
     {
         $temas = Tema::all();
 
-        $query = Metodo::with(['tema', 'user']);
+        $query = Metodo::with(['tema']);
 
         if ($request->filled('tema_id')) {
             $query->where('tema_id', $request->tema_id);
@@ -31,6 +31,10 @@ class MetodoController extends Controller
 
         if ($request->filled('subtema_id')) {
             $query->whereRaw('FIND_IN_SET(?, subtema_ids)', [$request->subtema_id]);
+        }
+
+        if ($request->filled('institution')) {
+            $query->where('institution', $request->institution);
         }
 
         $metodos = $query->orderBy('id', 'desc')->get();
@@ -52,7 +56,9 @@ class MetodoController extends Controller
             ? Subtema::where('tema_id', $request->tema_id)->orderBy('id')->get()
             : collect();
 
-        return view('metodos.index', compact('metodos', 'temas', 'subtemas'));
+        $institutions = Metodo::distinct()->orderBy('institution')->pluck('institution');
+
+        return view('metodos.index', compact('metodos', 'temas', 'subtemas', 'institutions'));
     }
 
     public function show($id)
@@ -78,6 +84,7 @@ class MetodoController extends Controller
             'tema_id' => 'required|exists:temas,id',
             'subtema_ids' => 'required|array|min:1',
             'subtema_ids.*' => 'exists:subtemas,id',
+            'institution' => 'nullable|string|max:256',
         ];
 
         if (Auth::user()->isAdmin()) {
@@ -97,6 +104,7 @@ class MetodoController extends Controller
             'subtema_ids' => implode(',', $request->subtema_ids),
             'tema_id' => $request->tema_id,
             'user_id' => $userId,
+            'institution' => $request->institution ?? 'PIM',
         ]);
 
         return redirect()->route('metodos.index')->with('success', 'Método creado correctamente.');
@@ -134,6 +142,7 @@ class MetodoController extends Controller
             'tema_id' => 'required|exists:temas,id',
             'subtema_ids' => 'required|array|min:1',
             'subtema_ids.*' => 'exists:subtemas,id',
+            'institution' => 'nullable|string|max:256',
         ];
 
         if ($user->isAdmin()) {
@@ -147,6 +156,7 @@ class MetodoController extends Controller
             'method_tex' => $request->method_tex,
             'subtema_ids' => implode(',', $request->subtema_ids),
             'tema_id' => $request->tema_id,
+            'institution' => $request->institution ?? 'PIM',
         ];
 
         if ($user->isAdmin() && $request->filled('user_id')) {

@@ -136,6 +136,21 @@
         background-color: #bee3f8;
     }
 
+    .btn-action.carrito {
+        font-size: 1.1rem;
+        transition: all 0.2s;
+    }
+
+    .btn-action.carrito:hover {
+        background-color: #c6f6d5;
+    }
+
+    .btn-action.carrito.en-carrito {
+        background-color: #48bb78;
+        color: white;
+        border-radius: 50%;
+    }
+
     .empty-message {
         background: white;
         border-radius: 8px;
@@ -185,6 +200,13 @@
                 <option value="{{ $subtema->id }}" {{ request('subtema_id') == $subtema->id ? 'selected' : '' }}>{{ $subtema->nombre }}</option>
             @endforeach
         </select>
+
+        <select id="filtro-institution">
+            <option value="">Todas las instituciones</option>
+            @foreach($institutions as $inst)
+                <option value="{{ $inst }}" {{ request('institution') == $inst ? 'selected' : '' }}>{{ $inst }}</option>
+            @endforeach
+        </select>
     </div>
 
     @if($metodos->count() > 0)
@@ -194,7 +216,7 @@
                     <th>Título</th>
                     <th>Tema</th>
                     <th>Subtema</th>
-                    <th>Proponente</th>
+                    <th>Institución</th>
                     <th class="actions-cell">Acciones</th>
                 </tr>
             </thead>
@@ -208,8 +230,9 @@
                                 <span class="tag" style="margin: 2px;">{{ $subtema->nombre }}</span>
                             @endforeach
                         </td>
-                        <td>{{ $metodo->user->name ?? '—' }}</td>
+                        <td>{{ $metodo->institution ?? 'PIM' }}</td>
                         <td class="actions-cell">
+                            <button class="btn-action carrito" data-metodo-id="{{ $metodo->id }}" onclick="toggleMetodoCarrito({{ $metodo->id }}, this)" title="Añadir al carrito">🛒</button>
                             <a href="{{ route('metodos.show', $metodo->id) }}" class="btn-action view" title="Ver">👁️</a>
                             @if(Auth::user()->canEditProblemas())
                                 <a href="{{ route('metodos.edit', $metodo->id) }}" class="btn-action edit" title="Editar">&#9998;</a>
@@ -240,21 +263,83 @@
 const baseUrl = '{{ route("metodos.index") }}';
 const apiSubtemasUrl = '{{ url("/api/subtemas") }}';
 
-document.getElementById('filtro-tema').addEventListener('change', function() {
-    const temaId = this.value;
+function buildFilterParams() {
     const params = new URLSearchParams();
+    const temaId = document.getElementById('filtro-tema').value;
+    const subtemaId = document.getElementById('filtro-subtema').value;
+    const institution = document.getElementById('filtro-institution').value;
     if (temaId) params.set('tema_id', temaId);
+    if (subtemaId) params.set('subtema_id', subtemaId);
+    if (institution) params.set('institution', institution);
+    return params;
+}
+
+document.getElementById('filtro-tema').addEventListener('change', function() {
+    const params = new URLSearchParams();
+    const temaId = this.value;
+    if (temaId) params.set('tema_id', temaId);
+    const institution = document.getElementById('filtro-institution').value;
+    if (institution) params.set('institution', institution);
     window.location.href = baseUrl + (params.toString() ? '?' + params.toString() : '');
 });
 
 document.getElementById('filtro-subtema').addEventListener('change', function() {
-    const subtemaId = this.value;
-    const temaId = document.getElementById('filtro-tema').value;
-    const params = new URLSearchParams();
-    if (temaId) params.set('tema_id', temaId);
-    if (subtemaId) params.set('subtema_id', subtemaId);
+    const params = buildFilterParams();
     window.location.href = baseUrl + (params.toString() ? '?' + params.toString() : '');
 });
+
+document.getElementById('filtro-institution').addEventListener('change', function() {
+    const params = buildFilterParams();
+    window.location.href = baseUrl + (params.toString() ? '?' + params.toString() : '');
+});
+
+// Carrito: marcar metodos que ya estan en el carrito
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('{{ route("carrito.count") }}')
+        .then(r => r.json())
+        .then(data => {
+            if (data.metodo_ids && data.metodo_ids.length > 0) {
+                data.metodo_ids.forEach(id => {
+                    const btn = document.querySelector('.btn-action.carrito[data-metodo-id="' + id + '"]');
+                    if (btn) {
+                        btn.classList.add('en-carrito');
+                        btn.title = 'Quitar del carrito';
+                    }
+                });
+            }
+            // Actualizar contador del carrito en el navbar si existe
+            const countEl = document.getElementById('carrito-count');
+            if (countEl) countEl.textContent = data.count;
+        })
+        .catch(err => console.error('Error cargando estado carrito:', err));
+});
+
+function toggleMetodoCarrito(metodoId, button) {
+    fetch('{{ route("carrito.toggle") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ metodo_id: metodoId })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'added') {
+            button.classList.add('en-carrito');
+            button.title = 'Quitar del carrito';
+        } else if (data.status === 'removed') {
+            button.classList.remove('en-carrito');
+            button.title = 'Añadir al carrito';
+        }
+        const countEl = document.getElementById('carrito-count');
+        if (countEl) countEl.textContent = data.count;
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        alert('Error al actualizar el carrito');
+    });
+}
 
 function eliminarMetodo(id, titulo) {
     if (confirm('¿Estás seguro de que quieres eliminar el método "' + titulo + '"?\n\nEsta acción no se puede deshacer.')) {

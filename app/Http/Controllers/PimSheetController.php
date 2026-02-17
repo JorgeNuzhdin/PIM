@@ -219,6 +219,7 @@ class PimSheetController extends Controller
                             'subtema_ids' => implode(',', $validIds),
                             'tema_id'     => (int) $request->theme,
                             'user_id'     => Auth::id(),
+                            'institution' => $request->institution ?? 'PIM',
                         ]);
 
                         Log::info('Método creado: ' . $metodoItem['title']);

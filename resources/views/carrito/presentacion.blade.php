@@ -52,6 +52,11 @@
         color: #276749;
     }
 
+    .page-type.metodo {
+        background: #ebf8ff;
+        color: #2b6cb0;
+    }
+
     .problem-number {
         font-size: 1.1rem;
         font-weight: 700;
@@ -162,6 +167,7 @@
         font-weight: 600;
         cursor: pointer;
         transition: all 0.2s;
+        font-size: 0.8rem;
     }
 
     .nav-number:hover {
@@ -173,9 +179,13 @@
         box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.4);
     }
 
-    .nav-separator {
-        color: #718096;
-        padding: 0 0.5rem;
+    .nav-number.metodo-nav {
+        background: #2b6cb0;
+    }
+
+    .nav-number.metodo-nav.active {
+        background: #3182ce;
+        box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.4);
     }
 
     .btn-volver {
@@ -210,7 +220,7 @@
         .nav-number {
             min-width: 32px;
             height: 32px;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
         }
     }
 </style>
@@ -222,14 +232,12 @@
     <div class="page-container">
         <div class="page-header">
             <span class="page-type enunciado" id="page-type">Enunciado</span>
-            <span class="problem-number" id="problem-number">Problema 1</span>
+            <span class="problem-number" id="problem-number"></span>
         </div>
         <div class="page-content" id="page-content">
             {{-- Contenido dinamico --}}
         </div>
     </div>
-
-
 </div>
 
 {{-- Barra de navegacion fija abajo --}}
@@ -239,7 +247,7 @@
     </button>
 
     <div class="nav-numbers" id="nav-numbers">
-        {{-- Numeros de problemas generados por JS --}}
+        {{-- Numeros generados por JS --}}
     </div>
 
     <button class="nav-arrow" id="btn-next" onclick="nextPage()" title="Siguiente">
@@ -249,45 +257,72 @@
     <a href="{{ route('carrito.index') }}" class="btn-volver">Volver</a>
 </div>
 
-{{-- Datos de los problemas (ocultos) --}}
-<div id="problems-data" class="page-data">
+{{-- Datos de los items (ocultos) --}}
+<div id="items-data" class="page-data">
     @foreach($items as $index => $item)
-        <div class="problem-item"
-             data-index="{{ $index }}"
-             data-id="{{ $item->problema->id }}"
-             data-has-hints="{{ $item->problema->hints ? '1' : '0' }}">
-            <div class="problem-enunciado">
-                {!! \App\Helpers\LatexHelper::toHtml($item->problema->problem_tex) !!}
+        @if($item->isMetodo())
+            <div class="cart-item"
+                 data-index="{{ $index }}"
+                 data-type="metodo"
+                 data-title="{{ $item->metodo->title }}">
+                <div class="metodo-content">
+                    {!! \App\Helpers\LatexHelper::toHtml($item->metodo->method_tex) !!}
+                </div>
             </div>
-            <div class="problem-hints">
-                @if($item->problema->hints)
-                    {!! \App\Helpers\LatexHelper::toHtml($item->problema->hints) !!}
-                @endif
+        @else
+            <div class="cart-item"
+                 data-index="{{ $index }}"
+                 data-type="problema"
+                 data-id="{{ $item->problema->id }}"
+                 data-has-hints="{{ $item->problema->hints ? '1' : '0' }}">
+                <div class="problem-enunciado">
+                    {!! \App\Helpers\LatexHelper::toHtml($item->problema->problem_tex) !!}
+                </div>
+                <div class="problem-hints">
+                    @if($item->problema->hints)
+                        {!! \App\Helpers\LatexHelper::toHtml($item->problema->hints) !!}
+                    @endif
+                </div>
+                <div class="problem-solution">
+                    @if($item->problema->solution_tex)
+                        {!! \App\Helpers\LatexHelper::toHtml($item->problema->solution_tex) !!}
+                    @else
+                        <p style="color: #718096; font-style: italic;">No hay solucion disponible para este problema.</p>
+                    @endif
+                </div>
             </div>
-            <div class="problem-solution">
-                @if($item->problema->solution_tex)
-                    {!! \App\Helpers\LatexHelper::toHtml($item->problema->solution_tex) !!}
-                @else
-                    <p style="color: #718096; font-style: italic;">No hay solucion disponible para este problema.</p>
-                @endif
-            </div>
-        </div>
+        @endif
     @endforeach
 </div>
 @endsection
 
 @section('scripts')
 <script>
-    const totalProblems = {{ $items->count() }};
-    const totalPages = totalProblems * 2; // Enunciado + Solucion por problema
-    let currentPage = 0; // 0-indexed
+    // Construir array de paginas: cada entrada tiene { type, itemIndex, subpage, label }
+    const pages = [];
+    const itemElements = document.querySelectorAll('.cart-item');
+    let problemCounter = 0;
+    let metodoCounter = 0;
 
-    // Inicializar
+    itemElements.forEach((el, idx) => {
+        const type = el.dataset.type;
+        if (type === 'metodo') {
+            metodoCounter++;
+            pages.push({ type: 'metodo', itemIndex: idx, subpage: 0, label: 'M' + metodoCounter, navLabel: 'M' + metodoCounter });
+        } else {
+            problemCounter++;
+            pages.push({ type: 'problema', itemIndex: idx, subpage: 0, label: 'P' + problemCounter, navLabel: 'P' + problemCounter });
+            pages.push({ type: 'problema', itemIndex: idx, subpage: 1, label: 'P' + problemCounter, navLabel: 'P' + problemCounter });
+        }
+    });
+
+    const totalPages = pages.length;
+    let currentPage = 0;
+
     document.addEventListener('DOMContentLoaded', function() {
         buildNavigation();
         showPage(0);
 
-        // Renderizar MathJax si esta disponible
         if (window.MathJax) {
             MathJax.typesetPromise().catch(err => console.error('MathJax error:', err));
         }
@@ -297,100 +332,101 @@
         const navNumbers = document.getElementById('nav-numbers');
         navNumbers.innerHTML = '';
 
-        for (let i = 0; i < totalProblems; i++) {
+        // Crear un boton por cada item (no por pagina)
+        const seen = new Set();
+        pages.forEach((page, pageIdx) => {
+            const key = page.type + '-' + page.itemIndex;
+            if (seen.has(key)) return;
+            seen.add(key);
+
             const btn = document.createElement('button');
-            btn.className = 'nav-number';
-            btn.textContent = (i + 1);
-            btn.onclick = () => goToProblem(i);
-            btn.id = 'nav-btn-' + i;
+            btn.className = 'nav-number' + (page.type === 'metodo' ? ' metodo-nav' : '');
+            btn.textContent = page.navLabel;
+            btn.dataset.itemIndex = page.itemIndex;
+            btn.dataset.firstPage = pageIdx;
+            btn.onclick = () => showPage(pageIdx);
             navNumbers.appendChild(btn);
-        }
+        });
     }
 
     function showPage(pageIndex) {
         currentPage = pageIndex;
-
-        const problemIndex = Math.floor(pageIndex / 2);
-        const isEnunciado = pageIndex % 2 === 0;
-
-        const problemData = document.querySelector(`.problem-item[data-index="${problemIndex}"]`);
-        const problemId = problemData.dataset.id;
-        const hasHints = problemData.dataset.hasHints === '1';
+        const page = pages[pageIndex];
+        const itemEl = document.querySelector(`.cart-item[data-index="${page.itemIndex}"]`);
 
         const pageType = document.getElementById('page-type');
         const problemNumber = document.getElementById('problem-number');
         const pageContent = document.getElementById('page-content');
 
-        if (isEnunciado) {
-            pageType.textContent = 'Enunciado';
-            pageType.className = 'page-type enunciado';
-            problemNumber.textContent = `Problema ${problemIndex + 1}`;
+        if (page.type === 'metodo') {
+            pageType.textContent = 'Método';
+            pageType.className = 'page-type metodo';
+            problemNumber.textContent = itemEl.dataset.title;
 
-            const enunciado = problemData.querySelector('.problem-enunciado').innerHTML;
-            const hints = problemData.querySelector('.problem-hints').innerHTML;
-
-            let html = `<div class="latex-content">${enunciado}</div>`;
-
-            if (hasHints) {
-                html += `
-                    <div class="hint-section">
-                        <button class="btn-hint" onclick="toggleHint()">
-                            💡 Mostrar pista
-                        </button>
-                        <div class="hint-content" id="hint-content">
-                            ${hints}
-                        </div>
-                    </div>
-                `;
-            }
-
-            pageContent.innerHTML = html;
+            const content = itemEl.querySelector('.metodo-content').innerHTML;
+            pageContent.innerHTML = `<div class="latex-content">${content}</div>`;
         } else {
-            pageType.textContent = 'Solucion';
-            pageType.className = 'page-type solucion';
-            problemNumber.textContent = `Problema ${problemIndex + 1}`;
+            const problemId = itemEl.dataset.id;
+            const hasHints = itemEl.dataset.hasHints === '1';
 
-            const solution = problemData.querySelector('.problem-solution').innerHTML;
-            pageContent.innerHTML = `<div class="latex-content">${solution}</div>`;
+            if (page.subpage === 0) {
+                pageType.textContent = 'Enunciado';
+                pageType.className = 'page-type enunciado';
+                problemNumber.textContent = `Problema #${problemId}`;
+
+                const enunciado = itemEl.querySelector('.problem-enunciado').innerHTML;
+                const hints = itemEl.querySelector('.problem-hints').innerHTML;
+
+                let html = `<div class="latex-content">${enunciado}</div>`;
+
+                if (hasHints) {
+                    html += `
+                        <div class="hint-section">
+                            <button class="btn-hint" onclick="toggleHint()">
+                                Mostrar pista
+                            </button>
+                            <div class="hint-content" id="hint-content">
+                                ${hints}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                pageContent.innerHTML = html;
+            } else {
+                pageType.textContent = 'Solucion';
+                pageType.className = 'page-type solucion';
+                problemNumber.textContent = `Problema #${problemId}`;
+
+                const solution = itemEl.querySelector('.problem-solution').innerHTML;
+                pageContent.innerHTML = `<div class="latex-content">${solution}</div>`;
+            }
         }
 
-        // Actualizar navegacion
         updateNavigation();
 
-        // Re-renderizar MathJax
         if (window.MathJax) {
             MathJax.typesetPromise([pageContent]).catch(err => console.error('MathJax error:', err));
         }
     }
 
     function updateNavigation() {
-        const problemIndex = Math.floor(currentPage / 2);
+        const currentItemIndex = pages[currentPage].itemIndex;
 
-        // Actualizar botones de problemas
-        document.querySelectorAll('.nav-number').forEach((btn, idx) => {
-            btn.classList.toggle('active', idx === problemIndex);
+        document.querySelectorAll('.nav-number').forEach(btn => {
+            btn.classList.toggle('active', parseInt(btn.dataset.itemIndex) === currentItemIndex);
         });
 
-        // Actualizar flechas
         document.getElementById('btn-prev').disabled = currentPage === 0;
         document.getElementById('btn-next').disabled = currentPage === totalPages - 1;
     }
 
     function prevPage() {
-        if (currentPage > 0) {
-            showPage(currentPage - 1);
-        }
+        if (currentPage > 0) showPage(currentPage - 1);
     }
 
     function nextPage() {
-        if (currentPage < totalPages - 1) {
-            showPage(currentPage + 1);
-        }
-    }
-
-    function goToProblem(problemIndex) {
-        // Ir al enunciado del problema
-        showPage(problemIndex * 2);
+        if (currentPage < totalPages - 1) showPage(currentPage + 1);
     }
 
     function toggleHint() {
@@ -399,12 +435,11 @@
 
         if (hintContent.classList.contains('visible')) {
             hintContent.classList.remove('visible');
-            btn.textContent = '💡 Mostrar pista';
+            btn.textContent = 'Mostrar pista';
         } else {
             hintContent.classList.add('visible');
-            btn.textContent = '💡 Ocultar pista';
+            btn.textContent = 'Ocultar pista';
 
-            // Re-renderizar MathJax en la pista
             if (window.MathJax) {
                 MathJax.typesetPromise([hintContent]).catch(err => console.error('MathJax error:', err));
             }

@@ -190,79 +190,63 @@
     @if($items->count() > 0)
         <div id="carrito-list">
             @foreach($items as $item)
-                <div class="carrito-item" data-id="{{ $item->id }}" draggable="true">
+                <div class="carrito-item" data-id="{{ $item->id }}" data-tipo="{{ $item->isMetodo() ? 'metodo' : 'problema' }}" data-problema-id="{{ $item->problema_id }}" data-metodo-id="{{ $item->metodo_id }}" draggable="true">
                     <div class="drag-handle">☰</div>
                     <div class="item-content">
-                        <div class="item-title">Problema #{{ $item->problema->id }}</div>
-                        <div class="item-preview">
-                            @php
-                                $text = strip_tags($item->problema->problem_html_processed);
-                                // Quitar bloques TikZ completos
-                                $text = preg_replace('/\\\\begin\{tikzpicture\}.*?\\\\end\{tikzpicture\}/s', '[figura]', $text);
-                                // Truncar respetando delimitadores MathJax
-                                $limit = 150;
-                                if (strlen($text) > $limit) {
-                                    $cut = substr($text, 0, $limit);
-                                    // Si cortamos dentro de $...$ inline, extender hasta el cierre
-                                    $dollarCount = substr_count($cut, '$') - substr_count($cut, '\\$');
-                                    if ($dollarCount % 2 !== 0) {
-                                        $nextDollar = strpos($text, '$', $limit);
-                                        if ($nextDollar !== false && $nextDollar < $limit + 100) {
-                                            $cut = substr($text, 0, $nextDollar + 1);
-                                        } else {
-                                            // No se encuentra cierre, cortar antes del $ abierto
-                                            $lastDollar = strrpos($cut, '$');
-                                            $cut = substr($text, 0, $lastDollar);
-                                        }
-                                    }
-                                    // Si cortamos dentro de \(...\), extender hasta \)
-                                    if (substr_count($cut, '\\(') > substr_count($cut, '\\)')) {
-                                        $nextClose = strpos($text, '\\)', strlen($cut));
-                                        if ($nextClose !== false && $nextClose < $limit + 100) {
-                                            $cut = substr($text, 0, $nextClose + 2);
-                                        }
-                                    }
-                                    // Si cortamos dentro de \[...\], extender hasta \]
-                                    if (substr_count($cut, '\\[') > substr_count($cut, '\\]')) {
-                                        $nextClose = strpos($text, '\\]', strlen($cut));
-                                        if ($nextClose !== false && $nextClose < $limit + 200) {
-                                            $cut = substr($text, 0, $nextClose + 2);
-                                        } else {
-                                            // Fórmula display muy larga, cortar antes del \[
-                                            $lastOpen = strrpos($cut, '\\[');
-                                            if ($lastOpen !== false) {
-                                                $cut = substr($text, 0, $lastOpen);
+                        @if($item->isMetodo())
+                            <div class="item-title" style="color: #2b6cb0;">📘 Método: {{ $item->metodo->title }}</div>
+                            <div class="item-preview">
+                                @php
+                                    $text = strip_tags(\App\Helpers\LatexHelper::toHtml($item->metodo->method_tex));
+                                    $text = preg_replace('/\\\\begin\{tikzpicture\}.*?\\\\end\{tikzpicture\}/s', '[figura]', $text);
+                                    if (strlen($text) > 150) $text = substr($text, 0, 150) . '...';
+                                @endphp
+                                {!! $text !!}
+                            </div>
+                        @else
+                            <div class="item-title">Problema #{{ $item->problema->id }}</div>
+                            <div class="item-preview">
+                                @php
+                                    $text = strip_tags($item->problema->problem_html_processed);
+                                    $text = preg_replace('/\\\\begin\{tikzpicture\}.*?\\\\end\{tikzpicture\}/s', '[figura]', $text);
+                                    $limit = 150;
+                                    if (strlen($text) > $limit) {
+                                        $cut = substr($text, 0, $limit);
+                                        $dollarCount = substr_count($cut, '$') - substr_count($cut, '\\$');
+                                        if ($dollarCount % 2 !== 0) {
+                                            $nextDollar = strpos($text, '$', $limit);
+                                            if ($nextDollar !== false && $nextDollar < $limit + 100) {
+                                                $cut = substr($text, 0, $nextDollar + 1);
+                                            } else {
+                                                $lastDollar = strrpos($cut, '$');
+                                                $cut = substr($text, 0, $lastDollar);
                                             }
                                         }
-                                    }
-                                    // Si cortamos dentro de \begin{env}...\end{env}, extender o cortar antes
-                                    if (preg_match_all('/\\\\begin\{([^}]+)\}/', $cut, $beginMatches, PREG_SET_ORDER)) {
-                                        foreach ($beginMatches as $m) {
-                                            $envName = $m[1];
-                                            $endTag = '\\end{' . $envName . '}';
-                                            $beginCount = substr_count($cut, '\\begin{' . $envName . '}');
-                                            $endCount = substr_count($cut, $endTag);
-                                            if ($beginCount > $endCount) {
-                                                $nextEnd = strpos($text, $endTag, strlen($cut));
-                                                if ($nextEnd !== false && $nextEnd < $limit + 300) {
-                                                    $cut = substr($text, 0, $nextEnd + strlen($endTag));
-                                                } else {
-                                                    // Entorno muy largo, cortar antes del \begin
-                                                    $lastBegin = strrpos($cut, '\\begin{' . $envName . '}');
-                                                    if ($lastBegin !== false) {
-                                                        $cut = substr($text, 0, $lastBegin);
-                                                    }
+                                        if (substr_count($cut, '\\(') > substr_count($cut, '\\)')) {
+                                            $nextClose = strpos($text, '\\)', strlen($cut));
+                                            if ($nextClose !== false && $nextClose < $limit + 100) {
+                                                $cut = substr($text, 0, $nextClose + 2);
+                                            }
+                                        }
+                                        if (substr_count($cut, '\\[') > substr_count($cut, '\\]')) {
+                                            $nextClose = strpos($text, '\\]', strlen($cut));
+                                            if ($nextClose !== false && $nextClose < $limit + 200) {
+                                                $cut = substr($text, 0, $nextClose + 2);
+                                            } else {
+                                                $lastOpen = strrpos($cut, '\\[');
+                                                if ($lastOpen !== false) {
+                                                    $cut = substr($text, 0, $lastOpen);
                                                 }
                                             }
                                         }
+                                        $text = $cut . '...';
                                     }
-                                    $text = $cut . '...';
-                                }
-                            @endphp
-                            {!! $text !!}
-                        </div>
+                                @endphp
+                                {!! $text !!}
+                            </div>
+                        @endif
                     </div>
-                    <button class="btn-remove" onclick="removeFromCarrito({{ $item->problema_id }}, this)">
+                    <button class="btn-remove" onclick="removeFromCarrito(this)" title="Quitar del carrito">
                         🗑️
                     </button>
                 </div>
@@ -272,9 +256,11 @@
         <div class="carrito-empty">
             <p style="font-size: 3rem; margin-bottom: 1rem;">🛒</p>
             <p style="font-size: 1.2rem;">Tu carrito está vacío</p>
-            <a href="{{ route('problemas.index') }}" style="color: #4299e1; text-decoration: underline; margin-top: 1rem; display: inline-block;">
-                Ver problemas
-            </a>
+            <p style="margin-top: 0.5rem;">
+                <a href="{{ route('problemas.index') }}" style="color: #4299e1; text-decoration: underline;">Ver problemas</a>
+                &nbsp;|&nbsp;
+                <a href="{{ route('metodos.index') }}" style="color: #4299e1; text-decoration: underline;">Ver métodos</a>
+            </p>
         </div>
     @endif
 </div>
@@ -365,25 +351,29 @@ function updateOrder() {
     });
 }
 
-function removeFromCarrito(problemaId, button) {
-    if (confirm('¿Quitar este problema del carrito?')) {
+function removeFromCarrito(button) {
+    const item = button.closest('.carrito-item');
+    const tipo = item.dataset.tipo;
+    const label = tipo === 'metodo' ? 'este método' : 'este problema';
+
+    if (confirm('¿Quitar ' + label + ' del carrito?')) {
+        const body = tipo === 'metodo'
+            ? { metodo_id: parseInt(item.dataset.metodoId) }
+            : { problema_id: parseInt(item.dataset.problemaId) };
+
         fetch('{{ route("carrito.toggle") }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
-            body: JSON.stringify({ problema_id: problemaId })
+            body: JSON.stringify(body)
         })
         .then(response => response.json())
         .then(data => {
-            // Eliminar el elemento del DOM
-            button.closest('.carrito-item').remove();
-            
-            // Actualizar contador
-            document.getElementById('carrito-count').textContent = data.count;
-            
-            // Si no quedan items, mostrar mensaje vacío
+            item.remove();
+            const countEl = document.getElementById('carrito-count');
+            if (countEl) countEl.textContent = data.count;
             if (data.count === 0) {
                 location.reload();
             }

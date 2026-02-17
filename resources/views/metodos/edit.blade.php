@@ -254,6 +254,12 @@
                 @endif
             </div>
 
+            {{-- Institución --}}
+            <div class="form-group">
+                <label for="institution">Institución</label>
+                <input type="text" name="institution" id="institution" value="{{ old('institution', $metodo->institution ?? 'PIM') }}" placeholder="Institución (por defecto PIM)">
+            </div>
+
             {{-- Proponente (solo admin) --}}
             @if(Auth::user()->isAdmin())
             <div class="form-group">
