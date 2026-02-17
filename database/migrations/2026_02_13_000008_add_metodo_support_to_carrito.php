@@ -19,10 +19,11 @@ return new class extends Migration
             $table->integer('orden')->default(0);
             $table->timestamps();
 
-            $table->foreign('problema_id')->references('id')->on('pim_problems')->onDelete('cascade');
-            $table->foreign('metodo_id')->references('id')->on('metodos')->onDelete('cascade');
+            // Solo indices, sin FK en problema_id/metodo_id (tipo de columna puede no coincidir)
             $table->index(['user_id', 'problema_id']);
             $table->index(['user_id', 'metodo_id']);
+            $table->index('problema_id');
+            $table->index('metodo_id');
         });
     }
 
@@ -38,7 +39,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['user_id', 'problema_id']);
-            $table->foreign('problema_id')->references('id')->on('pim_problems')->onDelete('cascade');
+            $table->index('problema_id');
         });
     }
 };
