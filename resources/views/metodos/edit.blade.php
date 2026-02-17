@@ -254,6 +254,20 @@
                 @endif
             </div>
 
+            {{-- Proponente (solo admin) --}}
+            @if(Auth::user()->isAdmin())
+            <div class="form-group">
+                <label for="user_id">Proponente</label>
+                <select name="user_id" id="user_id">
+                    @foreach($editores as $editor)
+                        <option value="{{ $editor->id }}" {{ old('user_id', $metodo->user_id) == $editor->id ? 'selected' : '' }}>
+                            {{ $editor->name }} ({{ $editor->rol }})
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            @endif
+
             {{-- Editor LaTeX --}}
             <div class="form-group">
                 <div class="latex-editor-grid">

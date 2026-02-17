@@ -216,7 +216,6 @@ class PimSheetController extends Controller
                         Metodo::create([
                             'title'       => $metodoItem['title'],
                             'method_tex'  => $metodoItem['method_tex'],
-                            'method_html' => $metodoItem['method_tex'],
                             'subtema_ids' => implode(',', $validIds),
                             'tema_id'     => (int) $request->theme,
                             'user_id'     => Auth::id(),

@@ -125,7 +125,7 @@ class CarritoController extends Controller
         $contenido .= "\n\\idtitulo{\\#" . $problema->id . ": " . $titulo . "}\n";
 
         $contenido .= "\\exercise{";
-        $contenido .= $this->sanitizeTexForMacroArg($problema->problem_tex ?? $problema->problem_html);
+        $contenido .= $this->sanitizeTexForMacroArg($problema->problem_tex);
         $contenido .= "}\n";
 
         // Pistas
@@ -134,9 +134,9 @@ class CarritoController extends Controller
         }
 
         // Solución
-        if ($problema->solution_tex || $problema->solution_html) {
+        if ($problema->solution_tex) {
             $contenido .= "\n\\solution{";
-            $contenido .= $this->sanitizeTexForMacroArg($problema->solution_tex ?? $problema->solution_html);
+            $contenido .= $this->sanitizeTexForMacroArg($problema->solution_tex);
             $contenido .= "}\n";
         }
         
@@ -481,16 +481,16 @@ private function crearZip($texContent, $imagenesNombres)
             $titulo = $problema->title ?? 'sin-titulo';
             $contenido .= "\n\\idtitulo{\\#" . $problema->id . ": " . $titulo . "}\n";
             $contenido .= "\\exercise{";
-            $contenido .= $this->sanitizeTexForMacroArg($problema->problem_tex ?? $problema->problem_html);
+            $contenido .= $this->sanitizeTexForMacroArg($problema->problem_tex);
             $contenido .= "}\n";
 
             if ($problema->hints) {
                 $contenido .= "\n\\pistas{" . $this->sanitizeTexForMacroArg($problema->hints) . "}\n";
             }
 
-            if ($problema->solution_tex || $problema->solution_html) {
+            if ($problema->solution_tex) {
                 $contenido .= "\n\\solution{";
-                $contenido .= $this->sanitizeTexForMacroArg($problema->solution_tex ?? $problema->solution_html);
+                $contenido .= $this->sanitizeTexForMacroArg($problema->solution_tex);
                 $contenido .= "}\n";
             }
 

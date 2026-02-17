@@ -65,10 +65,8 @@ class ProblemaController extends Controller
                     'school_year' => $schoolYearText,
                     'title' => $validated['title'] ?? null,
                     'problem_tex' => $validated['problem_tex'],
-                    'problem_html' => $validated['problem_tex'],
                     'hints' => $validated['hints'] ?? null,
                     'solution_tex' => $validated['solution_tex'] ?? null,
-                    'solution_html' => $validated['solution_tex'] ?? null,
                     'comments' => $validated['comments'] ?? null,
                     'source' => $validated['source'] ?? null,
                     'proponent_id' => Auth::id(),
@@ -214,10 +212,8 @@ class ProblemaController extends Controller
                         'school_year' => $schoolYearText,
                         'title' => $validated['title'],
                         'problem_tex' => $validated['problem_tex'],
-                        'problem_html' => $validated['problem_tex'],
                         'hints' => $validated['hints'],
                         'solution_tex' => $validated['solution_tex'],
-                        'solution_html' => $validated['solution_tex'],
                         'comments' => $validated['comments'],
                         'source' => $validated['source'],
                     ];
@@ -338,8 +334,8 @@ class ProblemaController extends Controller
                 $q->where('id', $buscar);
             }
             // Buscar también en contenido y fuente
-            $q->orWhere('problem_html', 'LIKE', "%{$buscar}%")
-              ->orWhere('solution_html', 'LIKE', "%{$buscar}%")
+            $q->orWhere('problem_tex', 'LIKE', "%{$buscar}%")
+              ->orWhere('solution_tex', 'LIKE', "%{$buscar}%")
               ->orWhere('source', 'LIKE', "%{$buscar}%");
         });
     }
@@ -394,9 +390,17 @@ class ProblemaController extends Controller
         $query->where('difficulty', '<=', $request->difficulty_max);
     }
     
-    // Filtro por año académico (hasta el año seleccionado)
-    if ($request->filled('school_year')) {
-        $query->where('school_year', '<=', $request->school_year);
+    // Filtro por año académico (rango Desde - Hasta)
+    if ($request->filled('school_year_min') || $request->filled('school_year_max')) {
+        $allYears = SchoolYearHelper::getAllYears();
+        $min = $request->input('school_year_min', 1);
+        $max = $request->input('school_year_max', 12);
+        $validYears = array_filter($allYears, fn($k) => $k >= $min && $k <= $max, ARRAY_FILTER_USE_KEY);
+        if (!empty($validYears)) {
+            $query->whereIn('school_year', array_values($validYears));
+        } else {
+            $query->whereRaw('1 = 0');
+        }
     }
 
     // Filtro por fuente (source) - usando SourceHelper para grupos y comas
@@ -422,6 +426,15 @@ class ProblemaController extends Controller
     if ($request->filled('sort_difficulty')) {
         $sortDirection = $request->sort_difficulty === 'desc' ? 'desc' : 'asc';
         $query->orderBy('difficulty', $sortDirection);
+    }
+
+    // Ordenar por año académico si se solicita
+    if ($request->filled('sort_year')) {
+        $sortDirection = $request->sort_year === 'desc' ? 'desc' : 'asc';
+        // Ordenar usando FIELD() para respetar el orden lógico de los años
+        $allYears = SchoolYearHelper::getAllYears();
+        $yearList = implode(',', array_map(fn($y) => "'" . addslashes($y) . "'", array_values($allYears)));
+        $query->orderByRaw("FIELD(school_year, {$yearList}) {$sortDirection}");
     }
 
     // Ordenar por ID si se solicita

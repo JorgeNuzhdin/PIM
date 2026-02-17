@@ -54,6 +54,8 @@ Route::middleware('auth')->group(function () {
     // Métodos: listado y detalle visible para todos los autenticados
     Route::get('/metodos', [MetodoController::class, 'index'])->name('metodos.index');
     Route::get('/metodos/{id}', [MetodoController::class, 'show'])->name('metodos.show')->where('id', '[0-9]+');
+    Route::get('/metodos/{id}/descargar-tex', [MetodoController::class, 'downloadTex'])->name('metodos.download-tex')->where('id', '[0-9]+');
+    Route::get('/metodos/{id}/descargar-pdf', [MetodoController::class, 'downloadPdf'])->name('metodos.download-pdf')->where('id', '[0-9]+');
 
     // Crear/editar/guardar métodos: solo para admin/editor
     Route::middleware('can.edit.problemas')->group(function () {
@@ -61,6 +63,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/metodos', [MetodoController::class, 'store'])->name('metodos.store');
         Route::get('/metodos/{id}/editar', [MetodoController::class, 'edit'])->name('metodos.edit')->where('id', '[0-9]+');
         Route::put('/metodos/{id}', [MetodoController::class, 'update'])->name('metodos.update')->where('id', '[0-9]+');
+        Route::delete('/metodos/{id}', [MetodoController::class, 'destroy'])->name('metodos.destroy')->where('id', '[0-9]+');
     });
 
 });

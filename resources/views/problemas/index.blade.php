@@ -266,6 +266,13 @@
     font-size: 1rem;
     box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
     flex-shrink: 0;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.difficulty-badge:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
 }
 
 /* Año académico */
@@ -277,6 +284,12 @@
     font-size: 0.85rem;
     font-weight: 600;
     white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.year-badge:hover {
+    background: #e2e8f0;
 }
 
 /* Usado en hoja */
@@ -335,6 +348,15 @@
 .btn-icon:hover {
     transform: scale(1.1);
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.btn-edit {
+    color: #4299e1;
+}
+
+.btn-edit:hover {
+    border-color: #4299e1;
+    background-color: #ebf8ff;
 }
 
 .btn-delete:hover {
@@ -574,7 +596,7 @@
 
     <div class="stats">
     Total de problemas en la base de datos: <strong>{{ $totalProblemas }}</strong>
-    @if(request()->hasAny(['buscar', 'tema_id', 'topic_title', 'source', 'proponent_id', 'difficulty_min', 'difficulty_max', 'school_year']))
+    @if(request()->hasAny(['buscar', 'tema_id', 'topic_title', 'source', 'proponent_id', 'difficulty_min', 'difficulty_max', 'school_year_min', 'school_year_max']))
         | Problemas encontrados: <strong style="color: #4299e1;">{{ $problemasEncontrados }}</strong>
     @endif
     | Mostrando en esta página: <strong>{{ $problemas->count() }}</strong>
@@ -656,16 +678,44 @@
                 </div>
             </div>
 
-            <div class="form-group">
-                <label for="school_year">Año académico (hasta)</label>
-                <select name="school_year" id="school_year">
-                    <option value="">-- Todos los años --</option>
-                    @foreach($schoolYears as $index => $yearName)
-                        <option value="{{ $index }}" {{ request('school_year') == $index ? 'selected' : '' }}>
-                            {{ $yearName }}
-                        </option>
-                    @endforeach
-                </select>
+            <div class="form-group-range">
+                <label>Año académico</label>
+                <div style="display: flex; gap: 0.5rem; align-items: center; min-height: 38px;">
+                    <select name="school_year_min" style="flex: 1; height: 38px; padding: 0.4rem; border: 1px solid #cbd5e0; border-radius: 4px; font-size: 0.9rem;">
+                        <option value="">Desde</option>
+                        @foreach($schoolYears as $index => $yearName)
+                            <option value="{{ $index }}" {{ request('school_year_min') == $index ? 'selected' : '' }}>
+                                {{ $yearName }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <span>—</span>
+                    <select name="school_year_max" style="flex: 1; height: 38px; padding: 0.4rem; border: 1px solid #cbd5e0; border-radius: 4px; font-size: 0.9rem;">
+                        <option value="">Hasta</option>
+                        @foreach($schoolYears as $index => $yearName)
+                            <option value="{{ $index }}" {{ request('school_year_max') == $index ? 'selected' : '' }}>
+                                {{ $yearName }}
+                            </option>
+                        @endforeach
+                    </select>
+
+                    <div class="sort-buttons">
+                        <button type="submit"
+                                name="sort_year"
+                                value="asc"
+                                class="sort-btn {{ request('sort_year') == 'asc' ? 'active' : '' }}"
+                                title="Ordenar por año ascendente">
+                            ▲
+                        </button>
+                        <button type="submit"
+                                name="sort_year"
+                                value="desc"
+                                class="sort-btn {{ request('sort_year') == 'desc' ? 'active' : '' }}"
+                                title="Ordenar por año descendente">
+                            ▼
+                        </button>
+                    </div>
+                </div>
             </div>
 
             {{-- Filtro por fuente (agrupado) --}}
@@ -864,9 +914,9 @@
             <div class="problema-header">
                 {{-- Nivel de dificultad - FUERA de problema-info --}}
                 @if($problema->difficulty)
-                    <div class="difficulty-badge" title="Dificultad: {{ $problema->difficulty }}/10">
+                    <a href="{{ route('problemas.index', ['difficulty_min' => $problema->difficulty, 'difficulty_max' => $problema->difficulty]) }}" class="difficulty-badge" title="Filtrar dificultad {{ $problema->difficulty }}" style="text-decoration:none;color:white;">
                         {{ $problema->difficulty }}
-                    </div>
+                    </a>
                 @endif
                 
                 {{-- Título, año y tags --}}
@@ -876,9 +926,10 @@
                         
                         {{-- Año académico --}}
                         @if($problema->school_year && in_array('year', $mostrarArray))
-                            <span class="year-badge">
+                            @php $yearIdx = \App\Helpers\SchoolYearHelper::getYearIndex($problema->school_year); @endphp
+                            <a href="{{ route('problemas.index', ['school_year_min' => $yearIdx, 'school_year_max' => $yearIdx]) }}" class="year-badge" style="text-decoration:none;color:#4a5568;">
                                 📚 {{ $problema->school_year }}
-                            </span>
+                            </a>
                         @endif
 
                         {{-- Usado en hoja --}}
@@ -903,8 +954,8 @@
                 <div class="problema-actions">
                     @auth
                        @if(Auth::user()->canEditProblemas())
-                            <a href="{{ route('problemas.edit', ['id' => $problema->id, 'return' => urlencode(request()->fullUrl())]) }}" class="btn-icon" title="Editar problema">
-                                ✏️
+                            <a href="{{ route('problemas.edit', ['id' => $problema->id, 'return' => urlencode(request()->fullUrl())]) }}" class="btn-icon btn-edit" title="Editar problema">
+                                &#9998;
                             </a>
                             
                             <button class="btn-icon btn-delete" 

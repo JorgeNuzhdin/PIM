@@ -257,7 +257,7 @@
              data-id="{{ $item->problema->id }}"
              data-has-hints="{{ $item->problema->hints ? '1' : '0' }}">
             <div class="problem-enunciado">
-                {!! \App\Helpers\LatexHelper::toHtml($item->problema->problem_tex ?? $item->problema->problem_html) !!}
+                {!! \App\Helpers\LatexHelper::toHtml($item->problema->problem_tex) !!}
             </div>
             <div class="problem-hints">
                 @if($item->problema->hints)
@@ -265,8 +265,8 @@
                 @endif
             </div>
             <div class="problem-solution">
-                @if($item->problema->solution_tex || $item->problema->solution_html)
-                    {!! \App\Helpers\LatexHelper::toHtml($item->problema->solution_tex ?? $item->problema->solution_html) !!}
+                @if($item->problema->solution_tex)
+                    {!! \App\Helpers\LatexHelper::toHtml($item->problema->solution_tex) !!}
                 @else
                     <p style="color: #718096; font-style: italic;">No hay solucion disponible para este problema.</p>
                 @endif

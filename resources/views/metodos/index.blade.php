@@ -83,6 +83,59 @@
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
+    .actions-cell {
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    .btn-action {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.25rem 0.4rem;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+        font-size: 1.1rem;
+        text-decoration: none;
+    }
+
+    .btn-action:hover {
+        background-color: #e2e8f0;
+    }
+
+    .btn-action.view:hover {
+        background-color: #bee3f8;
+    }
+
+    .btn-action.download-tex {
+        color: #059669;
+        font-weight: 700;
+        font-size: 0.85rem;
+    }
+
+    .btn-action.download-tex:hover {
+        background-color: #d1fae5;
+    }
+
+    .btn-action.download-pdf {
+        color: #e53e3e;
+        font-weight: 700;
+        font-size: 0.85rem;
+    }
+
+    .btn-action.download-pdf:hover {
+        background-color: #fed7d7;
+    }
+
+    .btn-action.edit {
+        color: #4299e1;
+        font-size: 1.1rem;
+    }
+
+    .btn-action.edit:hover {
+        background-color: #bee3f8;
+    }
+
     .empty-message {
         background: white;
         border-radius: 8px;
@@ -142,6 +195,7 @@
                     <th>Tema</th>
                     <th>Subtema</th>
                     <th>Proponente</th>
+                    <th class="actions-cell">Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -150,11 +204,22 @@
                         <td><a href="{{ route('metodos.show', $metodo->id) }}" class="metodo-link">{{ $metodo->title }}</a></td>
                         <td><span class="tag">{{ $metodo->tema->tema }}</span></td>
                         <td>
-                            @foreach($metodo->subtemas as $subtema)
+                            @foreach($metodo->preloadedSubtemas as $subtema)
                                 <span class="tag" style="margin: 2px;">{{ $subtema->nombre }}</span>
                             @endforeach
                         </td>
                         <td>{{ $metodo->user->name ?? '—' }}</td>
+                        <td class="actions-cell">
+                            <a href="{{ route('metodos.show', $metodo->id) }}" class="btn-action view" title="Ver">👁️</a>
+                            @if(Auth::user()->canEditProblemas())
+                                <a href="{{ route('metodos.edit', $metodo->id) }}" class="btn-action edit" title="Editar">&#9998;</a>
+                            @endif
+                            <a href="{{ route('metodos.download-tex', $metodo->id) }}" class="btn-action download-tex" title="Descargar TEX">TEX⤓</a>
+                            <a href="{{ route('metodos.download-pdf', $metodo->id) }}" class="btn-action download-pdf" title="Descargar PDF">PDF⤓</a>
+                            @if(Auth::user()->isAdmin())
+                                <button class="btn-action btn-delete" onclick="eliminarMetodo({{ $metodo->id }}, '{{ addslashes($metodo->title) }}')" title="Eliminar" style="color:#e53e3e;">🗑️</button>
+                            @endif
+                        </td>
                     </tr>
                 @endforeach
             </tbody>
@@ -190,5 +255,29 @@ document.getElementById('filtro-subtema').addEventListener('change', function() 
     if (subtemaId) params.set('subtema_id', subtemaId);
     window.location.href = baseUrl + (params.toString() ? '?' + params.toString() : '');
 });
+
+function eliminarMetodo(id, titulo) {
+    if (confirm('¿Estás seguro de que quieres eliminar el método "' + titulo + '"?\n\nEsta acción no se puede deshacer.')) {
+        fetch('{{ url("metodos") }}/' + id, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al eliminar el método');
+        });
+    }
+}
 </script>
 @endsection

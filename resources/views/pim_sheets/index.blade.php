@@ -161,8 +161,20 @@
         background-color: #bee3f8;
     }
 
-    .btn-action.download:hover {
-        background-color: #c6f6d5;
+    .btn-action.download-tex {
+        color: #059669;
+        font-weight: 700;
+        font-size: 0.85rem;
+    }
+
+    .btn-action.download-tex:hover {
+        background-color: #d1fae5;
+    }
+
+    .btn-action.download-pdf {
+        color: #e53e3e;
+        font-weight: 700;
+        font-size: 0.85rem;
     }
 
     .btn-action.download-pdf:hover {
@@ -446,8 +458,8 @@
                         <td>{{ $sheet->tema->tema ?? '-' }}</td>
                         <td class="actions-cell">
                             <a href="{{ route('pim-sheets.show', ['id' => $sheet->id]) }}" class="btn-action view" title="Ver hoja">👁️</a>
-                            <a href="{{ route('pim-sheets.download', ['id' => $sheet->id]) }}" class="btn-action download" title="Descargar TEX+IMG (ZIP)">⤓</a>
-                            <a href="{{ route('pim-sheets.download-pdf', ['id' => $sheet->id]) }}" class="btn-action download-pdf" title="Descargar PDF" style="color: #e53e3e; font-weight: bold;">PDF</a>
+                            <a href="{{ route('pim-sheets.download', ['id' => $sheet->id]) }}" class="btn-action download-tex" title="Descargar TEX+IMG (ZIP)">TEX⤓</a>
+                            <a href="{{ route('pim-sheets.download-pdf', ['id' => $sheet->id]) }}" class="btn-action download-pdf" title="Descargar PDF">PDF⤓</a>
                             @auth
                                 @if(Auth::user()->isAdmin())
                                     <button class="btn-action btn-delete" onclick="eliminarHoja({{ $sheet->id }}, '{{ addslashes($sheet->title) }}')" title="Eliminar hoja">🗑️</button>

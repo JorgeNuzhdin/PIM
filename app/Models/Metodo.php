@@ -10,7 +10,7 @@ class Metodo extends Model
     protected $table = 'metodos';
     public $timestamps = false;
 
-    protected $fillable = ['title', 'method_tex', 'method_html', 'subtema_ids', 'tema_id', 'user_id'];
+    protected $fillable = ['title', 'method_tex', 'subtema_ids', 'tema_id', 'user_id'];
 
     public function tema()
     {
@@ -46,6 +46,6 @@ class Metodo extends Model
         if ($this->method_tex) {
             return LatexHelper::toHtml($this->method_tex);
         }
-        return $this->method_html ? trim($this->method_html) : '';
+        return '';
     }
 }

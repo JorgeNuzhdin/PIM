@@ -28,4 +28,9 @@ class SchoolYearHelper
     {
         return self::$years;
     }
+
+    public static function getYearIndex($name)
+    {
+        return array_search($name, self::$years) ?: null;
+    }
 }

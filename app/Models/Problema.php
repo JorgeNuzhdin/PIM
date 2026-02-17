@@ -18,10 +18,8 @@ class Problema extends Model
         'school_year',
         'title',
         'problem_tex',
-        'problem_html',
         'hints',
         'solution_tex',
-        'solution_html',
         'comments',
         'source',
         'packages',
@@ -54,22 +52,19 @@ class Problema extends Model
     }
  
     public function getProblemHtmlProcessedAttribute()
-{
-    
-    if ($this->problem_tex) {
-        return LatexHelper::toHtml($this->problem_tex);
+    {
+        if ($this->problem_tex) {
+            return LatexHelper::toHtml($this->problem_tex);
+        }
+        return '';
     }
-    // Fallback a HTML si no hay LaTeX
-    return $this->problem_html ? trim($this->problem_html) : '';
-}
 
-public function getSolutionHtmlProcessedAttribute()
-{
-    if ($this->solution_tex) {
-        return LatexHelper::toHtml($this->solution_tex);
+    public function getSolutionHtmlProcessedAttribute()
+    {
+        if ($this->solution_tex) {
+            return LatexHelper::toHtml($this->solution_tex);
+        }
+        return '';
     }
-    // Fallback a HTML si no hay LaTeX
-    return $this->solution_html ? trim($this->solution_html) : '';
-}
 }
 
