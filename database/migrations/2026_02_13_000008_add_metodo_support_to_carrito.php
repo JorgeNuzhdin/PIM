@@ -9,31 +9,33 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // 1. Buscar y eliminar FK de problema_id (nombre puede variar)
-        $fkName = DB::selectOne("
+        // 1. Eliminar TODAS las FKs de la tabla (el unique index puede respaldar varias)
+        $fks = DB::select("
             SELECT CONSTRAINT_NAME
-            FROM information_schema.KEY_COLUMN_USAGE
+            FROM information_schema.TABLE_CONSTRAINTS
             WHERE TABLE_SCHEMA = DATABASE()
               AND TABLE_NAME = 'carrito'
-              AND COLUMN_NAME = 'problema_id'
-              AND REFERENCED_TABLE_NAME IS NOT NULL
+              AND CONSTRAINT_TYPE = 'FOREIGN KEY'
         ");
-        if ($fkName) {
-            DB::statement("ALTER TABLE carrito DROP FOREIGN KEY `{$fkName->CONSTRAINT_NAME}`");
+        foreach ($fks as $fk) {
+            DB::statement("ALTER TABLE carrito DROP FOREIGN KEY `{$fk->CONSTRAINT_NAME}`");
         }
 
         // 2. Eliminar unique constraint existente
-        Schema::table('carrito', function (Blueprint $table) {
-            $table->dropUnique('carrito_user_id_problema_id_unique');
-        });
+        DB::statement("ALTER TABLE carrito DROP INDEX `carrito_user_id_problema_id_unique`");
 
-        // 3. Hacer problema_id nullable via SQL directo
+        // 3. Hacer problema_id nullable
         DB::statement('ALTER TABLE carrito MODIFY problema_id BIGINT UNSIGNED NULL');
 
-        // 4. Re-agregar FK de problema_id (sin unique) + agregar metodo_id y indices
+        // 4. Agregar metodo_id
         Schema::table('carrito', function (Blueprint $table) {
-            $table->foreign('problema_id')->references('id')->on('pim_problems')->onDelete('cascade');
             $table->unsignedBigInteger('metodo_id')->nullable()->after('problema_id');
+        });
+
+        // 5. Re-agregar FKs e indices
+        Schema::table('carrito', function (Blueprint $table) {
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('problema_id')->references('id')->on('pim_problems')->onDelete('cascade');
             $table->foreign('metodo_id')->references('id')->on('metodos')->onDelete('cascade');
             $table->index(['user_id', 'problema_id']);
             $table->index(['user_id', 'metodo_id']);
