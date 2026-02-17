@@ -325,7 +325,12 @@
 
             <div class="form-group">
                 <label for="tex_sols">Archivo TEX <span class="required">*</span></label>
-                <input type="file" id="tex_sols" name="tex_sols" accept=".tex,.txt" required>
+                <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                    <input type="file" id="tex_sols" name="tex_sols" accept=".tex,.txt" required>
+                    <a href="/tex/plantilla_hoja.tex" download style="background:#4299e1;color:white;padding:0.4rem 0.8rem;border-radius:4px;font-size:0.875rem;text-decoration:none;font-weight:600;white-space:nowrap;">
+                        📥 Descargar plantilla
+                    </a>
+                </div>
                 <small>Archivo LaTeX de la hoja de problemas (máx. 10MB)</small>
             </div>
 

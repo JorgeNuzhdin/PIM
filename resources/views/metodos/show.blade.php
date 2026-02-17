@@ -90,6 +90,27 @@
         font-size: 0.9rem;
         margin-top: 0.5rem;
     }
+
+    .btn-carrito-show {
+        background: none;
+        border: 2px solid #cbd5e0;
+        border-radius: 8px;
+        padding: 0.4rem 0.8rem;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-carrito-show:hover {
+        border-color: #48bb78;
+        background: #f0fff4;
+    }
+
+    .btn-carrito-show.en-carrito {
+        background: #48bb78;
+        border-color: #48bb78;
+        color: white;
+    }
 </style>
 @endsection
 
@@ -101,6 +122,7 @@
         <div class="metodo-title-row">
             <h1>{{ $metodo->title }}</h1>
             @auth
+                <button class="btn-carrito-show" id="btn-carrito-metodo" data-metodo-id="{{ $metodo->id }}" onclick="toggleCarritoMetodo({{ $metodo->id }}, this)" title="Añadir al carrito">🛒</button>
                 @if(Auth::user()->isAdmin() || (Auth::user()->canEditProblemas() && $metodo->user_id === Auth::id()))
                     <a href="{{ route('metodos.edit', $metodo->id) }}" class="edit-icon" title="Editar método">&#9998;</a>
                 @endif
@@ -123,3 +145,53 @@
     </div>
 </div>
 @endsection
+
+@auth
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('{{ route("carrito.count") }}')
+        .then(r => r.json())
+        .then(data => {
+            if (data.metodo_ids && data.metodo_ids.includes({{ $metodo->id }})) {
+                const btn = document.getElementById('btn-carrito-metodo');
+                if (btn) {
+                    btn.classList.add('en-carrito');
+                    btn.title = 'Quitar del carrito';
+                }
+            }
+            const countEl = document.getElementById('carrito-count');
+            if (countEl) countEl.textContent = data.count;
+        })
+        .catch(err => console.error('Error:', err));
+});
+
+function toggleCarritoMetodo(metodoId, button) {
+    fetch('{{ route("carrito.toggle") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ metodo_id: metodoId })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'added') {
+            button.classList.add('en-carrito');
+            button.title = 'Quitar del carrito';
+        } else if (data.status === 'removed') {
+            button.classList.remove('en-carrito');
+            button.title = 'Añadir al carrito';
+        }
+        const countEl = document.getElementById('carrito-count');
+        if (countEl) countEl.textContent = data.count;
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        alert('Error al actualizar el carrito');
+    });
+}
+</script>
+@endsection
+@endauth

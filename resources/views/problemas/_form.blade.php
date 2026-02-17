@@ -3,18 +3,21 @@
 <div class="form-group">
     <label>📄 Cargar desde archivo .tex (opcional)</label>
     <div class="tex-upload-container">
-        <input type="file" 
-               id="tex-file" 
-               accept=".tex" 
+        <input type="file"
+               id="tex-file"
+               accept=".tex"
                onchange="procesarArchivoTex(this)">
-        <button type="button" 
-                class="btn-secondary btn-limpiar" 
+        <button type="button"
+                class="btn-secondary btn-limpiar"
                 onclick="limpiarFormulario()">
             🔄 Limpiar
         </button>
+        <a href="/tex/plantilla.tex" download class="btn-secondary" style="text-decoration:none; display:inline-block; padding:0.4rem 0.8rem; border-radius:4px; font-size:0.875rem;">
+            📥 Descargar plantilla
+        </a>
     </div>
     <small style="color: #718096; display: block; margin-top: 0.5rem;">
-            El archivo debe contener la estructura estándar con \temas{}, \dificultad{},\fuente{},\curso{}, \comentarios{},ejer,pistas, proof
+            El archivo debe contener la estructura estándar: \title{}, \temas{}, \dificultad{}, \fuente{}, \curso{}, \comentarios{}, \begin{ejer} \end{ejer}, \begin{pistas} \end{pistas}, \begin{proof} \end{proof}
         </small>
 </div>
 
