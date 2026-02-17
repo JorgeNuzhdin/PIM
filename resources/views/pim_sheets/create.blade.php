@@ -552,7 +552,7 @@
         if (!preambleText || !preambleText.trim()) return [];
 
         const methods = [];
-        const sectionRegex = /\\section\*?\{([^}]+)\}/g;
+        const sectionRegex = /\\subsection\*?\{([^}]+)\}/g;
         const matches = [];
         let m;
 
