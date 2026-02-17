@@ -9,10 +9,18 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // 1. Eliminar FK de problema_id (necesario para poder eliminar el unique index)
-        Schema::table('carrito', function (Blueprint $table) {
-            $table->dropForeign(['problema_id']);
-        });
+        // 1. Buscar y eliminar FK de problema_id (nombre puede variar)
+        $fkName = DB::selectOne("
+            SELECT CONSTRAINT_NAME
+            FROM information_schema.KEY_COLUMN_USAGE
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = 'carrito'
+              AND COLUMN_NAME = 'problema_id'
+              AND REFERENCED_TABLE_NAME IS NOT NULL
+        ");
+        if ($fkName) {
+            DB::statement("ALTER TABLE carrito DROP FOREIGN KEY `{$fkName->CONSTRAINT_NAME}`");
+        }
 
         // 2. Eliminar unique constraint existente
         Schema::table('carrito', function (Blueprint $table) {
