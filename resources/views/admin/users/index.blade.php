@@ -57,7 +57,11 @@
                     <th>Email</th>
                     <th>Fecha registro</th>
                     <th>Rol</th>
-                    <th>Acciones</th>
+                    <th>Acciones
+                        <button id="btn-enable-delete" onclick="toggleDeleteMode()" title="Habilitar eliminación de usuarios"
+                                style="background:none;border:none;cursor:pointer;font-size:1.1rem;margin-left:0.5rem;opacity:0.4;"
+                                title="Activar modo eliminación">🗑️</button>
+                    </th>
                 </tr>
             </thead>
             <tbody>
@@ -81,6 +85,15 @@
                                     <option value="editor" {{ $user->rol == 'editor' ? 'selected' : '' }}>Editor</option>
                                     <option value="admin" {{ $user->rol == 'admin' ? 'selected' : '' }}>Admin</option>
                                 </select>
+                            </form>
+                            <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="delete-user-form" style="display:none;margin-top:0.25rem;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn-delete-user"
+                                        onclick="return confirm('¿Eliminar al usuario {{ addslashes($user->name) }}? Esta acción no se puede deshacer.')"
+                                        style="background:#dc3545;color:white;border:none;padding:0.25rem 0.5rem;border-radius:4px;cursor:pointer;font-size:0.8rem;">
+                                    🗑️ Eliminar
+                                </button>
                             </form>
                         </td>
                     </tr>
@@ -297,11 +310,30 @@
     .filters-form {
         flex-direction: column;
     }
-    
+
     .filter-group input,
     .filter-group select {
         min-width: 100%;
     }
 }
+
+#btn-enable-delete.active {
+    opacity: 1;
+    background: #dc354520 !important;
+    border-radius: 4px;
+    padding: 2px 4px;
+}
 </style>
+<script>
+let deleteMode = false;
+function toggleDeleteMode() {
+    deleteMode = !deleteMode;
+    const btn = document.getElementById('btn-enable-delete');
+    btn.classList.toggle('active', deleteMode);
+    btn.title = deleteMode ? 'Desactivar modo eliminación' : 'Activar modo eliminación';
+    document.querySelectorAll('.delete-user-form').forEach(f => {
+        f.style.display = deleteMode ? 'block' : 'none';
+    });
+}
+</script>
 @endsection

@@ -43,4 +43,16 @@ class AdminUserController extends Controller
 
         return back()->with('success', 'Rol actualizado correctamente.');
     }
+
+    public function destroy(User $user)
+    {
+        // Evitar que un admin se elimine a sí mismo
+        if ($user->id === auth()->id()) {
+            return back()->with('error', 'No puedes eliminar tu propia cuenta.');
+        }
+
+        $user->delete();
+
+        return back()->with('success', 'Usuario eliminado correctamente.');
+    }
 }

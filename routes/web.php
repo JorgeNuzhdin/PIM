@@ -71,11 +71,16 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
     Route::patch('/users/{user}/rol', [AdminUserController::class, 'updateRol'])->name('users.updateRol');
+    Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
 
     // Reparar LaTeX
     Route::get('/fix-latex', [App\Http\Controllers\FixLatexController::class, 'index'])->name('fix-latex');
     Route::post('/fix-latex/scan', [App\Http\Controllers\FixLatexController::class, 'scan'])->name('fix-latex.scan');
     Route::post('/fix-latex/fix', [App\Http\Controllers\FixLatexController::class, 'fix'])->name('fix-latex.fix');
+
+    // Configuración general
+    Route::get('/settings', [App\Http\Controllers\AdminSettingsController::class, 'index'])->name('settings');
+    Route::post('/settings', [App\Http\Controllers\AdminSettingsController::class, 'update'])->name('settings.update');
 });
 
 // Rutas de Hojas de Problemas (PimSheets)
@@ -88,8 +93,12 @@ Route::middleware('auth')->prefix('pim-sheets')->name('pim-sheets.')->group(func
         Route::post('/', [PimSheetController::class, 'store'])->name('store');
     });
 
-    // Solo administradores pueden eliminar sheets
-    Route::delete('/{id}', [PimSheetController::class, 'destroy'])->name('destroy');
+    // Solo administradores pueden editar/eliminar sheets
+    Route::middleware('admin')->group(function () {
+        Route::get('/{id}/edit', [PimSheetController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [PimSheetController::class, 'update'])->name('update');
+        Route::delete('/{id}', [PimSheetController::class, 'destroy'])->name('destroy');
+    });
 
     // Ver hoja (debe ir después de /create para evitar conflictos)
     Route::get('/{id}', [PimSheetController::class, 'show'])->name('show');

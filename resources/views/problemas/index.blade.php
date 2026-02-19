@@ -910,7 +910,7 @@
 
 @if($problemas->count() > 0)
     @foreach($problemas as $problema)
-        <div class="problema-card">
+        <div class="problema-card" id="problema-{{ $problema->id }}">
             <div class="problema-header">
                 {{-- Nivel de dificultad - FUERA de problema-info --}}
                 @if($problema->difficulty)
@@ -954,7 +954,7 @@
                 <div class="problema-actions">
                     @auth
                        @if(Auth::user()->canEditProblemas())
-                            <a href="{{ route('problemas.edit', ['id' => $problema->id, 'return' => urlencode(request()->fullUrl())]) }}" class="btn-icon btn-edit" title="Editar problema">
+                            <a href="{{ route('problemas.edit', ['id' => $problema->id, 'return' => urlencode(request()->fullUrlWithQuery(['scrollTo' => $problema->id]))]) }}" class="btn-icon btn-edit" title="Editar problema">
                                 &#9998;
                             </a>
                             
@@ -1193,6 +1193,20 @@ document.addEventListener('click', function(event) {
 
 // Actualizar texto al cargar
 document.addEventListener('DOMContentLoaded', updateMostrarText);
+
+// Scroll al problema recién editado
+document.addEventListener('DOMContentLoaded', function() {
+    const params = new URLSearchParams(window.location.search);
+    const scrollTo = params.get('scrollTo');
+    if (scrollTo) {
+        const el = document.getElementById('problema-' + scrollTo);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.style.outline = '3px solid #4299e1';
+            setTimeout(() => { el.style.outline = ''; }, 2500);
+        }
+    }
+});
 
 </script>
 @endsection

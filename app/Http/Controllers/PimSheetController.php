@@ -10,6 +10,7 @@ use App\Models\Figure;
 use App\Models\Metodo;
 use App\Models\Subtema;
 use App\Helpers\LatexHelper;
+use App\Helpers\AccessHelper;
 use App\Services\LatexCompilerService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -25,6 +26,12 @@ class PimSheetController extends Controller
     public function index(Request $request)
     {
         $query = PimSheet::with('tema');
+
+        // Restricción para usuarios básicos (rol 'user')
+        $allowedYears = AccessHelper::allowedYears();
+        if ($allowedYears !== null) {
+            $query->whereIn('date_year', $allowedYears);
+        }
 
         // Búsqueda por título
         if ($request->filled('search')) {
@@ -622,6 +629,42 @@ class PimSheetController extends Controller
         }
 
         return view('pim_sheets.show', compact('sheet', 'preambleHtml', 'problemas', 'mostrarArray'));
+    }
+
+    /**
+     * Formulario para editar metadatos de una hoja (solo admin)
+     */
+    public function edit($id)
+    {
+        $sheet = PimSheet::findOrFail($id);
+        $temas = Tema::orderBy('tema')->get();
+        return view('pim_sheets.edit', compact('sheet', 'temas'));
+    }
+
+    /**
+     * Guardar edición de metadatos (solo admin)
+     */
+    public function update(Request $request, $id)
+    {
+        $sheet = PimSheet::findOrFail($id);
+
+        $request->validate([
+            'title'       => 'required|string|max:255',
+            'date_year'   => 'required|integer|min:1900|max:2100',
+            'planet'      => 'nullable|string|max:255',
+            'institution' => 'required|string|max:256',
+            'theme'       => 'required|exists:temas,id',
+        ]);
+
+        $sheet->update([
+            'title'       => $request->title,
+            'date_year'   => $request->date_year,
+            'planet'      => $request->planet,
+            'institution' => $request->institution,
+            'theme'       => $request->theme,
+        ]);
+
+        return redirect()->route('pim-sheets.index')->with('success', 'Hoja actualizada correctamente.');
     }
 
     /**

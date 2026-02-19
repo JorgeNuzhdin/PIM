@@ -16,7 +16,7 @@
             📥 Descargar plantilla
         </a>
     </div>
-    <small style="color: #718096; display: block; margin-top: 0.5rem;">
+    <small class="tex2jax_ignore" style="color: #718096; display: block; margin-top: 0.5rem;">
             El archivo debe contener la estructura estándar: \title{}, \temas{}, \dificultad{}, \fuente{}, \curso{}, \comentarios{}, \begin{ejer} \end{ejer}, \begin{pistas} \end{pistas}, \begin{proof} \end{proof}
         </small>
 </div>

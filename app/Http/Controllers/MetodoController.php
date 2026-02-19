@@ -6,6 +6,7 @@ use App\Models\Metodo;
 use App\Models\Tema;
 use App\Models\Subtema;
 use App\Models\User;
+use App\Helpers\AccessHelper;
 use App\Services\LatexCompilerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,6 +22,11 @@ class MetodoController extends Controller
 
     public function index(Request $request)
     {
+        // Usuarios básicos no tienen acceso a métodos
+        if (AccessHelper::isRestricted()) {
+            abort(403, 'Los métodos no están disponibles para tu tipo de cuenta.');
+        }
+
         $temas = Tema::all();
 
         $query = Metodo::with(['tema']);
@@ -63,6 +69,10 @@ class MetodoController extends Controller
 
     public function show($id)
     {
+        if (AccessHelper::isRestricted()) {
+            abort(403, 'Los métodos no están disponibles para tu tipo de cuenta.');
+        }
+
         $metodo = Metodo::with(['tema', 'user'])->findOrFail($id);
 
         return view('metodos.show', compact('metodo'));
@@ -170,6 +180,7 @@ class MetodoController extends Controller
 
     public function downloadTex($id)
     {
+        if (AccessHelper::isRestricted()) abort(403);
         $metodo = Metodo::findOrFail($id);
 
         $filename = preg_replace('/[^a-zA-Z0-9_\-áéíóúñÁÉÍÓÚÑ ]/u', '', $metodo->title);
@@ -182,6 +193,7 @@ class MetodoController extends Controller
 
     public function downloadPdf($id)
     {
+        if (AccessHelper::isRestricted()) abort(403);
         $metodo = Metodo::findOrFail($id);
 
         $texDocument = "\\documentclass[12pt]{article}\n"

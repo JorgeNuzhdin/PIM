@@ -342,18 +342,20 @@ window.MathJax = {
                 <a href="{{ route('problemas.index') }}">Problemas</a>
             @endauth
 
-            {{-- Métodos: link for all, dropdown for editors --}}
+            {{-- Métodos: visible solo si no es usuario básico --}}
             @auth
-                @if(Auth::user()->canEditProblemas())
-                    <div class="nav-dropdown">
-                        <a href="{{ route('metodos.index') }}" class="nav-dropdown-btn">Métodos ▾</a>
-                        <div class="nav-dropdown-content">
-                            <a href="{{ route('metodos.index') }}">Ver métodos</a>
-                            <a href="{{ route('metodos.create') }}">Añadir método</a>
+                @if(Auth::user()->rol !== 'user')
+                    @if(Auth::user()->canEditProblemas())
+                        <div class="nav-dropdown">
+                            <a href="{{ route('metodos.index') }}" class="nav-dropdown-btn">Métodos ▾</a>
+                            <div class="nav-dropdown-content">
+                                <a href="{{ route('metodos.index') }}">Ver métodos</a>
+                                <a href="{{ route('metodos.create') }}">Añadir método</a>
+                            </div>
                         </div>
-                    </div>
-                @else
-                    <a href="{{ route('metodos.index') }}">Métodos</a>
+                    @else
+                        <a href="{{ route('metodos.index') }}">Métodos</a>
+                    @endif
                 @endif
             @else
                 <a href="{{ route('metodos.index') }}">Métodos</a>
@@ -400,6 +402,7 @@ window.MathJax = {
                     <div class="user-dropdown-content">
                         @if(Auth::user()->rol === 'admin')
                             <a href="{{ route('admin.users.index') }}">Administrar usuarios</a>
+                            <a href="{{ route('admin.settings') }}">⚙️ Configuración</a>
                             @if(Auth::user()->name === 'Georgy Nuzhdin')
                                 <a href="{{ route('admin.fix-latex') }}">Reparar LaTeX</a>
                             @endif

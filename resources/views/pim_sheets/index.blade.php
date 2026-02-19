@@ -462,6 +462,7 @@
                             <a href="{{ route('pim-sheets.download-pdf', ['id' => $sheet->id]) }}" class="btn-action download-pdf" title="Descargar PDF">PDF⤓</a>
                             @auth
                                 @if(Auth::user()->isAdmin())
+                                    <a href="{{ route('pim-sheets.edit', ['id' => $sheet->id]) }}" class="btn-action" style="background:#4299e1;color:white;" title="Editar metadatos">✏️</a>
                                     <button class="btn-action btn-delete" onclick="eliminarHoja({{ $sheet->id }}, '{{ addslashes($sheet->title) }}')" title="Eliminar hoja">🗑️</button>
                                 @endif
                             @endauth

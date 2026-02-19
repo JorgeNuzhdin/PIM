@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Auth;
 
 use App\Helpers\LatexHelper;
 use App\Helpers\TagHelper;
+use App\Helpers\AccessHelper;
 
 
 
@@ -167,10 +168,10 @@ class ProblemaController extends Controller
                 $schoolYears = SchoolYearHelper::getAllYears();
                 $figuras = Figure::where('problem_id', $id)->get();
 
-                // Lista de proponentes para admin
+                // Lista de proponentes para admin (solo admins y editores pueden proponer)
                 $proponents = [];
                 if (Auth::user()->isAdmin()) {
-                    $proponents = \App\Models\User::orderBy('name')->get();
+                    $proponents = \App\Models\User::whereIn('rol', ['admin', 'editor'])->orderBy('name')->get();
                 }
 
                 // URL de retorno (para volver a la misma página/filtros)
@@ -324,7 +325,17 @@ class ProblemaController extends Controller
     public function index(Request $request)
 {
     $query = Problema::query();
-    
+
+    // Restricción para usuarios básicos (rol 'user'): solo problemas usados en hojas accesibles
+    $allowedProblemIds = AccessHelper::allowedProblemIds();
+    if ($allowedProblemIds !== null) {
+        if (empty($allowedProblemIds)) {
+            $query->whereRaw('1 = 0');
+        } else {
+            $query->whereIn('id', $allowedProblemIds);
+        }
+    }
+
     // Filtro por texto (busca en ID, problema, solución y fuente)
     if ($request->filled('buscar')) {
         $buscar = $request->buscar;
