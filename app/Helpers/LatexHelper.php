@@ -320,8 +320,8 @@ private static function getImSimple($filename)
                 $box = preg_replace('/^\\\\begin\{minipage\}(\[[^\]]*\])*\{[^}]*\}\s*/s', '', $box);
                 // Eliminar \end{minipage} al final
                 $box = preg_replace('/\\\\end\{minipage\}\s*$/s', '', $box);
-                // Eliminar líneas que solo contienen un comando de espaciado como [0.5em]
-                $box = preg_replace('/^[ \t]*\[[ \t]*[\d.]+[ \t]*(em|pt|cm|mm|ex)[ \t]*\][ \t]*$/m', '', $box);
+                // Eliminar [0.5em], [1cm], [3pt]... dondequiera que aparezcan (espaciados LaTeX)
+                $box = preg_replace('/\[[\d.]+\s*(em|pt|cm|mm|ex|in|pc|bp|sp)\]/', '', $box);
                 $processedBoxes[] = trim($box);
             }
 
