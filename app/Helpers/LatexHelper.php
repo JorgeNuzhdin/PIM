@@ -245,6 +245,105 @@ private static function getImSimple($filename)
 }
 
 
+    /**
+     * Procesa grupos consecutivos de \fbox{...} y los convierte en divs con borde.
+     * Si hay varios \fbox seguidos (separados solo por espacios/saltos de línea),
+     * los agrupa en un contenedor flex para mostrarlos en columnas.
+     * Soporta contenido con o sin \begin{minipage}...\end{minipage}.
+     */
+    private static function processConsecutiveFboxes(string $t): string
+    {
+        $output = '';
+        $pos = 0;
+        $len = strlen($t);
+
+        while ($pos < $len) {
+            $fboxPos = strpos($t, '\fbox{', $pos);
+            if ($fboxPos === false) {
+                $output .= substr($t, $pos);
+                break;
+            }
+
+            // Texto antes del primer \fbox
+            $output .= substr($t, $pos, $fboxPos - $pos);
+
+            // Recoger todos los \fbox{} consecutivos (separados solo por espacios/newlines)
+            $boxes = [];
+            $curPos = $fboxPos;
+
+            while ($curPos < $len && substr($t, $curPos, 6) === '\fbox{') {
+                // Extraer contenido entre llaves contando llaves anidadas
+                $braceStart = $curPos + 5; // posición de la {
+                $braceCount = 1;
+                $i = $braceStart + 1;
+                while ($i < $len && $braceCount > 0) {
+                    if ($t[$i] === '{') $braceCount++;
+                    elseif ($t[$i] === '}') $braceCount--;
+                    $i++;
+                }
+                // $i apunta al carácter después del }
+                $boxContent = substr($t, $braceStart + 1, $i - $braceStart - 2);
+                $boxes[] = $boxContent;
+                $curPos = $i;
+
+                // Saltar espacios/newlines para ver si hay otro \fbox seguido
+                while ($curPos < $len && ctype_space($t[$curPos])) {
+                    $curPos++;
+                }
+            }
+
+            // Solo procesar como cajas con borde si al menos uno contiene \begin{minipage}
+            // o si hay más de uno (varios \fbox seguidos).
+            // Si es un único \fbox{texto corto} sin minipage, dejarlo sin procesar
+            // (MathJax puede estar manejándolo dentro de modo matemático).
+            $hasMinipages = false;
+            foreach ($boxes as $box) {
+                if (strpos($box, '\begin{minipage}') !== false) {
+                    $hasMinipages = true;
+                    break;
+                }
+            }
+            $isMultiple = count($boxes) > 1;
+
+            if (!$hasMinipages && !$isMultiple) {
+                // Devolver el \fbox{} original sin procesar
+                $output .= '\fbox{' . $boxes[0] . '}';
+                $pos = $curPos;
+                continue;
+            }
+
+            // Procesar el contenido de cada caja
+            $processedBoxes = [];
+            foreach ($boxes as $box) {
+                $box = trim($box);
+                // Eliminar \begin{minipage}[opt][opt]{width} (con 0, 1 o 2 args opcionales)
+                $box = preg_replace('/^\\\\begin\{minipage\}(\[[^\]]*\])*\{[^}]*\}\s*/s', '', $box);
+                // Eliminar \end{minipage} al final
+                $box = preg_replace('/\\\\end\{minipage\}\s*$/s', '', $box);
+                // Eliminar líneas que solo contienen un comando de espaciado como [0.5em]
+                $box = preg_replace('/^[ \t]*\[[ \t]*[\d.]+[ \t]*(em|pt|cm|mm|ex)[ \t]*\][ \t]*$/m', '', $box);
+                $processedBoxes[] = trim($box);
+            }
+
+            // Renderizar
+            $boxStyle = 'border: 1px solid #333; padding: 0.75rem; box-sizing: border-box;';
+            if (count($processedBoxes) === 1) {
+                $output .= '<div style="display:inline-block; ' . $boxStyle . ' margin: 0.25rem;">'
+                         . $processedBoxes[0] . '</div>';
+            } else {
+                $output .= '<div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin:0.5rem 0;">';
+                foreach ($processedBoxes as $box) {
+                    $output .= '<div style="' . $boxStyle . ' flex:1; min-width:100px;">' . $box . '</div>';
+                }
+                $output .= '</div>';
+            }
+
+            $pos = $curPos;
+        }
+
+        return $output;
+    }
+
     public static function toHtml($t)
     {
         if ($t == '') return '';
@@ -710,8 +809,11 @@ while ($li['inside'] != '') {
     $li = self::fromAtoB('\begin{itemize}', '\end{itemize}', $t);
 }
 
+// Procesar \fbox{...} antes de eliminar minipages
+$t = self::processConsecutiveFboxes($t);
+
 // Entorno minipage (eliminar el entorno pero mantener contenido)
-$t = preg_replace('/\\\\begin\{minipage\}(\[[^\]]*\])?\{[^}]*\}/', '', $t);
+$t = preg_replace('/\\\\begin\{minipage\}(\[[^\]]*\])*\{[^}]*\}/', '', $t);
 $t = str_replace('\end{minipage}', '', $t);
 
 // Entornos de alineación que eliminamos pero mantenemos contenido
