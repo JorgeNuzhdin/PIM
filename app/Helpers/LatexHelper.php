@@ -631,7 +631,7 @@ $t = preg_replace('/\\\\definecolor\{[^}]+\}\{[^}]+\}\{[^}]+\}/', '', $t);
         }
 
 
-        $t = str_replace('\par', '<br>', $t);
+        $t = preg_replace('/\\\\par\b/', '<br>', $t);  // \par → <br>, pero NO \parbox
         $t = str_replace('*\;', '*', $t);
 
         // Solución
