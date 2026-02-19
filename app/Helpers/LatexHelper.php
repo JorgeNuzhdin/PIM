@@ -455,6 +455,8 @@ private static function getImSimple($filename)
         $t = str_replace('\modd', '\pmod', $t);        // modular (MathJax usa pmod)
         $t = str_replace('\mcd', '\operatorname{mcd}', $t);  // \mcd → operatorname para MathJax
         $t = str_replace('\mcm', '\operatorname{mcm}', $t);  // \mcm → operatorname para MathJax
+        $t = preg_replace('/\\\\arcsen\b/', '\arcsin', $t);  // \arcsen → \arcsin
+        $t = preg_replace('/\\\\sen\b/', '\sin', $t);        // \sen → \sin
 
         // Eliminar comandos LaTeX que no tienen equivalente en HTML
         // Comandos de espaciado vertical

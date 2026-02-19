@@ -19,7 +19,8 @@ window.MathJax = {
         packages: {'[+]': ['color']}
     },
     options: {
-        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+        ignoreHtmlClass: 'tex2jax_ignore'
     },
     startup: {
         pageReady: () => {

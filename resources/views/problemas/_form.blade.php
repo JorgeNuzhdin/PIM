@@ -17,8 +17,12 @@
         </a>
     </div>
     <small class="tex2jax_ignore" style="color: #718096; display: block; margin-top: 0.5rem;">
-            El archivo debe contener la estructura estándar: \title{}, \temas{}, \dificultad{}, \fuente{}, \curso{}, \comentarios{}, \begin{ejer} \end{ejer}, \begin{pistas} \end{pistas}, \begin{proof} \end{proof}
-        </small>
+        El archivo debe contener la estructura estándar:
+        <code>\title{}</code>, <code>\temas{}</code>, <code>\dificultad{}</code>,
+        <code>\fuente{}</code>, <code>\curso{}</code>, <code>\comentarios{}</code>,
+        <code>\begin{ejer}...\end{ejer}</code>, <code>\begin{pistas}...\end{pistas}</code>,
+        <code>\begin{proof}...\end{proof}</code>
+    </small>
 </div>
 
 <div style="border-top: 2px solid #e2e8f0; margin: 2rem 0; padding-top: 2rem;"></div>
