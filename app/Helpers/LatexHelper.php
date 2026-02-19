@@ -246,6 +246,52 @@ private static function getImSimple($filename)
 
 
     /**
+     * Extrae el contenido del segundo argumento de \parbox[opts]{width}{content}.
+     * Salta args opcionales [...] y el primer {width}, devuelve lo que hay en {content}.
+     */
+    private static function stripParboxWrapper(string $box): string
+    {
+        $rest = ltrim($box);
+        if (!str_starts_with($rest, '\parbox')) return $box;
+        $rest = substr($rest, strlen('\parbox'));
+
+        // Saltar args opcionales [...]
+        while (preg_match('/^\s*\[/', $rest)) {
+            $rest = ltrim($rest);
+            $close = strpos($rest, ']');
+            if ($close !== false) {
+                $rest = substr($rest, $close + 1);
+            } else break;
+        }
+
+        // Saltar primer {width} contando llaves anidadas
+        $rest = ltrim($rest);
+        if (isset($rest[0]) && $rest[0] === '{') {
+            $count = 1; $i = 1; $len = strlen($rest);
+            while ($i < $len && $count > 0) {
+                if ($rest[$i] === '{') $count++;
+                elseif ($rest[$i] === '}') $count--;
+                $i++;
+            }
+            $rest = substr($rest, $i);
+        }
+
+        // Extraer contenido del segundo {content}
+        $rest = ltrim($rest);
+        if (isset($rest[0]) && $rest[0] === '{') {
+            $count = 1; $i = 1; $len = strlen($rest);
+            while ($i < $len && $count > 0) {
+                if ($rest[$i] === '{') $count++;
+                elseif ($rest[$i] === '}') $count--;
+                if ($count > 0) $i++;
+            }
+            return substr($rest, 1, $i - 1);
+        }
+
+        return $box;
+    }
+
+    /**
      * Procesa grupos consecutivos de \fbox{...} y los convierte en divs con borde.
      * Si hay varios \fbox seguidos (separados solo por espacios/saltos de línea),
      * los agrupa en un contenedor flex para mostrarlos en columnas.
@@ -293,19 +339,20 @@ private static function getImSimple($filename)
             }
 
             // Solo procesar como cajas con borde si al menos uno contiene \begin{minipage}
-            // o si hay más de uno (varios \fbox seguidos).
-            // Si es un único \fbox{texto corto} sin minipage, dejarlo sin procesar
+            // o \parbox, o si hay más de uno (varios \fbox seguidos).
+            // Si es un único \fbox{texto corto} sin wrapper, dejarlo sin procesar
             // (MathJax puede estar manejándolo dentro de modo matemático).
-            $hasMinipages = false;
+            $hasWrapper = false;
             foreach ($boxes as $box) {
-                if (strpos($box, '\begin{minipage}') !== false) {
-                    $hasMinipages = true;
+                if (strpos($box, '\begin{minipage}') !== false ||
+                    preg_match('/^\s*\\\\parbox/s', $box)) {
+                    $hasWrapper = true;
                     break;
                 }
             }
             $isMultiple = count($boxes) > 1;
 
-            if (!$hasMinipages && !$isMultiple) {
+            if (!$hasWrapper && !$isMultiple) {
                 // Devolver el \fbox{} original sin procesar
                 $output .= '\fbox{' . $boxes[0] . '}';
                 $pos = $curPos;
@@ -316,6 +363,10 @@ private static function getImSimple($filename)
             $processedBoxes = [];
             foreach ($boxes as $box) {
                 $box = trim($box);
+                // Eliminar \parbox[opts]{width}{ wrapper y extraer contenido del segundo {}
+                if (preg_match('/^\\\\parbox/s', $box)) {
+                    $box = self::stripParboxWrapper($box);
+                }
                 // Eliminar \begin{minipage}[opt][opt]{width} (con 0, 1 o 2 args opcionales)
                 $box = preg_replace('/^\\\\begin\{minipage\}(\[[^\]]*\])*\{[^}]*\}\s*/s', '', $box);
                 // Eliminar \end{minipage} al final
