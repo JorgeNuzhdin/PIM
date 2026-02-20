@@ -299,7 +299,13 @@
 
 @section('content')
 <div class="container">
-    <h1 style="margin-bottom: 1rem;">Editor de Tags</h1>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+        <h1 style="margin:0;">Editor de Tags</h1>
+        @if($isAdmin)
+        <button id="btn-enable-delete" onclick="toggleDeleteMode()" title="Activar modo eliminación"
+                style="background:none;border:none;cursor:pointer;font-size:1.2rem;opacity:0.4;">🗑️</button>
+        @endif
+    </div>
 
     <div class="stats">
         Total de tags: <strong>{{ $totalTags }}</strong>
@@ -431,10 +437,10 @@
                         <td class="count-cell">{{ $tag->count }}</td>
                         @if($isAdmin)
                         <td class="actions-cell">
-                            <button class="btn btn-primary btn-icon btn-edit" onclick="toggleEdit('{{ $rowId }}')" title="Editar">✏️</button>
+                            <button class="btn btn-primary btn-icon btn-edit" onclick="toggleEdit('{{ $rowId }}')" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" style="vertical-align:middle;"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
                             <button class="btn btn-success btn-icon btn-save" style="display: none;" onclick="saveTag('{{ $rowId }}')" title="Guardar">💾</button>
                             <button class="btn btn-secondary btn-icon btn-cancel" style="display: none;" onclick="cancelEdit('{{ $rowId }}')" title="Cancelar">✖️</button>
-                            <button class="btn btn-danger btn-icon btn-delete" onclick="confirmDelete('{{ $rowId }}', '{{ addslashes($tag->title) }}')" title="Borrar">🗑️</button>
+                            <button class="btn btn-danger btn-icon btn-delete btn-delete-item" onclick="confirmDelete('{{ $rowId }}', '{{ addslashes($tag->title) }}')" title="Borrar" style="display:none;">🗑️</button>
                         </td>
                         @endif
                     </tr>
@@ -468,6 +474,19 @@
 <script>
     let deleteRowId = null;
     let deleteTitle = null;
+    let deleteMode = false;
+
+    function toggleDeleteMode() {
+        deleteMode = !deleteMode;
+        const btn = document.getElementById('btn-enable-delete');
+        btn.style.opacity = deleteMode ? '1' : '0.4';
+        btn.style.background = deleteMode ? '#dc354520' : 'none';
+        btn.style.borderRadius = '4px';
+        btn.title = deleteMode ? 'Desactivar modo eliminación' : 'Activar modo eliminación';
+        document.querySelectorAll('.btn-delete-item').forEach(b => {
+            b.style.display = deleteMode ? 'inline-block' : 'none';
+        });
+    }
 
     // Ordenamiento de columnas
     document.querySelectorAll('th.sortable').forEach(th => {
@@ -507,7 +526,7 @@
         row.classList.remove('edit-mode');
 
         row.querySelector('.btn-edit').style.display = 'inline-block';
-        row.querySelector('.btn-delete').style.display = 'inline-block';
+        row.querySelector('.btn-delete').style.display = deleteMode ? 'inline-block' : 'none';
         row.querySelector('.btn-save').style.display = 'none';
         row.querySelector('.btn-cancel').style.display = 'none';
 

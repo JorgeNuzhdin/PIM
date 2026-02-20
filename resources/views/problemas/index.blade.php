@@ -605,7 +605,7 @@
 
 @section('content')
 <div class="container">
-   <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem;">
+   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
        <h1 style="margin:0;">Buscador de problemas</h1>
        @auth
            @if(Auth::user()->canEditProblemas())
