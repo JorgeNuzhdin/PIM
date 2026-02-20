@@ -596,7 +596,7 @@
 
     <div class="stats">
     Total de problemas en la base de datos: <strong>{{ $totalProblemas }}</strong>
-    @if(request()->hasAny(['buscar', 'tema_id', 'topic_title', 'source', 'proponent_id', 'difficulty_min', 'difficulty_max', 'school_year_min', 'school_year_max']))
+    @if(request()->hasAny(['buscar', 'tema_id', 'topic_title', 'source', 'proponent_id', 'solo_mios', 'difficulty_min', 'difficulty_max', 'school_year_min', 'school_year_max']))
         | Problemas encontrados: <strong style="color: #4299e1;">{{ $problemasEncontrados }}</strong>
     @endif
     | Mostrando en esta página: <strong>{{ $problemas->count() }}</strong>
@@ -748,68 +748,70 @@
                 </select>
             </div>
 
-            {{-- Filtro por proponente (solo editor/admin) --}}
-            @if(in_array(Auth::user()->rol, ['admin', 'editor']))
-            <div class="form-group">
-                <label for="proponent_id">Proponente</label>
-                <select name="proponent_id" id="proponent_id">
-                    <option value="">-- Todos los proponentes --</option>
-                    @foreach($proponents as $proponent)
-                        <option value="{{ $proponent->id }}" {{ request('proponent_id') == $proponent->id ? 'selected' : '' }}>
-                            {{ $proponent->name }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-            @endif
-
             {{-- Opciones a mostrar --}}
-<div class="form-group">
-    <label for="mostrar">Mostrar</label>
-    <div class="select-multiple-wrapper">
-        <button type="button" class="select-multiple-button" onclick="toggleMostrar(event)">
-            <span id="mostrar-text">Seleccionar opciones...</span>
-            <span>▼</span>
-        </button>
-        <div class="select-multiple-dropdown" id="mostrar-dropdown" style="display: none;">
-            @php
-                $mostrarArray = is_array(request('mostrar')) ? request('mostrar') : ['fuente', 'pistas', 'solucion', 'comentarios', 'year'];
-            @endphp
-            
-            <label class="checkbox-option">
-                <input type="checkbox" name="mostrar[]" value="fuente" {{ in_array('fuente', $mostrarArray) ? 'checked' : '' }} onchange="updateMostrarText()">
-                Fuente
-            </label>
-            <label class="checkbox-option">
-                <input type="checkbox" name="mostrar[]" value="pistas" {{ in_array('pistas', $mostrarArray) ? 'checked' : '' }} onchange="updateMostrarText()">
-                Pistas
-            </label>
-            <label class="checkbox-option">
-                <input type="checkbox" name="mostrar[]" value="solucion" {{ in_array('solucion', $mostrarArray) ? 'checked' : '' }} onchange="updateMostrarText()">
-                Solución
-            </label>
-            <label class="checkbox-option">
-                <input type="checkbox" name="mostrar[]" value="comentarios" {{ in_array('comentarios', $mostrarArray) ? 'checked' : '' }} onchange="updateMostrarText()">
-                Comentarios
-            </label>
-            <label class="checkbox-option">
-                <input type="checkbox" name="mostrar[]" value="year" {{ in_array('year', $mostrarArray) ? 'checked' : '' }} onchange="updateMostrarText()">
-                Año académico
-            </label>
-            <label class="checkbox-option">
-                <input type="checkbox" name="mostrar[]" value="proponente" {{ in_array('proponente', $mostrarArray) ? 'checked' : '' }} onchange="updateMostrarText()">
-                Proponente
-            </label>
-        </div>
-    </div>
-</div>
-          
+            <div class="form-group">
+                <label for="mostrar">Mostrar</label>
+                <div class="select-multiple-wrapper">
+                    <button type="button" class="select-multiple-button" onclick="toggleMostrar(event)">
+                        <span id="mostrar-text">Seleccionar opciones...</span>
+                        <span>▼</span>
+                    </button>
+                    <div class="select-multiple-dropdown" id="mostrar-dropdown" style="display: none;">
+                        @php
+                            $mostrarArray = is_array(request('mostrar')) ? request('mostrar') : ['fuente', 'pistas', 'solucion', 'comentarios', 'year'];
+                        @endphp
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="mostrar[]" value="fuente" {{ in_array('fuente', $mostrarArray) ? 'checked' : '' }} onchange="updateMostrarText()">
+                            Fuente
+                        </label>
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="mostrar[]" value="pistas" {{ in_array('pistas', $mostrarArray) ? 'checked' : '' }} onchange="updateMostrarText()">
+                            Pistas
+                        </label>
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="mostrar[]" value="solucion" {{ in_array('solucion', $mostrarArray) ? 'checked' : '' }} onchange="updateMostrarText()">
+                            Solución
+                        </label>
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="mostrar[]" value="comentarios" {{ in_array('comentarios', $mostrarArray) ? 'checked' : '' }} onchange="updateMostrarText()">
+                            Comentarios
+                        </label>
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="mostrar[]" value="year" {{ in_array('year', $mostrarArray) ? 'checked' : '' }} onchange="updateMostrarText()">
+                            Año académico
+                        </label>
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="mostrar[]" value="proponente" {{ in_array('proponente', $mostrarArray) ? 'checked' : '' }} onchange="updateMostrarText()">
+                            Proponente
+                        </label>
+                    </div>
+                </div>
+            </div>
 
-            {{-- Botones --}}
+            {{-- Celda vacía para completar fila (solo no-editors no la necesitan) --}}
+            @if(!in_array(Auth::user()->rol, ['admin', 'editor']))
             <div class="form-group form-buttons">
                 <button type="submit" class="btn">Filtrar</button>
                 <a href="{{ route('problemas.index') }}" class="btn btn-secondary">Limpiar</a>
             </div>
+            @endif
+
+            {{-- Checkbox solo mis problemas (solo editor/admin) --}}
+            @if(in_array(Auth::user()->rol, ['admin', 'editor']))
+            <div style="grid-column: 1 / -1; display: flex; justify-content: center; align-items: center; padding: 0.25rem 0;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500; color: #4a5568;">
+                    <input type="checkbox" name="solo_mios" value="1" {{ request('solo_mios') ? 'checked' : '' }}
+                           style="width: 1.1rem; height: 1.1rem; cursor: pointer;">
+                    Solo mis problemas
+                </label>
+            </div>
+
+            {{-- Botones (editors/admin: fila propia) --}}
+            <div style="grid-column: 1 / -1; display: flex; justify-content: center; gap: 0.75rem;">
+                <button type="submit" class="btn">Filtrar</button>
+                <a href="{{ route('problemas.index') }}" class="btn btn-secondary">Limpiar</a>
+            </div>
+            @endif
         </div>
     </form>
 </div>

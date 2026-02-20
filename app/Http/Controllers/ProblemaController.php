@@ -419,9 +419,11 @@ class ProblemaController extends Controller
         SourceHelper::applySourceFilterWithCommas($query, $request->source);
     }
 
-    // Filtro por proponente (proponent_id)
+    // Filtro por proponente
     if ($request->filled('proponent_id')) {
         $query->where('proponent_id', $request->proponent_id);
+    } elseif ($request->boolean('solo_mios') && in_array(Auth::user()->rol, ['admin', 'editor'])) {
+        $query->where('proponent_id', Auth::id());
     }
 
     // Contar problemas filtrados ANTES de paginar
