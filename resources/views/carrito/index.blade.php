@@ -172,9 +172,11 @@
                     </a>
                 @endif
             @endauth
+            @if(Auth::user()->rol !== 'user')
             <a href="{{ route('carrito.descargar.tex') }}" class="btn-carrito btn-tex">
                  TEX ⤓
             </a>
+            @endif
             <a href="{{ route('carrito.descargar.pdf') }}" class="btn-carrito btn-pdf">
                  PDF ⤓
             </a>

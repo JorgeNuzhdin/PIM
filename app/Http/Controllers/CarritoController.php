@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\AccessHelper;
 use App\Models\Carrito;
 use App\Models\Metodo;
 use App\Models\Problema;
@@ -112,6 +113,8 @@ class CarritoController extends Controller
 
     public function descargarTex()
     {
+        if (AccessHelper::isRestricted()) abort(403);
+
         $items = Carrito::where('user_id', Auth::id())
                         ->with(['problema', 'metodo'])
                         ->orderBy('orden')

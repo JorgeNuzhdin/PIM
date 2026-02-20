@@ -237,7 +237,9 @@
                             @if(Auth::user()->canEditProblemas())
                                 <a href="{{ route('metodos.edit', $metodo->id) }}" class="btn-action edit" title="Editar">&#9998;</a>
                             @endif
+                            @if(Auth::user()->rol !== 'user')
                             <a href="{{ route('metodos.download-tex', $metodo->id) }}" class="btn-action download-tex" title="Descargar TEX">TEX⤓</a>
+                            @endif
                             <a href="{{ route('metodos.download-pdf', $metodo->id) }}" class="btn-action download-pdf" title="Descargar PDF">PDF⤓</a>
                             @if(Auth::user()->isAdmin())
                                 <button class="btn-action btn-delete" onclick="eliminarMetodo({{ $metodo->id }}, '{{ addslashes($metodo->title) }}')" title="Eliminar" style="color:#e53e3e;">🗑️</button>
