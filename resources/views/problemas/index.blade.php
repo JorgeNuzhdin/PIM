@@ -788,7 +788,7 @@
                 </div>
             </div>
 
-            {{-- Admin: dropdown de proponentes + botones en la misma fila --}}
+            {{-- Admin: dropdown proponentes en col 3, botones debajo en col 3 --}}
             @if(Auth::user()->rol === 'admin')
             <div class="form-group">
                 <label for="proponent_id">Proponente</label>
@@ -801,26 +801,27 @@
                     @endforeach
                 </select>
             </div>
-            <div style="grid-column: 1 / -1; display: flex; justify-content: center; gap: 0.75rem;">
+            <div class="form-group form-buttons" style="grid-column: 3;">
                 <button type="submit" class="btn">Filtrar</button>
                 <a href="{{ route('problemas.index') }}" class="btn btn-secondary">Limpiar</a>
             </div>
 
-            {{-- Editor: checkbox Solo mis problemas + botones --}}
+            {{-- Editor: checkbox en col 3 alineado con Mostrar, botones debajo en col 3 --}}
             @elseif(Auth::user()->rol === 'editor')
-            <div style="grid-column: 1 / -1; display: flex; justify-content: center; align-items: center; padding: 0.25rem 0;">
-                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500; color: #4a5568;">
+            <div class="form-group">
+                <label style="display: block; margin-bottom: 0.4rem; font-size: 0.875rem; color: #4a5568;">&nbsp;</label>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500; color: #4a5568; height: 2.5rem;">
                     <input type="checkbox" name="solo_mios" value="1" {{ request('solo_mios') ? 'checked' : '' }}
                            style="width: 1.1rem; height: 1.1rem; cursor: pointer;">
                     Solo mis problemas
                 </label>
             </div>
-            <div style="grid-column: 1 / -1; display: flex; justify-content: center; gap: 0.75rem;">
+            <div class="form-group form-buttons" style="grid-column: 3;">
                 <button type="submit" class="btn">Filtrar</button>
                 <a href="{{ route('problemas.index') }}" class="btn btn-secondary">Limpiar</a>
             </div>
 
-            {{-- Resto de roles: botones en la tercera celda de la fila --}}
+            {{-- Resto de roles: botones en col 3 de la misma fila --}}
             @else
             <div class="form-group form-buttons">
                 <button type="submit" class="btn">Filtrar</button>
