@@ -748,7 +748,8 @@
                 </select>
             </div>
 
-            {{-- Filtro por proponente --}}
+            {{-- Filtro por proponente (solo editor/admin) --}}
+            @if(in_array(Auth::user()->rol, ['admin', 'editor']))
             <div class="form-group">
                 <label for="proponent_id">Proponente</label>
                 <select name="proponent_id" id="proponent_id">
@@ -760,6 +761,7 @@
                     @endforeach
                 </select>
             </div>
+            @endif
 
             {{-- Opciones a mostrar --}}
 <div class="form-group">
