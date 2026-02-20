@@ -959,7 +959,7 @@
                     @auth
                        @if(Auth::user()->canEditProblemas())
                             <a href="{{ route('problemas.edit', ['id' => $problema->id, 'return' => urlencode(request()->fullUrlWithQuery(['scrollTo' => $problema->id]))]) }}" class="btn-icon btn-edit" title="Editar problema">
-                                &#9998;
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.1em" height="1.1em" fill="currentColor" style="vertical-align:middle;"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
                             </a>
                             
                             <button class="btn-icon btn-delete" 
