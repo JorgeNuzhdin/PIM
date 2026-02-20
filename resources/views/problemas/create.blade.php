@@ -11,7 +11,7 @@
 @section('content')
 <div class="form-container">
     <div class="form-header">
-        <h1>✏️ Crear Nuevo Problema</h1>
+        <h1><span style="color:#4299e1;">✏</span> Crear Nuevo Problema</h1>
     </div>
     
     @if(session('error'))
