@@ -190,6 +190,7 @@
     display: flex;
     flex-direction: row;
     gap: 0.5rem;
+    padding-top: calc(0.9rem * 1.4 + 0.5rem); /* label height + margin-bottom */
 }
 
 .btn {
@@ -580,6 +581,7 @@
     
     .form-buttons {
         flex-direction: column;
+        padding-top: 0;
     }
 
     .problema-content strong {
