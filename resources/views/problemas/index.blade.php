@@ -190,7 +190,12 @@
     display: flex;
     flex-direction: row;
     gap: 0.5rem;
-    padding-top: calc(0.9rem * 1.4 + 0.5rem); /* label height + margin-bottom */
+    padding-top: calc(0.9rem * 1.5 + 0.5rem); /* label line-height + margin-bottom */
+}
+
+/* Fuerza col 3 solo en grid de 3 columnas */
+.form-buttons-col3 {
+    grid-column: 3;
 }
 
 .btn {
@@ -437,6 +442,9 @@
     .filtros-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+    .form-buttons-col3 {
+        grid-column: auto;
+    }
 }
 
 @media (max-width: 768px) {
@@ -582,6 +590,9 @@
     .form-buttons {
         flex-direction: column;
         padding-top: 0;
+    }
+    .form-buttons-col3 {
+        grid-column: auto;
     }
 
     .problema-content strong {
@@ -803,7 +814,7 @@
                     @endforeach
                 </select>
             </div>
-            <div class="form-group form-buttons" style="grid-column: 3;">
+            <div class="form-group form-buttons form-buttons-col3">
                 <button type="submit" class="btn">Filtrar</button>
                 <a href="{{ route('problemas.index') }}" class="btn btn-secondary">Limpiar</a>
             </div>
@@ -818,7 +829,7 @@
                     Solo mis problemas
                 </label>
             </div>
-            <div class="form-group form-buttons" style="grid-column: 3;">
+            <div class="form-group form-buttons form-buttons-col3">
                 <button type="submit" class="btn">Filtrar</button>
                 <a href="{{ route('problemas.index') }}" class="btn btn-secondary">Limpiar</a>
             </div>
