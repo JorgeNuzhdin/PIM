@@ -788,16 +788,26 @@
                 </div>
             </div>
 
-            {{-- Celda vacía para completar fila (solo no-editors no la necesitan) --}}
-            @if(!in_array(Auth::user()->rol, ['admin', 'editor']))
-            <div class="form-group form-buttons">
+            {{-- Admin: dropdown de proponentes + botones en la misma fila --}}
+            @if(Auth::user()->rol === 'admin')
+            <div class="form-group">
+                <label for="proponent_id">Proponente</label>
+                <select name="proponent_id" id="proponent_id">
+                    <option value="">-- Todos --</option>
+                    @foreach($proponents as $proponent)
+                        <option value="{{ $proponent->id }}" {{ request('proponent_id') == $proponent->id ? 'selected' : '' }}>
+                            {{ $proponent->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div style="grid-column: 1 / -1; display: flex; justify-content: center; gap: 0.75rem;">
                 <button type="submit" class="btn">Filtrar</button>
                 <a href="{{ route('problemas.index') }}" class="btn btn-secondary">Limpiar</a>
             </div>
-            @endif
 
-            {{-- Checkbox solo mis problemas (solo editor/admin) --}}
-            @if(in_array(Auth::user()->rol, ['admin', 'editor']))
+            {{-- Editor: checkbox Solo mis problemas + botones --}}
+            @elseif(Auth::user()->rol === 'editor')
             <div style="grid-column: 1 / -1; display: flex; justify-content: center; align-items: center; padding: 0.25rem 0;">
                 <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500; color: #4a5568;">
                     <input type="checkbox" name="solo_mios" value="1" {{ request('solo_mios') ? 'checked' : '' }}
@@ -805,9 +815,14 @@
                     Solo mis problemas
                 </label>
             </div>
-
-            {{-- Botones (editors/admin: fila propia) --}}
             <div style="grid-column: 1 / -1; display: flex; justify-content: center; gap: 0.75rem;">
+                <button type="submit" class="btn">Filtrar</button>
+                <a href="{{ route('problemas.index') }}" class="btn btn-secondary">Limpiar</a>
+            </div>
+
+            {{-- Resto de roles: botones en la tercera celda de la fila --}}
+            @else
+            <div class="form-group form-buttons">
                 <button type="submit" class="btn">Filtrar</button>
                 <a href="{{ route('problemas.index') }}" class="btn btn-secondary">Limpiar</a>
             </div>
