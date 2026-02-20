@@ -605,7 +605,15 @@
 
 @section('content')
 <div class="container">
-   <h1>Buscador de problemas</h1>
+   <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem;">
+       <h1 style="margin:0;">Buscador de problemas</h1>
+       @auth
+           @if(Auth::user()->canEditProblemas())
+           <button id="btn-enable-delete" onclick="toggleDeleteMode()" title="Activar modo eliminación"
+                   style="background:none;border:none;cursor:pointer;font-size:1.2rem;opacity:0.4;">🗑️</button>
+           @endif
+       @endauth
+   </div>
 
     <div class="stats">
     Total de problemas en la base de datos: <strong>{{ $totalProblemas }}</strong>
@@ -991,9 +999,10 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.1em" height="1.1em" fill="currentColor" style="vertical-align:middle;"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
                             </a>
                             
-                            <button class="btn-icon btn-delete" 
-                                    onclick="eliminarProblema({{ $problema->id }})" 
-                                    title="Eliminar problema">
+                            <button class="btn-icon btn-delete btn-delete-item"
+                                    onclick="eliminarProblema({{ $problema->id }})"
+                                    title="Eliminar problema"
+                                    style="display:none;">
                                 🗑️
                             </button>
                         @endif
@@ -1204,6 +1213,19 @@ function eliminarProblema(problemaId) {
         alert('Funcionalidad de eliminación pendiente');
     }
 }
+let deleteMode = false;
+function toggleDeleteMode() {
+    deleteMode = !deleteMode;
+    const btn = document.getElementById('btn-enable-delete');
+    btn.style.opacity = deleteMode ? '1' : '0.4';
+    btn.style.background = deleteMode ? '#dc354520' : 'none';
+    btn.style.borderRadius = '4px';
+    btn.title = deleteMode ? 'Desactivar modo eliminación' : 'Activar modo eliminación';
+    document.querySelectorAll('.btn-delete-item').forEach(b => {
+        b.style.display = deleteMode ? 'inline-flex' : 'none';
+    });
+}
+
 function toggleMostrar(event) {
     event.preventDefault();
     const dropdown = document.getElementById('mostrar-dropdown');

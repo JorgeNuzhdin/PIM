@@ -175,9 +175,15 @@
 <div class="container metodos-container">
     <div class="metodos-header">
         <h1>Métodos</h1>
-        @if(Auth::user()->canEditProblemas())
-            <a href="{{ route('metodos.create') }}" style="background:#4299e1;color:white;padding:0.5rem 1rem;border-radius:4px;text-decoration:none;font-weight:600;">+ Añadir método</a>
-        @endif
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+            @if(Auth::user()->canEditProblemas())
+                <a href="{{ route('metodos.create') }}" style="background:#4299e1;color:white;padding:0.5rem 1rem;border-radius:4px;text-decoration:none;font-weight:600;">+ Añadir método</a>
+            @endif
+            @if(Auth::user()->isAdmin())
+                <button id="btn-enable-delete" onclick="toggleDeleteMode()" title="Activar modo eliminación"
+                        style="background:none;border:none;cursor:pointer;font-size:1.2rem;opacity:0.4;">🗑️</button>
+            @endif
+        </div>
     </div>
 
     @if(session('success'))
@@ -242,7 +248,7 @@
                             @endif
                             <a href="{{ route('metodos.download-pdf', $metodo->id) }}" class="btn-action download-pdf" title="Descargar PDF">PDF⤓</a>
                             @if(Auth::user()->isAdmin())
-                                <button class="btn-action btn-delete" onclick="eliminarMetodo({{ $metodo->id }}, '{{ addslashes($metodo->title) }}')" title="Eliminar" style="color:#e53e3e;">🗑️</button>
+                                <button class="btn-action btn-delete btn-delete-item" onclick="eliminarMetodo({{ $metodo->id }}, '{{ addslashes($metodo->title) }}')" title="Eliminar" style="color:#e53e3e;display:none;">🗑️</button>
                             @endif
                         </td>
                     </tr>
@@ -340,6 +346,19 @@ function toggleMetodoCarrito(metodoId, button) {
     .catch(err => {
         console.error('Error:', err);
         alert('Error al actualizar el carrito');
+    });
+}
+
+let deleteMode = false;
+function toggleDeleteMode() {
+    deleteMode = !deleteMode;
+    const btn = document.getElementById('btn-enable-delete');
+    btn.style.opacity = deleteMode ? '1' : '0.4';
+    btn.style.background = deleteMode ? '#dc354520' : 'none';
+    btn.style.borderRadius = '4px';
+    btn.title = deleteMode ? 'Desactivar modo eliminación' : 'Activar modo eliminación';
+    document.querySelectorAll('.btn-delete-item').forEach(b => {
+        b.style.display = deleteMode ? 'inline-block' : 'none';
     });
 }
 

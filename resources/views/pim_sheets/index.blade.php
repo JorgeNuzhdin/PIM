@@ -267,11 +267,17 @@
 <div class="container">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
         <h1>Hojas de Problemas</h1>
-        @auth
-            @if(Auth::user()->canEditProblemas())
-                <a href="{{ route('pim-sheets.create') }}" class="btn btn-success">+ Subir Nueva Hoja</a>
-            @endif
-        @endauth
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+            @auth
+                @if(Auth::user()->canEditProblemas())
+                    <a href="{{ route('pim-sheets.create') }}" class="btn btn-success">+ Subir Nueva Hoja</a>
+                @endif
+                @if(Auth::user()->isAdmin())
+                    <button id="btn-enable-delete" onclick="toggleDeleteMode()" title="Activar modo eliminación"
+                            style="background:none;border:none;cursor:pointer;font-size:1.2rem;opacity:0.4;">🗑️</button>
+                @endif
+            @endauth
+        </div>
     </div>
 
     @if(session('success'))
@@ -471,7 +477,7 @@
                             @auth
                                 @if(Auth::user()->isAdmin())
                                     <a href="{{ route('pim-sheets.edit', ['id' => $sheet->id]) }}" class="btn-action edit" title="Editar metadatos"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.1em" height="1.1em" fill="currentColor" style="vertical-align:middle;"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></a>
-                                    <button class="btn-action btn-delete" onclick="eliminarHoja({{ $sheet->id }}, '{{ addslashes($sheet->title) }}')" title="Eliminar hoja">🗑️</button>
+                                    <button class="btn-action btn-delete btn-delete-item" onclick="eliminarHoja({{ $sheet->id }}, '{{ addslashes($sheet->title) }}')" title="Eliminar hoja" style="display:none;">🗑️</button>
                                 @endif
                             @endauth
                         </td>
@@ -512,6 +518,19 @@
             document.getElementById('filterForm').submit();
         });
     });
+
+    let deleteMode = false;
+    function toggleDeleteMode() {
+        deleteMode = !deleteMode;
+        const btn = document.getElementById('btn-enable-delete');
+        btn.style.opacity = deleteMode ? '1' : '0.4';
+        btn.style.background = deleteMode ? '#dc354520' : 'none';
+        btn.style.borderRadius = '4px';
+        btn.title = deleteMode ? 'Desactivar modo eliminación' : 'Activar modo eliminación';
+        document.querySelectorAll('.btn-delete-item').forEach(b => {
+            b.style.display = deleteMode ? 'inline-block' : 'none';
+        });
+    }
 
     // Función para eliminar hoja (solo admin)
     function eliminarHoja(id, titulo) {
