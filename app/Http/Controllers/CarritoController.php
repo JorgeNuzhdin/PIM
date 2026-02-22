@@ -389,7 +389,7 @@ LATEX;
 
     // \pref{N} → enlace al problema N (URL de la app)
     $appUrl = config('app.url', url('/'));
-    $preambulo .= "\\newcommand{\\pref}[1]{\\href{${appUrl}/problemas/#1}{Problema~#1}}\n";
+    $preambulo .= "\\newcommand{\\pref}[1]{\\href{" . $appUrl . "/problemas/#1}{Problema~#1}}\n";
 
     // Añadir paquetes específicos de los problemas
     if (!empty($packages)) {
