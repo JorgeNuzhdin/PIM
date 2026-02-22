@@ -336,7 +336,14 @@ class ProblemaController extends Controller
         $problema->problem_html_processed  = LatexHelper::toHtml($problema->problem_tex  ?? '');
         $problema->solution_html_processed = LatexHelper::toHtml($problema->solution_tex ?? '');
 
-        return view('problemas.show', compact('problema'));
+        $enCarrito = false;
+        if (auth()->check()) {
+            $enCarrito = \App\Models\Carrito::where('user_id', auth()->id())
+                ->where('problema_id', $problema->id)
+                ->exists();
+        }
+
+        return view('problemas.show', compact('problema', 'enCarrito'));
     }
 
     public function index(Request $request)

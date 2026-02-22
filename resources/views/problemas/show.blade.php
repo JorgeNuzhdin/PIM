@@ -60,8 +60,11 @@
             @endif
 
             <div class="problema-info">
-                <div class="problema-title-row">
-                    <h3>Problema #{{ $problema->id }}</h3>
+                <div class="problema-title-row" style="display:flex;align-items:center;gap:0.75rem;flex:1;">
+                    <h3 style="margin:0;">Problema #{{ $problema->id }}</h3>
+                    @if($problema->title)
+                        <span style="color:#4a5568;font-size:1rem;font-weight:500;">{{ $problema->title }}</span>
+                    @endif
                     @if($problema->school_year)
                         @php $yearIdx = \App\Helpers\SchoolYearHelper::getYearIndex($problema->school_year); @endphp
                         <a href="{{ route('problemas.index', ['school_year_min' => $yearIdx, 'school_year_max' => $yearIdx]) }}"
@@ -69,6 +72,16 @@
                             📚 {{ $problema->school_year }}
                         </a>
                     @endif
+                    {{-- Carrito --}}
+                    @auth
+                        <button class="btn-icon btn-carrito {{ $enCarrito ? 'en-carrito' : '' }}"
+                                data-problema-id="{{ $problema->id }}"
+                                onclick="toggleCarrito({{ $problema->id }}, this)"
+                                title="{{ $enCarrito ? 'Quitar del carrito' : 'Añadir al carrito' }}"
+                                style="margin-left:auto;">
+                            <span class="carrito-icon">🛒</span>
+                        </button>
+                    @endauth
                 </div>
 
                 @if($problema->tags && $problema->tags->count() > 0)
@@ -80,18 +93,6 @@
                     </div>
                 @endif
             </div>
-
-            {{-- Carrito --}}
-            @auth
-                <div class="problema-actions">
-                    <button class="btn-icon btn-carrito"
-                            data-problema-id="{{ $problema->id }}"
-                            onclick="toggleCarrito({{ $problema->id }}, this)"
-                            title="Añadir/Quitar del carrito">
-                        <span class="carrito-icon">🛒</span>
-                    </button>
-                </div>
-            @endauth
         </div>
 
         {{-- Enunciado --}}
