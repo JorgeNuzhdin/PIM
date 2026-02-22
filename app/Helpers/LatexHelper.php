@@ -819,6 +819,13 @@ $t = preg_replace('/\\\\definecolor\{[^}]+\}\{[^}]+\}\{[^}]+\}/', '', $t);
             $rule = self::fromAtoB('\*rule[', ']', $t);
         }
 
+        // \pref{N} → <a href="/problemas?scrollTo=N">Problema N</a>
+        $t = preg_replace_callback(
+            '/\\\\pref\{(\d+)\}/',
+            fn($m) => '<a href="' . url('/problemas') . '?scrollTo=' . $m[1] . '">Problema ' . $m[1] . '</a>',
+            $t
+        );
+
         // \href{url}{texto} → <a href="url">texto</a>
         $href = self::fromAtoB('\href{', '}', $t);
         while ($href['inside'] != '') {
