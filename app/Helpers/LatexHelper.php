@@ -819,13 +819,21 @@ $t = preg_replace('/\\\\definecolor\{[^}]+\}\{[^}]+\}\{[^}]+\}/', '', $t);
             $rule = self::fromAtoB('\*rule[', ']', $t);
         }
 
-        // Href
+        // \href{url}{texto} → <a href="url">texto</a>
         $href = self::fromAtoB('\href{', '}', $t);
         while ($href['inside'] != '') {
             $temp = $href['before'] . '<a href="' . $href['inside'] . '">';
             $temp2 = self::fromAtoB('{', '}', $href['after']);
             $t = $temp . $temp2['inside'] . '</a>' . $temp2['after'];
             $href = self::fromAtoB('\href{', '}', $t);
+        }
+
+        // \url{url} → <a href="url">url</a>
+        $url = self::fromAtoB('\url{', '}', $t);
+        while ($url['inside'] != '') {
+            $u = $url['inside'];
+            $t = $url['before'] . '<a href="' . $u . '">' . $u . '</a>' . $url['after'];
+            $url = self::fromAtoB('\url{', '}', $t);
         }
 
         // Color

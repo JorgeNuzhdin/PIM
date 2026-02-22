@@ -204,124 +204,113 @@ private function generarPreambulo($packages)
 {
     $preambulo = <<<'LATEX'
 \documentclass[12pt,a4paper]{article}
-\usepackage{amsmath}
 
-%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%% Settings %%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newif\ifshowsolutions
 \newif\ifshowinfo
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%% Setting %%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \showsolutionstrue   % para profesores
-% \showsolutionsfalse    % para alumnos
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\showinfotrue  % para ver grupos y títulos en versión generica
-%\showinfofalse % para genérica para publicar
+% \showsolutionsfalse  % para alumnos
+\showinfotrue        % para ver grupos y títulos en versión genérica
+%\showinfofalse      % para genérica para publicar
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 0 for genérica
-% 1 for Neptuno
-% 2 for Marte
-% 3 for Urano
-% 4 for Júpiter
-% 5 for Venus
-% 6 for Mercurio
-
+% 0 genérica | 1 Neptuno | 2 Marte | 3 Urano | 4 Júpiter | 5 Venus | 6 Mercurio
 \def\group{0}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \def\logo{logo2526pim.png}
 \def\title{Desigualdades}
-\def\dates{6, 13, 20 y 27 de febrero de  2026}
+\def\dates{6, 13, 20 y 27 de febrero de 2026}
 \def\datefir{6 de febrero}
 \def\datesec{13 de febrero}
 \def\datethi{20 de febrero}
 \def\datefou{27 de febrero}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%% Paquetes %%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% Codificación
 \usepackage[utf8]{inputenc}
-\usepackage{gensymb}
-\usepackage{subcaption}
+
+% Matemáticas
+\usepackage{amsmath}
 \usepackage{amssymb}
-\usepackage{mathtools}
-\usepackage{float}
 \usepackage{amsthm}
-\usepackage{graphicx,amssymb,latexsym,amsmath, amsthm}
+\usepackage{mathtools}
+\usepackage{mathrsfs}
+\usepackage{latexsym}
+
+% Símbolos y texto
+\usepackage{textcomp}
+\usepackage{gensymb}
+
+% Color
+\usepackage{xcolor}
+
+% Gráficos
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{float}
+
+% TikZ y derivados
+\usepackage{tikz}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.15}
-\usepackage{mathrsfs}
-\usepackage{tikz}
-\usetikzlibrary{arrows}
-\usetikzlibrary{arrows.meta}
-\usetikzlibrary{math,angles,quotes}
-\usepackage{color}
-\usepackage{geometry}
-\usepackage{enumitem}
-\usepackage{textcomp,gensymb}
-\usepackage{multicol}
-\usepackage{ifthen}
-\usepackage{gensymb}
-\usepackage{graphicx}
-\usepackage{amssymb}
-\usepackage{amsthm}
-\usepackage{xcolor}
-\usepackage{tikz}
-\usepackage{float}
-\usepackage{hyperref}
-\usetikzlibrary{positioning}
-\usepackage{mathtools}
-\usepackage{tcolorbox}
-
-%\usepackage{subcaption}
-
-\usetikzlibrary{math,angles,quotes}
-\usepackage{tikz}
 \usepackage{circuitikz}
-
-\DeclareMathOperator{\mcd}{mcd}
-\renewcommand{\min}{\textup{m\'in}\,}
-\usetikzlibrary{positioning}
-\usetikzlibrary{intersections}
-\usetikzlibrary{through}
-\usetikzlibrary{calc}
-\usepackage{amsthm}
-\usepackage{subcaption}
-\usetikzlibrary{patterns}
-\usepackage{tkz-euclide}
 \usepackage{tikz-cd}
-\usepackage{float}
-\usepackage{tikz}
-\usepackage{mathtools}
-\usepackage{gensymb}
+\usepackage{tkz-euclide}
+\usetikzlibrary{arrows,arrows.meta}
+\usetikzlibrary{math,angles,quotes}
+\usetikzlibrary{positioning}
+\usetikzlibrary{intersections,through,calc}
+\usetikzlibrary{patterns}
 
-\usepackage{graphicx,amssymb,latexsym,amsmath}
-%\renewcommand{\thepage}{}
+% Maquetación
+\usepackage{geometry}
+\usepackage{multicol}
+\usepackage{enumitem}
+\usepackage{ifthen}
+\usepackage{array}
+\usepackage{multirow}
+
+% Otros
+\usepackage{tcolorbox}
+\usepackage{twemojis}
+\usepackage{hyperref}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Geometría de página %%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \renewcommand{\baselinestretch}{1}
-\setlength{\parindent}{2em} \setlength{\textwidth}{19cm}
-\setlength{\textheight}{25cm} \setlength{\topmargin}{-2cm}
+\setlength{\parindent}{2em}
+\setlength{\textwidth}{19cm}
+\setlength{\textheight}{25cm}
+\setlength{\topmargin}{-2cm}
 \setlength{\oddsidemargin}{-1.5cm}
 
-\usepackage{multirow}
-\usepackage{color}
-\usepackage{tikz}
-\usetikzlibrary{patterns}
-\usetikzlibrary{angles,quotes}
-\usepackage{array}
-\usetikzlibrary{arrows}
-\newcommand{\modd}[1]{\ (\mathrm{m\acute{o}d}\ #1)}
-\usepackage{tikz-cd}
-\usepackage{twemojis}
-%%%%%%%%%%%%%%%%%%%%%%%%%
-%\pagestyle{empty}
-
-\newcommand{\equis}[1]{	\draw[color=zzccqq,line width=2pt](#1)--	++(-3.5pt,3.5pt)-- ++(7pt,-7pt);\draw[color=zzccqq,line width=2pt](#1)--	++(3.5pt,3.5pt)-- ++(-7pt,-7pt);}
-
-\newcommand{\arr}{%
-	{\fontfamily{ptm}\selectfont @}%
-}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Comandos personalizados %%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\DeclareMathOperator{\mcd}{mcd}
 \DeclareMathOperator{\cm}{cm}
+\renewcommand{\min}{\textup{m\'in}\,}
+\newcommand{\modd}[1]{\ (\mathrm{m\acute{o}d}\ #1)}
 \newcommand{\ubrace}[2]{\underset{#1}{\underbrace{#2}}}
+\newcommand{\arr}{{\fontfamily{ptm}\selectfont @}}
+\newcommand{\equis}[1]{\draw[color=zzccqq,line width=2pt](#1)-- ++(-3.5pt,3.5pt)-- ++(7pt,-7pt);\draw[color=zzccqq,line width=2pt](#1)-- ++(3.5pt,3.5pt)-- ++(-7pt,-7pt);}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Teoremas %%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newtheorem{theorem}{Teorema}
+\theoremstyle{definition}
+\newtheorem*{definition}{Definición}
+\newtheorem{ejer}{Problema}
+\newtheorem*{ejem}{Ejemplo resuelto}
+\newtheorem*{eje}{Ejemplo}
+\newtheorem{defin}{Definición}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newtheorem{theorem}{Teorema}
