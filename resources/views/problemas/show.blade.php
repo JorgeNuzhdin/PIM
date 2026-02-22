@@ -23,6 +23,27 @@
 }
 .show-nav a:hover { text-decoration: underline; }
 .show-nav .separator { color: #cbd5e0; }
+.btn-icon {
+    background: white;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    padding: 0.5rem;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    line-height: 1;
+}
+.btn-icon:hover {
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.btn-carrito.en-carrito {
+    background-color: #48bb78;
+    border-color: #48bb78;
+}
+.btn-carrito.en-carrito .carrito-icon::after {
+    content: ' ✓';
+}
 </style>
 @endsection
 
