@@ -322,6 +322,23 @@ class ProblemaController extends Controller
                 }
             }
 
+    public function show($id)
+    {
+        $problema = Problema::with(['tags', 'proponent'])->findOrFail($id);
+
+        // Restricción para rol 'user'
+        $allowedIds = AccessHelper::allowedProblemIds();
+        if ($allowedIds !== null && !in_array($problema->id, $allowedIds)) {
+            abort(403);
+        }
+
+        LatexHelper::resetCounters();
+        $problema->problem_html_processed  = LatexHelper::toHtml($problema->problem_tex  ?? '');
+        $problema->solution_html_processed = LatexHelper::toHtml($problema->solution_tex ?? '');
+
+        return view('problemas.show', compact('problema'));
+    }
+
     public function index(Request $request)
 {
     $query = Problema::query();

@@ -23,7 +23,7 @@ Route::middleware(['auth'])->prefix('hojas')->name('hojas.')->group(function () 
 });
 Route::middleware('auth')->group(function () {
     Route::get('/problemas', [App\Http\Controllers\ProblemaController::class, 'index'])->name('problemas.index');
-    Route::get('/problemas', [App\Http\Controllers\ProblemaController::class, 'index'])->name('problemas.index');
+    Route::get('/problemas/{id}', [App\Http\Controllers\ProblemaController::class, 'show'])->name('problemas.show')->where('id', '[0-9]+');
     Route::get('/api/topics/buscar', [App\Http\Controllers\ProblemaController::class, 'buscarTopics'])->name('topics.buscar');
 
    Route::get('/api/tema-desde-tag', [App\Http\Controllers\ProblemaController::class, 'temaDesdeTag'])->name('tema.desde.tag');
