@@ -147,8 +147,7 @@ function toggleCarrito(problemaId, button) {
     })
     .then(r => r.json())
     .then(data => {
-        const icon = button.querySelector('.carrito-icon');
-        if (data.action === 'added') {
+        if (data.status === 'added') {
             button.classList.add('en-carrito');
             button.title = 'Quitar del carrito';
         } else {
@@ -157,6 +156,9 @@ function toggleCarrito(problemaId, button) {
         }
         const countEl = document.getElementById('carrito-count');
         if (countEl) countEl.textContent = data.count;
+    })
+    .catch(() => {
+        console.error('Error al actualizar el carrito');
     });
 }
 </script>
