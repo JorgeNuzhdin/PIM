@@ -150,24 +150,8 @@ function procesarArchivoTex(input) {
             rellenarFormulario(ejercicios[0]);
             alert('✅ Archivo cargado. Revisa los campos y haz clic en "Crear Problema"');
         } else {
-            // Múltiples ejercicios: verificar imágenes primero
-            if (confirm(`Se encontraron ${ejercicios.length} ejercicios. ¿Deseas importarlos todos automáticamente?`)) {
-                // Extraer todas las imágenes referenciadas en el contenido
-                const imagenesRequeridas = extraerNombresImagenes(contenido);
-
-                if (imagenesRequeridas.length > 0) {
-                    // Mostrar modal para subir imágenes
-                    mostrarModalImagenes(imagenesRequeridas, () => {
-                        importarMultiplesEjercicios(ejercicios);
-                    });
-                } else {
-                    // No hay imágenes, importar directamente
-                    importarMultiplesEjercicios(ejercicios);
-                }
-            } else {
-                rellenarFormulario(ejercicios[0]);
-                alert(`Se cargó el primer ejercicio. Hay ${ejercicios.length - 1} más en el archivo.`);
-            }
+            // Múltiples ejercicios: validar + comprobar duplicados + mostrar preview
+            analizarYMostrarPreview(ejercicios, contenido);
         }
     };
     
@@ -550,6 +534,26 @@ async function importarMultiplesEjercicios(ejercicios) {
                 fallidos++;
                 continue;
             }
+            if (!ejercicio.solucion || !ejercicio.solucion.trim()) {
+                errores.push(`Ejercicio ${i + 1}: sin solución`);
+                fallidos++;
+                continue;
+            }
+            if (!ejercicio.temas || !ejercicio.temas.trim()) {
+                errores.push(`Ejercicio ${i + 1}: sin temas`);
+                fallidos++;
+                continue;
+            }
+            if (!ejercicio.dificultad || !ejercicio.dificultad.trim()) {
+                errores.push(`Ejercicio ${i + 1}: sin dificultad`);
+                fallidos++;
+                continue;
+            }
+            if (!ejercicio.curso || !ejercicio.curso.trim()) {
+                errores.push(`Ejercicio ${i + 1}: sin curso`);
+                fallidos++;
+                continue;
+            }
             
             // Convertir curso a índice numérico
             let schoolYearIndex = '';
@@ -660,6 +664,178 @@ async function importarMultiplesEjercicios(ejercicios) {
 
     // No redirigir automáticamente - dejar al usuario en la página de creación
     // para que pueda seguir importando o creando más problemas
+}
+
+// Normalizar prefijo de contenido (igual que en PHP)
+function normalizePrefix(text, len = 100) {
+    return (text || '').trim().replace(/\s+/g, ' ').substring(0, len);
+}
+
+// Validar y comprobar duplicados, luego mostrar preview interactivo
+async function analizarYMostrarPreview(ejercicios, contenido) {
+    // Paso 1: validación de estructura
+    const analisis = ejercicios.map((ej, i) => {
+        const issues = [];
+        let estado = 'ok';
+
+        if (!ej.enunciado || !ej.enunciado.trim()) { issues.push('Sin enunciado'); estado = 'error'; }
+        if (!ej.solucion   || !ej.solucion.trim())  { issues.push('Sin solución');  estado = 'error'; }
+        if (!ej.temas      || !ej.temas.trim())      { issues.push('Sin temas');     estado = 'error'; }
+        if (!ej.dificultad || !ej.dificultad.trim()) { issues.push('Sin dificultad'); estado = 'error'; }
+        if (!ej.curso      || !ej.curso.trim())      { issues.push('Sin curso');     estado = 'error'; }
+
+        if (estado !== 'error') {
+            if (!ej.fuente || !ej.fuente.trim())  { issues.push('Sin fuente (se cargará vacío)');  if (estado === 'ok') estado = 'warn'; }
+            if (!ej.titulo || !ej.titulo.trim())  { issues.push('Sin título (se cargará vacío)');  if (estado === 'ok') estado = 'warn'; }
+        }
+
+        return { index: i, issues, estado, title_match: null, content_match: null };
+    });
+
+    // Paso 2: comprobar duplicados en la API
+    const items = ejercicios.map(ej => ({
+        title: ej.titulo || '',
+        content_prefix: normalizePrefix(ej.enunciado || '')
+    }));
+
+    try {
+        const response = await fetch('{{ route("api.check-duplicates.problemas") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ items })
+        });
+        const dupResults = await response.json();
+
+        dupResults.forEach(r => {
+            if (r.index >= analisis.length) return;
+            const a = analisis[r.index];
+            if (r.content_match) {
+                a.issues.push(`Contenido duplicado → Problema #${r.content_match.id}`);
+                a.estado = 'error';
+                a.content_match = r.content_match;
+            }
+            if (r.title_match) {
+                a.issues.push(`Título duplicado → Problema #${r.title_match.id}`);
+                if (a.estado !== 'error') a.estado = 'warn';
+                a.title_match = r.title_match;
+            }
+        });
+    } catch (e) {
+        console.warn('Error al verificar duplicados:', e);
+    }
+
+    mostrarPreviewProblemas(ejercicios, analisis, contenido);
+}
+
+// Mostrar overlay de preview con tabla interactiva
+function mostrarPreviewProblemas(ejercicios, analisis, contenido) {
+    const overlay = document.createElement('div');
+    overlay.id = 'preview-problemas-overlay';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.55);z-index:10000;overflow-y:auto;padding:2rem 0;box-sizing:border-box;';
+
+    const cargables = analisis.filter(a => a.estado !== 'error').length;
+
+    const rows = analisis.map((a, i) => {
+        const ej = ejercicios[i];
+        const enunciado = (ej.enunciado || '').trim().substring(0, 80)
+            .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+        let rowBg = '';
+        let icon = '✅';
+        let checked = 'checked';
+        let disabled = '';
+
+        if (a.estado === 'error') {
+            rowBg = 'background:#fff5f5;border-left:3px solid #e53e3e;';
+            icon = '❌'; checked = ''; disabled = 'disabled';
+        } else if (a.estado === 'warn') {
+            rowBg = 'background:#fffbeb;border-left:3px solid #d69e2e;';
+            icon = '⚠️';
+        }
+
+        const issuesHtml = a.issues.length
+            ? `<ul style="margin:0;padding-left:1.2rem;font-size:0.8rem;color:#718096;">${a.issues.map(s => `<li>${s}</li>`).join('')}</ul>`
+            : '<span style="color:#68d391;font-size:0.85rem;">OK</span>';
+
+        return `<tr style="${rowBg}">
+            <td style="padding:0.4rem 0.5rem;text-align:center;">
+                <input type="checkbox" class="preview-checkbox" data-index="${i}" ${checked} ${disabled}>
+            </td>
+            <td style="padding:0.4rem 0.5rem;text-align:center;font-size:1.1rem;">${icon}</td>
+            <td style="padding:0.4rem 0.5rem;text-align:center;font-weight:600;">${i + 1}</td>
+            <td style="padding:0.4rem 0.5rem;font-family:monospace;font-size:0.82rem;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${enunciado}">${enunciado || '(sin enunciado)'}…</td>
+            <td style="padding:0.4rem 0.5rem;">${issuesHtml}</td>
+        </tr>`;
+    }).join('');
+
+    overlay.innerHTML = `
+        <div style="background:white;padding:2rem;border-radius:8px;width:90%;max-width:920px;margin:auto;">
+            <h2 style="margin-top:0;color:#2d3748;">Se encontraron ${ejercicios.length} problemas — revisa antes de cargar</h2>
+            <p style="color:#718096;margin-bottom:1rem;">❌ = no cargable (falta campo obligatorio o contenido duplicado) &nbsp;|&nbsp; ⚠️ = aviso (cargable) &nbsp;|&nbsp; ✅ = correcto.</p>
+            <div style="overflow-x:auto;">
+                <table style="width:100%;border-collapse:collapse;margin-bottom:1.5rem;">
+                    <thead>
+                        <tr style="background:#f7fafc;border-bottom:2px solid #e2e8f0;">
+                            <th style="padding:0.5rem;width:36px;"></th>
+                            <th style="padding:0.5rem;width:36px;"></th>
+                            <th style="padding:0.5rem;width:32px;">#</th>
+                            <th style="padding:0.5rem;text-align:left;">Enunciado</th>
+                            <th style="padding:0.5rem;text-align:left;">Estado / Detalles</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
+            <div style="display:flex;gap:1rem;justify-content:flex-end;align-items:center;flex-wrap:wrap;">
+                <span style="color:#718096;margin-right:auto;"><span id="preview-selected-count">${cargables}</span> seleccionados de ${ejercicios.length}</span>
+                <button type="button" id="btn-cancelar-preview" style="background:#718096;color:white;border:none;padding:0.75rem 1.5rem;border-radius:4px;cursor:pointer;">Cancelar</button>
+                <button type="button" id="btn-cargar-preview" style="background:#48bb78;color:white;border:none;padding:0.75rem 1.5rem;border-radius:4px;cursor:pointer;">
+                    Cargar seleccionados (<span id="btn-preview-count">${cargables}</span>)
+                </button>
+            </div>
+        </div>`;
+
+    document.body.appendChild(overlay);
+
+    overlay.querySelectorAll('.preview-checkbox').forEach(cb => {
+        cb.addEventListener('change', () => {
+            const n = overlay.querySelectorAll('.preview-checkbox:checked').length;
+            document.getElementById('preview-selected-count').textContent = n;
+            document.getElementById('btn-preview-count').textContent = n;
+        });
+    });
+
+    document.getElementById('btn-cancelar-preview').onclick = () => document.body.removeChild(overlay);
+
+    document.getElementById('btn-cargar-preview').onclick = () => {
+        const selectedIndices = Array.from(overlay.querySelectorAll('.preview-checkbox:checked'))
+            .map(cb => parseInt(cb.dataset.index));
+
+        if (selectedIndices.length === 0) {
+            alert('No hay problemas seleccionados.');
+            return;
+        }
+
+        const seleccionados = selectedIndices.map(i => ejercicios[i]);
+        document.body.removeChild(overlay);
+        prepararYCargarSeleccionados(seleccionados, contenido);
+    };
+}
+
+// Manejar imágenes y lanzar importación de los ejercicios seleccionados
+function prepararYCargarSeleccionados(ejercicios, contenido) {
+    const imagenesRequeridas = extraerNombresImagenes(contenido);
+
+    if (imagenesRequeridas.length > 0) {
+        mostrarModalImagenes(imagenesRequeridas, () => {
+            importarMultiplesEjercicios(ejercicios);
+        });
+    } else {
+        importarMultiplesEjercicios(ejercicios);
+    }
 }
 
 // Función para calcular distancia Levenshtein

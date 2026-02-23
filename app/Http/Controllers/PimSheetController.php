@@ -667,6 +667,31 @@ class PimSheetController extends Controller
         return redirect()->route('pim-sheets.index')->with('success', 'Hoja actualizada correctamente.');
     }
 
+    public function checkDuplicates(Request $request)
+    {
+        $items = $request->input('items', []);
+        $results = [];
+        $allSheets = PimSheet::whereNotNull('title')->get(['id', 'title']);
+
+        foreach ($items as $index => $item) {
+            $title = trim($item['title'] ?? '');
+            $titleMatch = null;
+
+            foreach ($allSheets as $s) {
+                if ($titleMatch === null && $title !== '' &&
+                    trim((string) $s->title) !== '' &&
+                    mb_strtolower(trim((string) $s->title)) === mb_strtolower($title)) {
+                    $titleMatch = ['id' => $s->id];
+                    break;
+                }
+            }
+
+            $results[] = ['index' => $index, 'title_match' => $titleMatch];
+        }
+
+        return response()->json($results);
+    }
+
     /**
      * Eliminar una hoja de problemas (solo admin)
      */

@@ -284,8 +284,15 @@
             </div>
 
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Guardar Método</button>
+                <button type="submit" class="btn btn-primary" id="btn-submit-metodo">Guardar Método</button>
                 <a href="{{ route('metodos.index') }}" class="btn btn-secondary">Cancelar</a>
+            </div>
+
+            <div id="metodo-duplicate-warning" style="display:none; margin-top:1rem; padding:1rem 1.25rem; border-radius:6px; border:1px solid #d69e2e; background:#fffbeb; color:#744210;">
+                <span id="metodo-duplicate-text"></span>
+                <div style="margin-top:0.75rem; display:flex; gap:0.75rem;">
+                    <button type="button" id="btn-metodo-dup-cancel" style="background:#718096;color:white;border:none;padding:0.45rem 1rem;border-radius:4px;cursor:pointer;">Cancelar</button>
+                </div>
             </div>
         </form>
     </div>
@@ -421,5 +428,60 @@ document.getElementById('method_tex').addEventListener('input', function() {
 if (document.getElementById('method_tex').value.trim()) {
     document.getElementById('method_tex').dispatchEvent(new Event('input'));
 }
+
+// Comprobación de duplicados antes de crear el método
+(function () {
+    let forceSubmit = false;
+    const form = document.getElementById('btn-submit-metodo').closest('form');
+    if (!form) return;
+
+    form.addEventListener('submit', async function (e) {
+        if (forceSubmit) return;
+
+        const title = (document.getElementById('title')?.value || '').trim();
+        const methodTex = (document.getElementById('method_tex')?.value || '').trim();
+
+        if (!methodTex) return;
+
+        e.preventDefault();
+
+        const contentPrefix = methodTex.trim().replace(/\s+/g, ' ').substring(0, 100);
+        const warningDiv  = document.getElementById('metodo-duplicate-warning');
+        const warningText = document.getElementById('metodo-duplicate-text');
+
+        try {
+            const resp = await fetch('{{ route("api.check-duplicates.metodos") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                body: JSON.stringify({ items: [{ title, content_prefix: contentPrefix }] })
+            });
+            const results = await resp.json();
+            const r = results[0] || {};
+
+            const msgs = [];
+            if (r.content_match) msgs.push(`Ya existe el Método #${r.content_match.id} con contenido similar o igual. No se puede crear un duplicado.`);
+            else if (r.title_match) msgs.push(`Ya existe el Método #${r.title_match.id} con el mismo título. No se puede crear un duplicado.`);
+
+            if (msgs.length === 0) {
+                forceSubmit = true;
+                form.submit();
+                return;
+            }
+
+            warningText.textContent = msgs.join(' ');
+            warningDiv.style.display = 'block';
+            warningDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        } catch (err) {
+            console.warn('Error al comprobar duplicados:', err);
+            forceSubmit = true;
+            form.submit();
+        }
+    });
+
+    document.getElementById('btn-metodo-dup-cancel').onclick = () => {
+        document.getElementById('metodo-duplicate-warning').style.display = 'none';
+    };
+})();
 </script>
 @endsection

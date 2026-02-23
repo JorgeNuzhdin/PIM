@@ -42,6 +42,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/subtemas/{tema_id}', [MetodoController::class, 'apiSubtemas'])->name('api.subtemas');
     Route::post('/api/subtemas', [MetodoController::class, 'apiStoreSubtema'])->name('api.subtemas.store');
 
+    // API comprobación de duplicados
+    Route::post('/api/check-duplicates/problemas', [App\Http\Controllers\ProblemaController::class, 'checkDuplicates'])->name('api.check-duplicates.problemas');
+    Route::post('/api/check-duplicates/metodos', [App\Http\Controllers\MetodoController::class, 'checkDuplicates'])->name('api.check-duplicates.metodos');
+    Route::post('/api/check-duplicates/hojas', [App\Http\Controllers\PimSheetController::class, 'checkDuplicates'])->name('api.check-duplicates.hojas');
+
     // Rutas de problemas (solo para admin/editor)
     Route::middleware('can.edit.problemas')->group(function () {
         Route::get('/problemas/crear', [App\Http\Controllers\ProblemaController::class, 'create'])->name('problemas.create');

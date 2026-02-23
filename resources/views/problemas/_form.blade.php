@@ -215,5 +215,81 @@
 {{-- Botones --}}
 <div class="form-actions">
     <a href="{{ route('problemas.index') }}" class="btn-cancel">Cancelar</a>
-    <button type="submit" class="btn-primary">{{ isset($problema) ? 'Actualizar' : 'Crear' }} Problema</button>
+    <button type="submit" class="btn-primary" id="btn-submit-problema">{{ isset($problema) ? 'Actualizar' : 'Crear' }} Problema</button>
 </div>
+
+@if(!isset($problema))
+<div id="duplicate-warning" style="display:none; margin-top:1rem; padding:1rem 1.25rem; border-radius:6px; border:1px solid #d69e2e; background:#fffbeb; color:#744210;">
+    <span id="duplicate-warning-text"></span>
+    <div style="margin-top:0.75rem; display:flex; gap:0.75rem;">
+        <button type="button" id="btn-dup-cancel" style="background:#718096;color:white;border:none;padding:0.45rem 1rem;border-radius:4px;cursor:pointer;">Cancelar</button>
+        <button type="button" id="btn-dup-force" style="background:#e53e3e;color:white;border:none;padding:0.45rem 1rem;border-radius:4px;cursor:pointer;">Crear de todos modos</button>
+    </div>
+</div>
+
+<script>
+(function () {
+    let forceSubmit = false;
+
+    const form = document.getElementById('btn-submit-problema').closest('form');
+    if (!form) return;
+
+    form.addEventListener('submit', async function (e) {
+        if (forceSubmit) return; // segunda vez: dejar pasar
+
+        const title = (document.getElementById('title')?.value || '').trim();
+        const problemTex = (document.getElementById('problem_tex')?.value || '').trim();
+
+        if (!problemTex) return; // sin contenido, no chequeamos
+
+        e.preventDefault();
+
+        const contentPrefix = problemTex.trim().replace(/\s+/g, ' ').substring(0, 100);
+        const warningDiv  = document.getElementById('duplicate-warning');
+        const warningText = document.getElementById('duplicate-warning-text');
+
+        try {
+            const resp = await fetch('{{ route("api.check-duplicates.problemas") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ items: [{ title, content_prefix: contentPrefix }] })
+            });
+            const results = await resp.json();
+            const r = results[0] || {};
+
+            const msgs = [];
+            if (r.content_match) msgs.push(`Ya existe el Problema #${r.content_match.id} con contenido similar o igual.`);
+            else if (r.title_match) msgs.push(`Ya existe el Problema #${r.title_match.id} con el mismo título.`);
+
+            if (msgs.length === 0) {
+                // Sin duplicados: enviar
+                forceSubmit = true;
+                form.submit();
+                return;
+            }
+
+            warningText.textContent = msgs.join(' ');
+            warningDiv.style.display = 'block';
+            warningDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        } catch (err) {
+            console.warn('Error al comprobar duplicados:', err);
+            forceSubmit = true;
+            form.submit();
+        }
+    });
+
+    document.getElementById('btn-dup-cancel').onclick = () => {
+        document.getElementById('duplicate-warning').style.display = 'none';
+    };
+
+    document.getElementById('btn-dup-force').onclick = () => {
+        forceSubmit = true;
+        form.submit();
+    };
+})();
+</script>
+@endif

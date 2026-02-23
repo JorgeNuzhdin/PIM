@@ -280,7 +280,7 @@
             <p><strong>Nota:</strong> Los campos marcados con <span style="color: #e53e3e;">*</span> son obligatorios.</p>
         </div>
 
-        <form action="{{ route('pim-sheets.store') }}" method="POST" enctype="multipart/form-data" id="sheetForm" onsubmit="return validateForm()">
+        <form action="{{ route('pim-sheets.store') }}" method="POST" enctype="multipart/form-data" id="sheetForm">
             @csrf
 
             <div class="form-group">
@@ -374,8 +374,16 @@
             <input type="hidden" name="metodos_json" id="metodos_json" value="">
 
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Subir Hoja de Problemas</button>
+                <button type="submit" class="btn btn-primary" id="btn-submit-sheet">Subir Hoja de Problemas</button>
                 <a href="{{ route('pim-sheets.index') }}" class="btn btn-secondary">Cancelar</a>
+            </div>
+
+            <div id="sheet-duplicate-warning" style="display:none; margin-top:1rem; padding:1rem 1.25rem; border-radius:6px; border:1px solid #d69e2e; background:#fffbeb; color:#744210;">
+                <span id="sheet-duplicate-text"></span>
+                <div style="margin-top:0.75rem; display:flex; gap:0.75rem;">
+                    <button type="button" id="btn-sheet-dup-cancel" style="background:#718096;color:white;border:none;padding:0.45rem 1rem;border-radius:4px;cursor:pointer;">Cancelar</button>
+                    <button type="button" id="btn-sheet-dup-force" style="background:#e53e3e;color:white;border:none;padding:0.45rem 1rem;border-radius:4px;cursor:pointer;">Crear de todos modos</button>
+                </div>
             </div>
         </form>
     </div>
@@ -627,7 +635,7 @@
                 if (result.unresolved.length > 0) {
                     showSubtemaModal(result.unresolved, subtemas);
                 } else {
-                    updateMethodsHiddenField(window._extractedMethods);
+                    checkDuplicatesAndFinalize(window._extractedMethods);
                 }
             })
             .catch(error => {
@@ -664,6 +672,9 @@
             } else {
                 statusText = 'Sin subtema asignado';
             }
+            if (method.is_duplicate) {
+                statusText += ` — ⚠️ Duplicado (Método #${method.dup_id}), no se cargará`;
+            }
 
             li.innerHTML = `
                 <span class="method-title">${index + 1}. ${escapeHtml(method.title)}</span>
@@ -682,14 +693,44 @@
         return div.innerHTML;
     }
 
-    // Serializar métodos al campo hidden
+    // Serializar métodos al campo hidden (excluye duplicados y sin subtema)
     function updateMethodsHiddenField(methods) {
-        const data = methods.filter(m => m.subtema_ids && m.subtema_ids.length > 0).map(m => ({
-            title: m.title,
-            method_tex: m.content,
-            subtema_ids: m.subtema_ids
-        }));
+        const data = methods
+            .filter(m => m.subtema_ids && m.subtema_ids.length > 0 && !m.is_duplicate)
+            .map(m => ({
+                title: m.title,
+                method_tex: m.content,
+                subtema_ids: m.subtema_ids
+            }));
         document.getElementById('metodos_json').value = JSON.stringify(data);
+    }
+
+    // Comprobar duplicados de métodos, actualizar display y guardar en hidden field
+    async function checkDuplicatesAndFinalize(methods) {
+        const items = methods.map(m => ({
+            title: m.title || '',
+            content_prefix: (m.content || '').trim().replace(/\s+/g, ' ').substring(0, 100)
+        }));
+
+        try {
+            const resp = await fetch('{{ route("api.check-duplicates.metodos") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                body: JSON.stringify({ items })
+            });
+            const results = await resp.json();
+            results.forEach(r => {
+                if (r.index < methods.length && (r.content_match || r.title_match)) {
+                    methods[r.index].is_duplicate = true;
+                    methods[r.index].dup_id = (r.content_match || r.title_match).id;
+                }
+            });
+        } catch (e) {
+            console.warn('Error al verificar métodos duplicados:', e);
+        }
+
+        displayExtractedMethods(methods);
+        updateMethodsHiddenField(methods);
     }
 
     // Modal para asignar subtemas faltantes
@@ -776,9 +817,8 @@
                 method.subtema_ids = Array.from(checked).map(cb => parseInt(cb.value));
             });
 
-            displayExtractedMethods(window._extractedMethods);
-            updateMethodsHiddenField(window._extractedMethods);
             modal.remove();
+            checkDuplicatesAndFinalize(window._extractedMethods);
         };
 
         modal.addEventListener('click', e => {
@@ -850,10 +890,60 @@
         const temaId = this.value;
         if (temaId && window._extractedMethods && window._extractedMethods.length > 0) {
             // Resetear subtema_ids de todos los métodos para re-resolver
-            window._extractedMethods.forEach(m => m.subtema_ids = []);
+            window._extractedMethods.forEach(m => { m.subtema_ids = []; m.is_duplicate = false; });
             fetchSubtemasAndResolve(temaId, window._extractedMethods);
         }
     });
+
+    // Comprobación de duplicados de la hoja antes de guardar
+    (function () {
+        let forceSubmit = false;
+        const form = document.getElementById('sheetForm');
+
+        form.addEventListener('submit', async function (e) {
+            if (forceSubmit) return;
+            e.preventDefault();
+
+            // Validación síncrona primero
+            if (!validateForm()) return;
+
+            const title = (document.getElementById('title')?.value || '').trim();
+            const warningDiv  = document.getElementById('sheet-duplicate-warning');
+            const warningText = document.getElementById('sheet-duplicate-text');
+
+            try {
+                const resp = await fetch('{{ route("api.check-duplicates.hojas") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: JSON.stringify({ items: [{ title }] })
+                });
+                const results = await resp.json();
+                const r = results[0] || {};
+
+                if (r.title_match) {
+                    warningText.textContent = `Ya existe una hoja con el mismo título (Hoja #${r.title_match.id}). ¿Deseas crearla de todos modos?`;
+                    warningDiv.style.display = 'block';
+                    warningDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    return;
+                }
+
+                forceSubmit = true;
+                form.submit();
+            } catch (err) {
+                console.warn('Error al comprobar duplicados:', err);
+                forceSubmit = true;
+                form.submit();
+            }
+        });
+
+        document.getElementById('btn-sheet-dup-cancel').onclick = () => {
+            document.getElementById('sheet-duplicate-warning').style.display = 'none';
+        };
+        document.getElementById('btn-sheet-dup-force').onclick = () => {
+            forceSubmit = true;
+            form.submit();
+        };
+    })();
 
 </script>
 @endsection

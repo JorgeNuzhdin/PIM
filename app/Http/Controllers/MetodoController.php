@@ -249,6 +249,42 @@ class MetodoController extends Controller
         return response()->json(['success' => true, 'message' => 'Método eliminado correctamente.']);
     }
 
+    public function checkDuplicates(Request $request)
+    {
+        $items = $request->input('items', []);
+        $results = [];
+        $allMetodos = Metodo::whereNotNull('method_tex')->get(['id', 'title', 'method_tex']);
+
+        foreach ($items as $index => $item) {
+            $title = trim($item['title'] ?? '');
+            $contentPrefix = $this->normalizePrefix($item['content_prefix'] ?? '');
+            $titleMatch = null;
+            $contentMatch = null;
+
+            foreach ($allMetodos as $m) {
+                if ($contentMatch === null && $contentPrefix !== '' &&
+                    $this->normalizePrefix($m->method_tex) === $contentPrefix) {
+                    $contentMatch = ['id' => $m->id];
+                }
+                if ($titleMatch === null && $title !== '' &&
+                    trim((string) $m->title) !== '' &&
+                    mb_strtolower(trim((string) $m->title)) === mb_strtolower($title)) {
+                    $titleMatch = ['id' => $m->id];
+                }
+                if ($titleMatch && $contentMatch) break;
+            }
+
+            $results[] = ['index' => $index, 'title_match' => $titleMatch, 'content_match' => $contentMatch];
+        }
+
+        return response()->json($results);
+    }
+
+    private function normalizePrefix(string $text, int $len = 100): string
+    {
+        return substr(trim(preg_replace('/\s+/', ' ', $text)), 0, $len);
+    }
+
     public function apiSubtemas($temaId)
     {
         $subtemas = Subtema::where('tema_id', $temaId)

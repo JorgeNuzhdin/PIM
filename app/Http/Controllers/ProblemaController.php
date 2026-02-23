@@ -571,9 +571,52 @@ class ProblemaController extends Controller
                     $html = LatexHelper::toHtml($latex);
                     
                     return response()->json(['html' => $html]);
-                    
+
                 } catch (\Exception $e) {
                     return response()->json(['error' => $e->getMessage()], 500);
                 }
             }
+
+    public function checkDuplicates(Request $request)
+    {
+        $items = $request->input('items', []);
+        $results = [];
+
+        // Cargar todos los problemas una sola vez para comparar en PHP
+        $allProblems = Problema::whereNotNull('problem_tex')->get(['id', 'title', 'problem_tex']);
+
+        foreach ($items as $index => $item) {
+            $title = trim($item['title'] ?? '');
+            $contentPrefix = $this->normalizePrefix($item['content_prefix'] ?? '');
+
+            $titleMatch = null;
+            $contentMatch = null;
+
+            foreach ($allProblems as $p) {
+                if ($contentMatch === null && $contentPrefix !== '' &&
+                    $this->normalizePrefix($p->problem_tex) === $contentPrefix) {
+                    $contentMatch = ['id' => $p->id];
+                }
+                if ($titleMatch === null && $title !== '' &&
+                    trim((string) $p->title) !== '' &&
+                    mb_strtolower(trim((string) $p->title)) === mb_strtolower($title)) {
+                    $titleMatch = ['id' => $p->id];
+                }
+                if ($titleMatch && $contentMatch) break;
+            }
+
+            $results[] = [
+                'index' => $index,
+                'title_match' => $titleMatch,
+                'content_match' => $contentMatch,
+            ];
+        }
+
+        return response()->json($results);
+    }
+
+    private function normalizePrefix(string $text, int $len = 100): string
+    {
+        return substr(trim(preg_replace('/\s+/', ' ', $text)), 0, $len);
+    }
 }
