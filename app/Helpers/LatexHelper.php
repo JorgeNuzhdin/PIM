@@ -7,6 +7,7 @@ class LatexHelper
     private static $countDefinition = 0;
     private static $countExemple = 0;
     private static $countTheorem = 0;
+    private static $countLemma = 0;
     private static $countReto = 0;
     private static $countRetoResuelto = 0;
     private static $isPreambleContext = false;
@@ -749,6 +750,19 @@ $t = preg_replace('/\\\\definecolor\{[^}]+\}\{[^}]+\}\{[^}]+\}/', '', $t);
         }
         $t = str_replace('\end{theorem}', '</p>', $t);
 
+        // Lemas (lema / lemma)
+        foreach (['\begin{lema}', '\begin{lemma}'] as $needle) {
+            $pos = strpos($t, $needle);
+            while ($pos !== false) {
+                self::$countLemma++;
+                $replace = '<p style="' . $style_th . '"><b>Lema ' . self::$countLemma . ': </b>';
+                $t = substr_replace($t, $replace, $pos, strlen($needle));
+                $pos = strpos($t, $needle);
+            }
+        }
+        $t = str_replace('\end{lema}', '</p>', $t);
+        $t = str_replace('\end{lemma}', '</p>', $t);
+
         // Definiciones
         $needle = '\begin{defin}';
         $pos = strpos($t, $needle);
@@ -988,6 +1002,7 @@ $t .= self::getDebugScript();
         self::$countDefinition = 0;
         self::$countExemple = 0;
         self::$countTheorem = 0;
+        self::$countLemma = 0;
         self::$countReto = 0;
         self::$countRetoResuelto = 0;
     }

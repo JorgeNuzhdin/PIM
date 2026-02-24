@@ -384,9 +384,10 @@ class PimSheetController extends Controller
         $result = $compiler->compile($texContent, $images);
 
         if (!$result['pdf']) {
-            Log::error("Error compilando PDF para sheet {$id}. Temp dir: {$result['tempDir']}");
+            $summary = $result['errorSummary'] ?: 'Error desconocido';
+            Log::error("Error compilando PDF para sheet {$id}. Temp dir: {$result['tempDir']}. Errores: {$summary}");
             // No limpiar para poder inspeccionar el log: $result['tempDir']/document.log
-            return back()->with('error', 'Error al compilar el PDF. Revisa el archivo TEX.');
+            return back()->with('error', 'Error al compilar el PDF: ' . $summary);
         }
 
         $baseName = str_replace(' ', '_', $sheet->title) . '_' . $sheet->date_year . '.pdf';

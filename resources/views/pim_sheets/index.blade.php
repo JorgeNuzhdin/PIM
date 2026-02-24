@@ -280,12 +280,6 @@
         </div>
     </div>
 
-    @if(session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
-        </div>
-    @endif
-
     <!-- Filtros -->
     <div class="filters-container">
         <form method="GET" action="{{ route('pim-sheets.index') }}" id="filterForm">

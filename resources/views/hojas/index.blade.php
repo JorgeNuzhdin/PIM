@@ -6,12 +6,6 @@
 <div class="hojas-container">
     <h1>Hojas de Problemas</h1>
 
-    @if(session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
-        </div>
-    @endif
-
     {{-- Filtros --}}
     <div class="filters-container">
         <form action="{{ route('hojas.index') }}" method="GET" class="filters-form">

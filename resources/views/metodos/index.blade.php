@@ -186,12 +186,6 @@
         </div>
     </div>
 
-    @if(session('success'))
-        <div style="background:#c6f6d5;color:#276749;padding:1rem;border-radius:4px;margin-bottom:1rem;">
-            {{ session('success') }}
-        </div>
-    @endif
-
     <div class="filtros">
         <select id="filtro-tema">
             <option value="">Todos los temas</option>

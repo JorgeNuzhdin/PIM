@@ -64,12 +64,11 @@ class LatexCompilerService
         }
 
         // Extraer líneas de error del log (empiezan con !)
+        $errorLines = [];
         if (!file_exists($pdfPath) && $logContent) {
-            $errorLines = [];
             $lines = explode("\n", $logContent);
             foreach ($lines as $i => $line) {
                 if (str_starts_with(trim($line), '!')) {
-                    // Incluir la línea de error y las 2 siguientes para contexto
                     $errorLines[] = trim($line);
                     if (isset($lines[$i + 1])) $errorLines[] = trim($lines[$i + 1]);
                     if (isset($lines[$i + 2])) $errorLines[] = trim($lines[$i + 2]);
@@ -81,10 +80,15 @@ class LatexCompilerService
             }
         }
 
+        $errorSummary = !empty($errorLines)
+            ? implode(' | ', array_slice(array_filter($errorLines, fn($l) => $l !== '---'), 0, 3))
+            : '';
+
         return [
-            'pdf' => file_exists($pdfPath) ? $pdfPath : null,
-            'tempDir' => $tempDir,
-            'log' => $logContent,
+            'pdf'          => file_exists($pdfPath) ? $pdfPath : null,
+            'tempDir'      => $tempDir,
+            'log'          => $logContent,
+            'errorSummary' => $errorSummary,
         ];
     }
 

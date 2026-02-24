@@ -422,6 +422,16 @@ window.MathJax = {
     </div>
 </nav>
   <main>
+    @if(session('error'))
+    <div style="background:#fed7d7;color:#742a2a;border:1px solid #fc8181;border-radius:6px;padding:0.85rem 1.25rem;margin:1rem auto;max-width:1200px;font-size:0.95rem;">
+        ❌ {{ session('error') }}
+    </div>
+    @endif
+    @if(session('success'))
+    <div style="background:#c6f6d5;color:#276749;border:1px solid #68d391;border-radius:6px;padding:0.85rem 1.25rem;margin:1rem auto;max-width:1200px;font-size:0.95rem;">
+        ✅ {{ session('success') }}
+    </div>
+    @endif
     @yield('content')
 </main>
 

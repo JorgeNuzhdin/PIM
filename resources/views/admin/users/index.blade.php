@@ -6,12 +6,6 @@
 <div class="admin-container">
     <h1>Administrar Usuarios</h1>
 
-    @if(session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
-        </div>
-    @endif
-
     {{-- Filtros --}}
     <div class="filters-container">
         <form action="{{ route('admin.users.index') }}" method="GET" class="filters-form">

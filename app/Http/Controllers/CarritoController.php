@@ -517,16 +517,7 @@ private function crearZip($texContent, $imagenesNombres)
         $result = $compiler->compile($texContent, $imageData);
 
         if (!$result['pdf']) {
-            // Extraer errores del log para mostrar al usuario
-            $errorLines = [];
-            if ($result['log']) {
-                foreach (explode("\n", $result['log']) as $line) {
-                    if (str_starts_with(trim($line), '!')) {
-                        $errorLines[] = trim($line);
-                    }
-                }
-            }
-            $errorSummary = !empty($errorLines) ? implode(' | ', array_slice($errorLines, 0, 3)) : 'Error desconocido';
+            $errorSummary = $result['errorSummary'] ?: 'Error desconocido';
             $ids = $items->map(fn($i) => $i->problema_id ? "P{$i->problema_id}" : "M{$i->metodo_id}")->implode(',');
             Log::error("Error compilando PDF del carrito. IDs: {$ids}. Errores: {$errorSummary}. Temp dir: {$result['tempDir']}");
             // No limpiar tempDir para poder depurar el .tex generado

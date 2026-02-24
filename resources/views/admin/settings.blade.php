@@ -6,12 +6,6 @@
 <div style="max-width: 600px; margin: 2rem auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
     <h1 style="margin-bottom: 1.5rem; color: #2d3748;">⚙️ Configuración del sitio</h1>
 
-    @if(session('success'))
-        <div style="background:#d4edda;color:#155724;border:1px solid #c3e6cb;padding:0.75rem 1rem;border-radius:4px;margin-bottom:1rem;">
-            {{ session('success') }}
-        </div>
-    @endif
-
     @if($errors->any())
         <div style="background:#fed7d7;color:#c53030;border:1px solid #fc8181;padding:0.75rem 1rem;border-radius:4px;margin-bottom:1rem;">
             @foreach($errors->all() as $error)

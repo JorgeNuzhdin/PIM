@@ -214,8 +214,10 @@ class MetodoController extends Controller
         $result = $compiler->compile($texDocument);
 
         if (!$result['pdf']) {
-            Log::error("Error compilando PDF para método {$id}. Temp dir: {$result['tempDir']}");
-            return back()->with('error', 'Error al compilar el PDF.');
+            $summary = $result['errorSummary'] ?: 'Error desconocido';
+            Log::error("Error compilando PDF para método {$id}. Temp dir: {$result['tempDir']}. Errores: {$summary}");
+            $compiler->cleanup($result['tempDir']);
+            return back()->with('error', 'Error al compilar el PDF: ' . $summary);
         }
 
         $filename = preg_replace('/[^a-zA-Z0-9_\-áéíóúñÁÉÍÓÚÑ ]/u', '', $metodo->title);
