@@ -582,8 +582,10 @@ class ProblemaController extends Controller
         $items = $request->input('items', []);
         $results = [];
 
-        // Cargar todos los problemas una sola vez para comparar en PHP
-        $allProblems = Problema::whereNotNull('problem_tex')->get(['id', 'title', 'problem_tex']);
+        // Cargar solo los primeros 500 chars de problem_tex para evitar OOM
+        $allProblems = Problema::whereNotNull('problem_tex')
+            ->selectRaw('id, title, SUBSTRING(problem_tex, 1, 500) AS problem_tex')
+            ->get();
 
         foreach ($items as $index => $item) {
             $title = trim($item['title'] ?? '');
