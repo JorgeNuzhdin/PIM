@@ -250,6 +250,8 @@ class PimSheetController extends Controller
      */
     public function download($id)
     {
+        if (AccessHelper::isRestricted()) abort(403);
+
         Log::info('=== PimSheet Download ===');
         Log::info('ID recibido: ' . $id);
 
