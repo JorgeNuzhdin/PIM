@@ -207,7 +207,11 @@
                 <option value="{{ $inst }}" {{ request('institution') == $inst ? 'selected' : '' }}>{{ $inst }}</option>
             @endforeach
         </select>
+        @if(Auth::user()->rol !== 'user')
+        <button type="button" id="btn-add-bulk-metodos" style="background:#48bb78;color:white;border:none;border-radius:4px;padding:0.5rem 1rem;font-weight:600;cursor:pointer;font-size:0.9rem;" onclick="addFilteredMetodosToCarrito()">Al carrito</button>
+        @endif
     </div>
+    <div id="bulk-metodos-msg" style="display:none;padding:0.5rem 1rem;border-radius:6px;margin-top:0.5rem;font-size:0.9rem;"></div>
 
     @if($metodos->count() > 0)
         <table class="metodos-table">
@@ -336,11 +340,43 @@ function toggleMetodoCarrito(metodoId, button) {
         }
         const countEl = document.getElementById('carrito-count');
         if (countEl) countEl.textContent = data.count;
+        if (data.status === 'limit_exceeded') {
+            alert(data.message);
+        }
     })
     .catch(err => {
         console.error('Error:', err);
         alert('Error al actualizar el carrito');
     });
+}
+
+function addFilteredMetodosToCarrito() {
+    const params = buildFilterParams();
+    const body = Object.fromEntries(params);
+    body.type = 'metodos';
+    const btn = document.getElementById('btn-add-bulk-metodos');
+    if (btn) btn.disabled = true;
+    fetch('{{ route("carrito.addBulk") }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+        body: JSON.stringify(body)
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (btn) btn.disabled = false;
+        const msg = document.getElementById('bulk-metodos-msg');
+        if (data.success) {
+            msg.style.cssText = 'display:block;padding:0.5rem 1rem;border-radius:6px;margin-top:0.5rem;font-size:0.9rem;background:#c6f6d5;color:#276749;border:1px solid #68d391;';
+            msg.textContent = '✅ ' + data.message;
+            const countEl = document.getElementById('carrito-count');
+            if (countEl) countEl.textContent = data.count;
+        } else {
+            msg.style.cssText = 'display:block;padding:0.5rem 1rem;border-radius:6px;margin-top:0.5rem;font-size:0.9rem;background:#fed7d7;color:#742a2a;border:1px solid #fc8181;';
+            msg.textContent = '❌ ' + data.error;
+        }
+        setTimeout(() => { msg.style.display = 'none'; }, 5000);
+    })
+    .catch(() => { if (btn) btn.disabled = false; alert('Error al añadir al carrito'); });
 }
 
 let deleteMode = false;

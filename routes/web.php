@@ -30,6 +30,7 @@ Route::middleware('auth')->group(function () {
      Route::post('/latex/preview', [App\Http\Controllers\ProblemaController::class, 'latexPreview'])->name('latex.preview');
     Route::get('/carrito', [App\Http\Controllers\CarritoController::class, 'index'])->name('carrito.index');
     Route::post('/carrito/toggle', [App\Http\Controllers\CarritoController::class, 'toggle'])->name('carrito.toggle');
+    Route::post('/carrito/add-bulk', [App\Http\Controllers\CarritoController::class, 'addBulk'])->name('carrito.addBulk');
     Route::post('/carrito/update-order', [App\Http\Controllers\CarritoController::class, 'updateOrder'])->name('carrito.updateOrder');
     Route::get('/carrito/count', [App\Http\Controllers\CarritoController::class, 'count'])->name('carrito.count');
     Route::get('/carrito/descargar-tex', [App\Http\Controllers\CarritoController::class, 'descargarTex'])->name('carrito.descargar.tex');

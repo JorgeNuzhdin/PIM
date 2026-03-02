@@ -3,9 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\AccessHelper;
+use App\Helpers\SchoolYearHelper;
+use App\Helpers\SourceHelper;
 use App\Models\Carrito;
 use App\Models\Metodo;
 use App\Models\Problema;
+use App\Models\ProblemaTag;
+use App\Models\TopicTema;
 use App\Models\Figure;
 use App\Services\LatexCompilerService;
 use Illuminate\Http\Request;
@@ -49,6 +53,10 @@ class CarritoController extends Controller
                 $item->delete();
                 return response()->json(['status' => 'removed', 'count' => $this->getCount()]);
             } else {
+                $currentMetodoCount = Carrito::where('user_id', Auth::id())->whereNotNull('metodo_id')->count();
+                if ($currentMetodoCount >= 10) {
+                    return response()->json(['status' => 'limit_exceeded', 'message' => 'El carrito ya tiene el máximo de 10 métodos', 'count' => $this->getCount()]);
+                }
                 // Metodos van ANTES de todo: incrementar orden de existentes e insertar con orden 0
                 Carrito::where('user_id', Auth::id())->increment('orden');
                 Carrito::create([
@@ -71,6 +79,10 @@ class CarritoController extends Controller
                 $item->delete();
                 return response()->json(['status' => 'removed', 'count' => $this->getCount()]);
             } else {
+                $currentProblemaCount = Carrito::where('user_id', Auth::id())->whereNotNull('problema_id')->count();
+                if ($currentProblemaCount >= 50) {
+                    return response()->json(['status' => 'limit_exceeded', 'message' => 'El carrito ya tiene el máximo de 50 problemas', 'count' => $this->getCount()]);
+                }
                 $maxOrden = Carrito::where('user_id', Auth::id())->max('orden') ?? 0;
                 Carrito::create([
                     'user_id' => Auth::id(),
@@ -95,6 +107,168 @@ class CarritoController extends Controller
         return response()->json(['status' => 'success']);
     }
     
+    public function addBulk(Request $request)
+    {
+        $type = $request->input('type');
+
+        if ($type === 'problemas') {
+            $query = Problema::query()->select('id');
+
+            $allowedIds = AccessHelper::allowedProblemIds();
+            if ($allowedIds !== null) {
+                if (empty($allowedIds)) {
+                    return response()->json(['error' => 'No hay problemas disponibles'], 200);
+                }
+                $query->whereIn('id', $allowedIds);
+            }
+
+            if ($request->filled('buscar')) {
+                $buscar = $request->buscar;
+                $query->where(function ($q) use ($buscar) {
+                    if (is_numeric($buscar)) {
+                        $q->where('id', $buscar);
+                    }
+                    $q->orWhere('title', 'LIKE', "%{$buscar}%")
+                      ->orWhere('problem_tex', 'LIKE', "%{$buscar}%")
+                      ->orWhere('solution_tex', 'LIKE', "%{$buscar}%")
+                      ->orWhere('source', 'LIKE', "%{$buscar}%");
+                });
+            }
+
+            if ($request->filled('tema_id')) {
+                $topicTitles = TopicTema::where('tema_id', $request->tema_id)->pluck('topic_title')->toArray();
+                $ids = ProblemaTag::whereIn('tag', $topicTitles)->distinct()->pluck('problem_id')->toArray();
+                $query->whereIn('id', !empty($ids) ? $ids : [0]);
+            }
+
+            $tagFilter = $request->filled('topic_title') ? $request->topic_title
+                       : ($request->filled('topic_display') ? $request->topic_display : null);
+            if ($tagFilter) {
+                $ids = ProblemaTag::where('tag', $tagFilter)->distinct()->pluck('problem_id')->toArray();
+                if (empty($ids)) {
+                    $ids = ProblemaTag::where('tag', 'LIKE', "%{$tagFilter}%")->distinct()->pluck('problem_id')->toArray();
+                }
+                $query->whereIn('id', !empty($ids) ? $ids : [0]);
+            }
+
+            if ($request->filled('difficulty_min')) {
+                $query->where('difficulty', '>=', $request->difficulty_min);
+            }
+            if ($request->filled('difficulty_max')) {
+                $query->where('difficulty', '<=', $request->difficulty_max);
+            }
+
+            if ($request->filled('school_year_min') || $request->filled('school_year_max')) {
+                $allYears = SchoolYearHelper::getAllYears();
+                $min = $request->input('school_year_min', 1);
+                $max = $request->input('school_year_max', 12);
+                $validYears = array_filter($allYears, fn($k) => $k >= $min && $k <= $max, ARRAY_FILTER_USE_KEY);
+                if (!empty($validYears)) {
+                    $query->whereIn('school_year', array_values($validYears));
+                } else {
+                    $query->whereRaw('1 = 0');
+                }
+            }
+
+            if ($request->filled('source')) {
+                SourceHelper::applySourceFilterWithCommas($query, $request->source);
+            }
+
+            if ($request->filled('proponent_id')) {
+                $query->where('proponent_id', $request->proponent_id);
+            } elseif ($request->boolean('solo_mios') && in_array(Auth::user()->rol, ['admin', 'editor'])) {
+                $query->where('proponent_id', Auth::id());
+            }
+
+            $filteredCount = $query->count();
+            if ($filteredCount > 50) {
+                return response()->json(['error' => "No puedo añadir más de 50 problemas ({$filteredCount} encontrados con estos filtros)"], 422);
+            }
+
+            $currentCount = Carrito::where('user_id', Auth::id())->whereNotNull('problema_id')->count();
+            $filteredIds = $query->pluck('id')->toArray();
+            $alreadyInCart = Carrito::where('user_id', Auth::id())
+                ->whereNotNull('problema_id')->whereIn('problema_id', $filteredIds)
+                ->pluck('problema_id')->toArray();
+            $toAdd = array_values(array_diff($filteredIds, $alreadyInCart));
+
+            if ($currentCount + count($toAdd) > 50) {
+                $canAdd = 50 - $currentCount;
+                return response()->json(['error' => "El carrito ya tiene {$currentCount} problemas. Solo puedes añadir {$canAdd} más (límite: 50)"], 422);
+            }
+
+            $maxOrden = Carrito::where('user_id', Auth::id())->max('orden') ?? 0;
+            foreach ($toAdd as $id) {
+                $maxOrden++;
+                Carrito::create(['user_id' => Auth::id(), 'problema_id' => $id, 'orden' => $maxOrden]);
+            }
+
+            $added = count($toAdd);
+            $already = count($alreadyInCart);
+            if ($added === 0) {
+                $msg = 'Todos los problemas ya estaban en el carrito';
+            } else {
+                $msg = "{$added} problema" . ($added !== 1 ? 's' : '') . " añadido" . ($added !== 1 ? 's' : '') . " al carrito";
+                if ($already > 0) {
+                    $msg .= " ({$already} ya estaba" . ($already !== 1 ? 'n' : '') . ")";
+                }
+            }
+
+            return response()->json(['success' => true, 'message' => $msg, 'count' => $this->getCount()]);
+        }
+
+        if ($type === 'metodos') {
+            $query = Metodo::query()->select('id');
+
+            if ($request->filled('tema_id')) {
+                $query->where('tema_id', $request->tema_id);
+            }
+            if ($request->filled('subtema_id')) {
+                $query->whereRaw('FIND_IN_SET(?, subtema_ids)', [$request->subtema_id]);
+            }
+            if ($request->filled('institution')) {
+                $query->where('institution', $request->institution);
+            }
+
+            $filteredCount = $query->count();
+            if ($filteredCount > 10) {
+                return response()->json(['error' => "No puedo añadir más de 10 métodos ({$filteredCount} encontrados con estos filtros)"], 422);
+            }
+
+            $currentCount = Carrito::where('user_id', Auth::id())->whereNotNull('metodo_id')->count();
+            $filteredIds = $query->pluck('id')->toArray();
+            $alreadyInCart = Carrito::where('user_id', Auth::id())
+                ->whereNotNull('metodo_id')->whereIn('metodo_id', $filteredIds)
+                ->pluck('metodo_id')->toArray();
+            $toAdd = array_values(array_diff($filteredIds, $alreadyInCart));
+
+            if ($currentCount + count($toAdd) > 10) {
+                $canAdd = 10 - $currentCount;
+                return response()->json(['error' => "El carrito ya tiene {$currentCount} métodos. Solo puedes añadir {$canAdd} más (límite: 10)"], 422);
+            }
+
+            foreach ($toAdd as $id) {
+                Carrito::where('user_id', Auth::id())->increment('orden');
+                Carrito::create(['user_id' => Auth::id(), 'metodo_id' => $id, 'orden' => 0]);
+            }
+
+            $added = count($toAdd);
+            $already = count($alreadyInCart);
+            if ($added === 0) {
+                $msg = 'Todos los métodos ya estaban en el carrito';
+            } else {
+                $msg = "{$added} método" . ($added !== 1 ? 's' : '') . " añadido" . ($added !== 1 ? 's' : '') . " al carrito";
+                if ($already > 0) {
+                    $msg .= " ({$already} ya estaba" . ($already !== 1 ? 'n' : '') . ")";
+                }
+            }
+
+            return response()->json(['success' => true, 'message' => $msg, 'count' => $this->getCount()]);
+        }
+
+        return response()->json(['error' => 'Tipo no válido'], 400);
+    }
+
     public function count()
     {
         $items = Carrito::where('user_id', Auth::id())->get();

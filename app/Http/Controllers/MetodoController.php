@@ -256,7 +256,7 @@ class MetodoController extends Controller
         $items = $request->input('items', []);
         $results = [];
         $allMetodos = Metodo::whereNotNull('method_tex')
-            ->selectRaw('id, title, SUBSTRING(method_tex, 1, 500) AS method_tex')
+            ->selectRaw('id, title, SUBSTRING(method_tex, 1, 100) AS method_tex')
             ->get();
 
         foreach ($items as $index => $item) {

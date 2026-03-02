@@ -825,6 +825,7 @@
             <div class="form-group form-buttons form-buttons-col3">
                 <button type="submit" class="btn">Filtrar</button>
                 <a href="{{ route('problemas.index') }}" class="btn btn-secondary">Limpiar</a>
+                <button type="button" class="btn" style="background:#48bb78;color:white;" onclick="addFilteredToCarrito()">Al carrito</button>
             </div>
 
             {{-- Editor: checkbox en col 3 alineado con Mostrar, botones debajo en col 3 --}}
@@ -840,6 +841,7 @@
             <div class="form-group form-buttons form-buttons-col3">
                 <button type="submit" class="btn">Filtrar</button>
                 <a href="{{ route('problemas.index') }}" class="btn btn-secondary">Limpiar</a>
+                <button type="button" class="btn" style="background:#48bb78;color:white;" onclick="addFilteredToCarrito()">Al carrito</button>
             </div>
 
             {{-- Resto de roles: botones en col 3 de la misma fila --}}
@@ -847,14 +849,15 @@
             <div class="form-group form-buttons">
                 <button type="submit" class="btn">Filtrar</button>
                 <a href="{{ route('problemas.index') }}" class="btn btn-secondary">Limpiar</a>
+                @if(Auth::user()->rol !== 'user')
+                <button type="button" class="btn" style="background:#48bb78;color:white;" onclick="addFilteredToCarrito()">Al carrito</button>
+                @endif
             </div>
             @endif
         </div>
     </form>
 </div>
-
-
-    
+<div id="bulk-carrito-msg" style="display:none;padding:0.6rem 1.2rem;border-radius:6px;margin:0.5rem 2rem 0;font-size:0.95rem;"></div>
 
 @php
     $params = request()->except('page');
@@ -1200,11 +1203,41 @@ function toggleCarrito(problemaId, button) {
         
         // Actualizar contador
         document.getElementById('carrito-count').textContent = data.count;
+        if (data.status === 'limit_exceeded') {
+            alert(data.message);
+        }
     })
     .catch(error => {
         console.error('Error:', error);
         alert('Error al actualizar el carrito');
     });
+}
+
+function addFilteredToCarrito() {
+    const params = Object.fromEntries(new URLSearchParams(window.location.search));
+    params.type = 'problemas';
+    const btn = event.currentTarget;
+    btn.disabled = true;
+    fetch('{{ route("carrito.addBulk") }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+        body: JSON.stringify(params)
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        const msg = document.getElementById('bulk-carrito-msg');
+        if (data.success) {
+            msg.style.cssText = 'display:block;padding:0.6rem 1.2rem;border-radius:6px;margin:0.5rem 2rem 0;font-size:0.95rem;background:#c6f6d5;color:#276749;border:1px solid #68d391;';
+            msg.textContent = '✅ ' + data.message;
+            document.getElementById('carrito-count').textContent = data.count;
+        } else {
+            msg.style.cssText = 'display:block;padding:0.6rem 1.2rem;border-radius:6px;margin:0.5rem 2rem 0;font-size:0.95rem;background:#fed7d7;color:#742a2a;border:1px solid #fc8181;';
+            msg.textContent = '❌ ' + data.error;
+        }
+        setTimeout(() => { msg.style.display = 'none'; }, 5000);
+    })
+    .catch(() => { btn.disabled = false; alert('Error al añadir al carrito'); });
 }
 
 function eliminarProblema(problemaId) {

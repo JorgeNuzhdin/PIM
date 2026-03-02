@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Tag;
 use App\Models\ProblemaTag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -106,15 +105,6 @@ class TagController extends Controller
 
             // Actualizar los restantes al nuevo nombre
             ProblemaTag::where('tag', $oldTitle)->update(['tag' => $newTitle]);
-
-            // Actualizar en tags si existe, o eliminar si hay fusión
-            if (Tag::where('title', $newTitle)->exists()) {
-                // Si el nuevo ya existe en tags, eliminar el viejo
-                Tag::where('title', $oldTitle)->delete();
-            } else {
-                // Si no existe, renombrar
-                Tag::where('title', $oldTitle)->update(['title' => $newTitle]);
-            }
         });
 
         $message = $newExists
@@ -146,11 +136,7 @@ class TagController extends Controller
         }
 
         DB::transaction(function () use ($title) {
-            // Eliminar de problemas_tags
             ProblemaTag::where('tag', $title)->delete();
-
-            // Eliminar de tags si existe
-            Tag::where('title', $title)->delete();
         });
 
         return response()->json([
