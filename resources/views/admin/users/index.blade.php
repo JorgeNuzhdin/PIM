@@ -31,6 +31,19 @@
             </div>
 
             <div class="filter-group">
+                <label for="profession">Profesión</label>
+                <select name="profession" id="profession">
+                    <option value="">Todas</option>
+                    <option value="alumno_secundaria"   {{ request('profession') == 'alumno_secundaria'   ? 'selected' : '' }}>Alumno secundaria</option>
+                    <option value="alumno_bachillerato" {{ request('profession') == 'alumno_bachillerato' ? 'selected' : '' }}>Alumno bachillerato</option>
+                    <option value="alumno_universitario" {{ request('profession') == 'alumno_universitario' ? 'selected' : '' }}>Alumno universitario</option>
+                    <option value="profesor_matematicas" {{ request('profession') == 'profesor_matematicas' ? 'selected' : '' }}>Profesor matemáticas</option>
+                    <option value="profesor_universitario" {{ request('profession') == 'profesor_universitario' ? 'selected' : '' }}>Profesor universitario</option>
+                    <option value="otro" {{ request('profession') == 'otro' ? 'selected' : '' }}>Otro</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
                 <label for="created_at">Registrado desde</label>
                 <input type="date" name="created_at" id="created_at" value="{{ request('created_at') }}">
             </div>
@@ -50,6 +63,8 @@
                     <th>Nombre</th>
                     <th>Email</th>
                     <th>Fecha registro</th>
+                    <th>Profesión</th>
+                    <th>Motivo</th>
                     <th>Rol</th>
                     <th>Acciones
                         <button id="btn-enable-delete" onclick="toggleDeleteMode()" title="Habilitar eliminación de usuarios"
@@ -59,11 +74,32 @@
                 </tr>
             </thead>
             <tbody>
+                @php
+                $professionLabels = [
+                    'alumno_secundaria'    => 'Alumno secundaria',
+                    'alumno_bachillerato'  => 'Alumno bachillerato',
+                    'alumno_universitario' => 'Alumno universitario',
+                    'profesor_matematicas' => 'Profe. matemáticas',
+                    'profesor_universitario' => 'Profe. universitario',
+                ];
+                $reasonLabels = [
+                    'estudiar_matematicas' => 'Estudiar matemáticas',
+                    'ensenar_matematicas'  => 'Enseñar matemáticas',
+                ];
+                @endphp
                 @forelse($users as $user)
+                    @php
+                        $prof = $user->profession ?? '';
+                        $profLabel = $professionLabels[$prof] ?? ($prof ?: '-');
+                        $reas = $user->reason ?? '';
+                        $reasLabel = $reasonLabels[$reas] ?? ($reas ?: '-');
+                    @endphp
                     <tr>
                         <td>{{ $user->name }}</td>
                         <td>{{ $user->email }}</td>
                         <td>{{ $user->created_at?->format('d/m/Y H:i') ?? '-' }}</td>
+                        <td title="{{ $profLabel }}">{{ Str::limit($profLabel, 22, '…') }}</td>
+                        <td title="{{ $reasLabel }}">{{ Str::limit($reasLabel, 22, '…') }}</td>
                         <td>
                             <span class="rol-badge rol-{{ $user->rol }}">
                                 {{ ucfirst($user->rol) }}
@@ -93,7 +129,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="empty-row">No se encontraron usuarios.</td>
+                        <td colspan="7" class="empty-row">No se encontraron usuarios.</td>
                     </tr>
                 @endforelse
             </tbody>

@@ -24,6 +24,10 @@ class AdminUserController extends Controller
             $query->where('rol', $request->rol);
         }
 
+        if ($request->filled('profession')) {
+            $query->where('profession', $request->profession);
+        }
+
         if ($request->filled('created_at')) {
             $query->whereDate('created_at', '>=', $request->created_at);
         }
