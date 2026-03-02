@@ -22,6 +22,9 @@ Route::middleware(['auth'])->prefix('hojas')->name('hojas.')->group(function () 
     Route::delete('/{hoja}', [HojaController::class, 'destroy'])->name('destroy');
 });
 Route::middleware('auth')->group(function () {
+    Route::get('/perfil/editar', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/perfil', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+
     Route::get('/problemas', [App\Http\Controllers\ProblemaController::class, 'index'])->name('problemas.index');
     Route::get('/problemas/{id}', [App\Http\Controllers\ProblemaController::class, 'show'])->name('problemas.show')->where('id', '[0-9]+');
     Route::get('/api/topics/buscar', [App\Http\Controllers\ProblemaController::class, 'buscarTopics'])->name('topics.buscar');
