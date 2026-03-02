@@ -200,7 +200,7 @@
 
 .btn {
     padding: 0.5rem 1.5rem;
-    background-color: #4a5568;
+    background-color: #007bff;
     color: white;
     border: none;
     border-radius: 4px;
@@ -209,7 +209,7 @@
 }
 
 .btn:hover {
-    background-color: #2d3748;
+    background-color: #0056b3;
 }
 
 .btn-secondary {
