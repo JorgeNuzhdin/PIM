@@ -30,23 +30,31 @@
         color: #4a5568;
     }
 
-    .form-group input {
+    .form-group input,
+    .form-group select {
         width: 100%;
         padding: 0.75rem;
         border: 1px solid #cbd5e0;
         border-radius: 4px;
         font-size: 1rem;
         box-sizing: border-box;
+        background: white;
     }
 
-    .form-group input:focus {
+    .form-group input:focus,
+    .form-group select:focus {
         outline: none;
         border-color: #4a5568;
         box-shadow: 0 0 0 2px rgba(74, 85, 104, 0.2);
     }
 
-    .form-group input.is-invalid {
+    .form-group input.is-invalid,
+    .form-group select.is-invalid {
         border-color: #e53e3e;
+    }
+
+    .otro-input {
+        margin-top: 0.5rem;
     }
 
     .invalid-feedback {
@@ -85,6 +93,16 @@
 </style>
 @endsection
 
+@section('scripts')
+<script>
+function toggleOtro(field, value) {
+    const input = document.getElementById(field + '_otro');
+    input.style.display = value === 'otro' ? 'block' : 'none';
+    if (value !== 'otro') input.value = '';
+}
+</script>
+@endsection
+
 @section('content')
 <div class="container">
     <div class="register-container">
@@ -113,6 +131,43 @@
                 <label for="institution">Institución</label>
                 <input id="institution" type="text" class="@error('institution') is-invalid @enderror" name="institution" value="{{ old('institution') }}" autocomplete="organization" placeholder="PIM">
                 @error('institution')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="form-group">
+                <label for="profession">Profesión / Estudios actuales <span style="color:#e53e3e;">*</span></label>
+                <select id="profession" name="profession" class="@error('profession') is-invalid @enderror" onchange="toggleOtro('profession', this.value)">
+                    <option value="">-- Selecciona --</option>
+                    <option value="alumno_secundaria"  {{ old('profession') === 'alumno_secundaria'  ? 'selected' : '' }}>Alumno de secundaria</option>
+                    <option value="alumno_bachillerato" {{ old('profession') === 'alumno_bachillerato' ? 'selected' : '' }}>Alumno de bachillerato</option>
+                    <option value="alumno_universitario" {{ old('profession') === 'alumno_universitario' ? 'selected' : '' }}>Alumno universitario</option>
+                    <option value="profesor_matematicas" {{ old('profession') === 'profesor_matematicas' ? 'selected' : '' }}>Profesor de matemáticas (colegio o instituto)</option>
+                    <option value="profesor_universitario" {{ old('profession') === 'profesor_universitario' ? 'selected' : '' }}>Profesor universitario</option>
+                    <option value="otro" {{ old('profession') === 'otro' ? 'selected' : '' }}>Otro</option>
+                </select>
+                <input type="text" id="profession_otro" name="profession_otro" class="otro-input"
+                       placeholder="Especifica tu profesión o estudios"
+                       value="{{ old('profession_otro') }}"
+                       style="display:{{ old('profession') === 'otro' ? 'block' : 'none' }};">
+                @error('profession')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="form-group">
+                <label for="reason">Motivo de registro <span style="color:#e53e3e;">*</span></label>
+                <select id="reason" name="reason" class="@error('reason') is-invalid @enderror" onchange="toggleOtro('reason', this.value)">
+                    <option value="">-- Selecciona --</option>
+                    <option value="estudiar_matematicas"  {{ old('reason') === 'estudiar_matematicas'  ? 'selected' : '' }}>Estudiar matemáticas</option>
+                    <option value="ensenar_matematicas" {{ old('reason') === 'ensenar_matematicas' ? 'selected' : '' }}>Enseñar matemáticas</option>
+                    <option value="otro" {{ old('reason') === 'otro' ? 'selected' : '' }}>Otro</option>
+                </select>
+                <input type="text" id="reason_otro" name="reason_otro" class="otro-input"
+                       placeholder="Especifica el motivo"
+                       value="{{ old('reason_otro') }}"
+                       style="display:{{ old('reason') === 'otro' ? 'block' : 'none' }};">
+                @error('reason')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
