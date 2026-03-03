@@ -254,12 +254,10 @@
                 TEX ⤓
             </a>
             @endif
-            <a href="{{ route('pim-sheets.download-pdf', ['id' => $sheet->id, 'solutions' => '1']) }}" class="btn btn-primary" style="background-color: #e53e3e;" title="PDF con soluciones (para profesores)">
-                PDF prof ⤓
-            </a>
-            <a href="{{ route('pim-sheets.download-pdf', ['id' => $sheet->id, 'solutions' => '0']) }}" class="btn btn-primary" style="background-color: #718096;" title="PDF sin soluciones (para alumnos)">
-                PDF alum ⤓
-            </a>
+            <button class="btn btn-primary" style="background-color:#e53e3e;"
+                    data-url-prof="{{ route('pim-sheets.download-pdf', ['id' => $sheet->id, 'solutions' => '1']) }}"
+                    data-url-alum="{{ route('pim-sheets.download-pdf', ['id' => $sheet->id, 'solutions' => '0']) }}"
+                    onclick="openPdfModal(this)">PDF ⤓</button>
             <a href="{{ route('pim-sheets.index') }}" class="btn btn-secondary">
                 ← Volver al listado
             </a>
@@ -386,4 +384,6 @@
         </div>
     @endif
 </div>
+
+@include('_partials.pdf-modal')
 @endsection

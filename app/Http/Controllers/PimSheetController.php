@@ -738,13 +738,23 @@ class PimSheetController extends Controller
      */
     private function applyShowSolutions(string $tex, bool $withSolutions): string
     {
-        if ($withSolutions) {
-            $tex = preg_replace('/^%+\s*(\\\\showsolutionstrue\b.*)/m', '$1', $tex);
-            $tex = preg_replace('/^(\\\\showsolutionsfalse\b.*)/m', '%$1', $tex);
+        // Eliminar todas las líneas showsolutionstrue/false (comentadas o no)
+        $tex = preg_replace('/^[ \t]*%*[ \t]*\\\\showsolutions(?:true|false)\b[^\n]*/m', '', $tex);
+
+        $line = $withSolutions ? '\\showsolutionstrue' : '\\showsolutionsfalse';
+
+        // Insertar justo después de \newif\ifshowsolutions
+        if (strpos($tex, '\newif\ifshowsolutions') !== false) {
+            $tex = preg_replace(
+                '/(\\\\newif\\\\ifshowsolutions[^\n]*\n)/m',
+                '$1' . $line . "\n",
+                $tex, 1
+            );
         } else {
-            $tex = preg_replace('/^%+\s*(\\\\showsolutionsfalse\b.*)/m', '$1', $tex);
-            $tex = preg_replace('/^(\\\\showsolutionstrue\b.*)/m', '%$1', $tex);
+            // Fallback: insertar al principio
+            $tex = $line . "\n" . $tex;
         }
+
         return $tex;
     }
 }

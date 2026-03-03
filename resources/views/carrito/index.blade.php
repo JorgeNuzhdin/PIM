@@ -177,12 +177,12 @@
                  TEX ⤓
             </a>
             @endif
-            <a href="{{ route('carrito.descargar.pdf', ['solutions' => '1']) }}" class="btn-carrito btn-pdf" title="PDF con soluciones (para profesores)">
-                 PDF prof ⤓
-            </a>
-            <a href="{{ route('carrito.descargar.pdf', ['solutions' => '0']) }}" class="btn-carrito btn-pdf" style="background-color: #718096;" title="PDF sin soluciones (para alumnos)">
-                 PDF alum ⤓
-            </a>
+            <button class="btn-carrito btn-pdf"
+                    data-url-prof="{{ route('carrito.descargar.pdf', ['solutions' => '1']) }}"
+                    data-url-alum="{{ route('carrito.descargar.pdf', ['solutions' => '0']) }}"
+                    onclick="openPdfModal(this)">
+                 PDF ⤓
+            </button>
             <a href="{{ route('carrito.presentacion') }}" class="btn-carrito btn-html">
                  HTML
             </a>
@@ -408,4 +408,5 @@ function limpiarCarrito() {
     }
 }
 </script>
+@include('_partials.pdf-modal')
 @endsection

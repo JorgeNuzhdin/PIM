@@ -467,8 +467,10 @@
                         <td class="actions-cell">
                             <a href="{{ route('pim-sheets.show', ['id' => $sheet->id]) }}" class="btn-action view" title="Ver hoja">👁️</a>
                             @if(Auth::user()->rol !== 'user')<a href="{{ route('pim-sheets.download', ['id' => $sheet->id]) }}" class="btn-action download-tex" title="Descargar TEX+IMG (ZIP)">TEX⤓</a>@endif
-                            <a href="{{ route('pim-sheets.download-pdf', ['id' => $sheet->id, 'solutions' => '1']) }}" class="btn-action download-pdf" title="PDF con soluciones (profesores)">PDF prof⤓</a>
-                            <a href="{{ route('pim-sheets.download-pdf', ['id' => $sheet->id, 'solutions' => '0']) }}" class="btn-action download-pdf" style="background-color:#718096;" title="PDF sin soluciones (alumnos)">PDF alum⤓</a>
+                            <button class="btn-action download-pdf"
+                                    data-url-prof="{{ route('pim-sheets.download-pdf', ['id' => $sheet->id, 'solutions' => '1']) }}"
+                                    data-url-alum="{{ route('pim-sheets.download-pdf', ['id' => $sheet->id, 'solutions' => '0']) }}"
+                                    onclick="openPdfModal(this)" title="Descargar PDF">PDF⤓</button>
                             @auth
                                 @if(Auth::user()->isAdmin())
                                     <a href="{{ route('pim-sheets.edit', ['id' => $sheet->id]) }}" class="btn-action edit" title="Editar metadatos"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.1em" height="1.1em" fill="currentColor" style="vertical-align:middle;"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></a>
@@ -553,4 +555,5 @@
     }
 
 </script>
+@include('_partials.pdf-modal')
 @endsection
