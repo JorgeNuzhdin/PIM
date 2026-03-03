@@ -461,12 +461,9 @@ LATEX;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Geometría de página %%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\renewcommand{\baselinestretch}{1}
-\setlength{\parindent}{2em}
-\setlength{\textwidth}{19cm}
-\setlength{\textheight}{25cm}
-\setlength{\topmargin}{-2cm}
-\setlength{\oddsidemargin}{-1.5cm}
+\geometry{a4paper, top=2cm, bottom=2.5cm, left=2.5cm, right=2.5cm}
+\renewcommand{\baselinestretch}{1.1}
+\setlength{\parindent}{1em}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Comandos personalizados %%%%%%
@@ -677,10 +674,22 @@ private function crearZip($texContent, $imagenesNombres)
         $imagenes = $result['imagenes'];
 
         $preambulo = $this->generarPreambulo($result['packages'], $withSolutions);
-        $texContent = $preambulo . "\n\n\\begin{document}\n\n" . $result['contenido'] . "\n\\end{document}";
+
+        $logoPath = resource_path('LogoPIMgeneral.png');
+
+        $texContent = $preambulo . "\n\n\\begin{document}\n\n"
+            . "\\begin{center}\\includegraphics[height=1.8cm]{LogoPIMgeneral.png}\\end{center}\n"
+            . "\\vspace{0.5cm}\n\n"
+            . $result['contenido'] . "\n\\end{document}";
 
         // Recopilar datos binarios de imágenes
         $imageData = [];
+
+        // Logo PIM general
+        if (file_exists($logoPath)) {
+            $imageData['LogoPIMgeneral.png'] = file_get_contents($logoPath);
+        }
+
         foreach (array_keys($imagenes) as $imgName) {
             $imgNameClean = preg_replace('/\.(png|jpg|jpeg|gif|pdf)$/i', '', $imgName);
             $figure = Figure::where('title', $imgName)
