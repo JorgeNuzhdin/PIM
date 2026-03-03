@@ -22,10 +22,10 @@ class LatexCompilerService
         file_put_contents($tempDir . '/document.tex', $texContent);
 
         // Copiar paquetes locales (resources/tex/packages/) al directorio de compilación
-        // Incluye .sty y .tex (algunos paquetes como listofitems usan archivos .tex compañeros)
+        // Incluye .sty/.tex (paquetes), .fd/.def (fuentes), .tfm/.pfb/.map/.cfg (métricas y mapas de fuentes)
         $packagesDir = resource_path('tex/packages');
         if (is_dir($packagesDir)) {
-            foreach (glob($packagesDir . '/*.{sty,tex,fd,def}', GLOB_BRACE) as $pkgFile) {
+            foreach (glob($packagesDir . '/*.{sty,tex,fd,def,tfm,pfb,map,cfg}', GLOB_BRACE) as $pkgFile) {
                 copy($pkgFile, $tempDir . '/' . basename($pkgFile));
             }
         }
