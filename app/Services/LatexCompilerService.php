@@ -37,7 +37,12 @@ class LatexCompilerService
                     continue; // No escribir PNGs corruptos
                 }
             }
-            file_put_contents($tempDir . '/' . $name, $binaryData);
+            $imagePath = $tempDir . '/' . $name;
+            $imageDir  = dirname($imagePath);
+            if (!is_dir($imageDir)) {
+                mkdir($imageDir, 0755, true);
+            }
+            file_put_contents($imagePath, $binaryData);
         }
 
         // Ruta a pdflatex
