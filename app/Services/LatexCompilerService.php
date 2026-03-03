@@ -25,7 +25,7 @@ class LatexCompilerService
         // Incluye .sty y .tex (algunos paquetes como listofitems usan archivos .tex compañeros)
         $packagesDir = resource_path('tex/packages');
         if (is_dir($packagesDir)) {
-            foreach (glob($packagesDir . '/*.{sty,tex}', GLOB_BRACE) as $pkgFile) {
+            foreach (glob($packagesDir . '/*.{sty,tex,fd}', GLOB_BRACE) as $pkgFile) {
                 copy($pkgFile, $tempDir . '/' . basename($pkgFile));
             }
         }
