@@ -739,7 +739,8 @@
                 </div>
             </div>
 
-            {{-- Filtro por fuente (agrupado) --}}
+            {{-- Filtro por fuente (agrupado) — solo para no-usuarios --}}
+            @if(Auth::user()->rol !== 'user')
             <div class="form-group">
                 <label for="source">Fuente</label>
                 <select name="source" id="source">
@@ -768,6 +769,7 @@
                     @endif
                 </select>
             </div>
+            @endif
 
             {{-- Opciones a mostrar --}}
             <div class="form-group">

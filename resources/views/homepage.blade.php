@@ -115,11 +115,25 @@
 @section('content')
 <div class="home-container">
     <h1 class="welcome-text">Bienvenido a PIM</h1>
-    <p class="subtitle">Tu plataforma de problemas de matematicas en LaTeX</p>
+    <p class="subtitle">Tu plataforma de problemas de matemáticas</p>
 
-    <p class="info-text">
-        <a href="/register">Necesitas registrarte</a> para poder ver hojas tematicas, explicaciones, confeccionar tus propias hojas de problemas con explicaciones y descargarlo todo en LaTeX o PDF.
-    </p>
+    <div class="info-text">
+        <p>
+            Esta base de problemas es parte del proyecto
+            <a href="https://www.icmat.es/PIM/" target="_blank" rel="noopener">Pequeño Instituto de Matemáticas</a>,
+            organizado por el
+            <a href="https://www.icmat.es" target="_blank" rel="noopener">Instituto de Ciencias Matemáticas</a>.
+        </p>
+        <p>
+            Para ver los problemas y las hojas temáticas que se han utilizado en la escuela durante los últimos
+            dos años académicos es necesario <a href="/register">registrarse</a>.
+        </p>
+        <p>
+            Para poder usar las opciones avanzadas de la base de datos, como ver todos los problemas,
+            descargar problemas en LaTeX y confeccionar tus propias hojas, contacta con los
+            <a href="mailto:pim@icmat.es">organizadores del PIM</a>.
+        </p>
+    </div>
 
     <div class="stats-bar">
         <div class="stat-item">
