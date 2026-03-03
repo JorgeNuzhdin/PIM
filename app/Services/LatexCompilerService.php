@@ -57,7 +57,17 @@ class LatexCompilerService
         // Ruta a pdflatex
         $pdflatex = config('services.latex.pdflatex_path', 'pdflatex');
         $escapedDir = escapeshellarg($tempDir);
-        $cmd = "cd {$escapedDir} && {$pdflatex} -interaction=nonstopmode document.tex 2>&1";
+
+        // TEXMFHOME permite a kpsewhich encontrar fuentes Type1/TFM locales (ej. skaknew)
+        // sin necesidad de instalarlas en el servidor. Solo en Linux (en Windows, MiKTeX
+        // ya tiene las fuentes instaladas).
+        $texmfEnv = '';
+        if (PHP_OS_FAMILY !== 'Windows') {
+            $texmfHome = resource_path('tex/texmf');
+            $texmfEnv  = 'TEXMFHOME=' . escapeshellarg($texmfHome) . ' ';
+        }
+
+        $cmd = "cd {$escapedDir} && {$texmfEnv}{$pdflatex} -interaction=nonstopmode document.tex 2>&1";
 
         // Primera pasada
         exec($cmd, $output1, $returnCode1);
