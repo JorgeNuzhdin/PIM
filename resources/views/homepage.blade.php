@@ -31,6 +31,9 @@
 }
 .info-text a {
     color: #4299e1;
+    text-decoration: none;
+}
+.info-text a:hover {
     text-decoration: underline;
 }
 .stats-bar {
@@ -114,8 +117,7 @@
 
 @section('content')
 <div class="home-container">
-    <h1 class="welcome-text">Bienvenido a PIM</h1>
-    <p class="subtitle">Tu plataforma de problemas de matemáticas</p>
+    <h1 class="welcome-text">Retos Matemáticos: la plataforma de problemas de matemáticas</h1>
 
     <div class="info-text">
         <p>
