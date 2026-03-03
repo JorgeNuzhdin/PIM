@@ -30,8 +30,10 @@ class LatexCompilerService
             }
         }
 
-        // Reescribir SkakNew.map con rutas absolutas a los PFBs para que pdflatex
-        // los abra directamente sin depender de kpsewhich (TEXMFHOME no siempre funciona).
+        // Reescribir SkakNew.map con rutas absolutas a los PFBs.
+        // Inyectar \pdfmapfile en el .tex para cargar el mapa por ruta absoluta:
+        // pdftex.cfg no se busca en el directorio de trabajo, pero \pdfmapfile sí
+        // acepta rutas absolutas directamente, sin pasar por kpsewhich.
         $pfbDir = resource_path('tex/texmf/fonts/type1/public/skaknew');
         if (is_dir($pfbDir)) {
             $mapLines = [
@@ -41,7 +43,17 @@ class LatexCompilerService
                 "SkakNew-DiagramT SkakNew-DiagramT <{$pfbDir}/SkakNew-DiagramT.pfb",
                 "AlphaDia ChessAlphaDiagram <{$pfbDir}/AlphaDia.pfb",
             ];
-            file_put_contents($tempDir . '/SkakNew.map', implode("\n", $mapLines) . "\n");
+            $skakMapPath = $tempDir . '/SkakNew.map';
+            file_put_contents($skakMapPath, implode("\n", $mapLines) . "\n");
+
+            // Prepend \pdfmapfile al documento (es un primitivo pdfTeX, funciona antes de \documentclass)
+            $currentTex = file_get_contents($tempDir . '/document.tex');
+            if (strpos($currentTex, '\pdfmapfile') === false) {
+                file_put_contents(
+                    $tempDir . '/document.tex',
+                    "\\pdfmapfile{+{$skakMapPath}}\n" . $currentTex
+                );
+            }
         }
 
         // Escribir imágenes (re-codificar PNGs para compatibilidad con libpng)
