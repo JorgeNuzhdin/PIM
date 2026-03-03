@@ -21,11 +21,12 @@ class LatexCompilerService
         // Escribir archivo .tex
         file_put_contents($tempDir . '/document.tex', $texContent);
 
-        // Copiar paquetes .sty locales (resources/tex/packages/) al directorio de compilación
+        // Copiar paquetes locales (resources/tex/packages/) al directorio de compilación
+        // Incluye .sty y .tex (algunos paquetes como listofitems usan archivos .tex compañeros)
         $packagesDir = resource_path('tex/packages');
         if (is_dir($packagesDir)) {
-            foreach (glob($packagesDir . '/*.sty') as $styFile) {
-                copy($styFile, $tempDir . '/' . basename($styFile));
+            foreach (glob($packagesDir . '/*.{sty,tex}', GLOB_BRACE) as $pkgFile) {
+                copy($pkgFile, $tempDir . '/' . basename($pkgFile));
             }
         }
 
