@@ -1,0 +1,48 @@
+% tkz-tools-eu-colors
+% Copyright 2011-2026  Alain Matthes
+% SPDX-License-Identifier: LPPL-1.3c
+% Maintainer: Alain Matthes
+
+\typeout{2026/01/25 5.13c  tkz-tools-eu-colors}
+\makeatletter
+
+%<------  Initialisation of the colors with tkzSetUpColors  ----------------->
+% Première macro SetUpColors %%%%%%%%%%%%%%%%%%%%%
+%Possible
+\pgfkeys{/tkzsucolor/.is family}
+\def\setupcolorkeys#1{%
+   \pgfkeys{/tkzsucolor,#1}}
+\setupcolorkeys{
+   background/.estore in   =  \setupcolor@background,
+   text/.estore in         =  \setupcolor@text,
+   @initial/.style         =  {background=white,text=black},
+   @apply/.code            =  {\pagecolor{\setupcolor@background}%
+                                    \color{\setupcolor@text}%
+ },
+}
+\def\tkzSetUpColors{\pgfutil@ifnextchar[{\tkz@SetUpColors}{\tkz@SetUpColors[]}}
+\def\tkz@SetUpColors[#1]{\setupcolorkeys{@initial,#1,@apply}}
+
+%<------  Initialisation of all colors   ----------------->
+\pgfkeys{/tkzsupallcol/.cd,
+         background/.store in       = \tkz@suac@bkc,
+         text/.store in             = \tkz@suac@txt,
+         background                 = \tkz@backgroundcolor,% see tkz-euclide.cfg
+         text                       = \tkz@textcolor% idem
+        }
+\def\tkzSetUpAllColors{\pgfutil@ifnextchar[{\tkz@SetUpAllColors}{%
+                                 \tkz@SetUpAllColors[]}}
+\def\tkz@SetUpAllColors[#1]{%
+   \pgfqkeys{/tkzsupallcol}{#1} % now we redefines the based colors
+   \def\tkz@fillcolor{\tkz@suac@bkc}
+   \def\tkz@mainlinecolor{\tkz@suac@txt}
+   \def\tkz@textcolor{\tkz@suac@txt}
+   \def\tkz@otherlinecolor{\tkz@suac@txt!50}
+   \def\tkz@sua@color{\tkz@suac@txt}
+   \tkzSetUpAxis[color=\tkz@suac@txt]
+   \tkzSetUpGrid[color=\tkz@suac@txt]
+   \pagecolor{\tkz@suac@bkc}
+   \color{\tkz@suac@txt}
+}
+\makeatother
+\endinput

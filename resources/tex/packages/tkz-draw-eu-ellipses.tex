@@ -1,0 +1,18 @@
+% tkz-obj-eu-draw-ellipses.tex
+% Copyright 2011-2026  Alain Matthes
+% SPDX-License-Identifier: LPPL-1.3c
+% Maintainer: Alain Matthes
+
+\typeout{2026/01/25 5.13c tkz-obj-eu-draw-ellipses.tex}
+
+
+\makeatletter
+\def\tkzDrawEllipse{\pgfutil@ifnextchar[{\tkz@DrawEllipse}{\tkz@DrawEllipse[]}}
+\def\tkz@DrawEllipse[#1](#2,#3,#4,#5){%
+\begingroup
+\draw[#1](#2) ellipse [x radius=#3, y radius=#4,rotate=#5];
+\endgroup
+}
+
+\makeatother
+\endinput

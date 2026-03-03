@@ -1,0 +1,21 @@
+% tkz-tools-eu-BB.tex
+% Copyright 2011-2026  Alain Matthes
+% SPDX-License-Identifier: LPPL-1.3c
+% Maintainer: Alain Matthes
+
+\typeout{2026/01/25 5.13c  tkz-obj-eu-BB.tex}
+\makeatletter
+%<--------------------------------------------------------------------------–>
+\def\tkzShowBB{\pgfutil@ifnextchar[{\tkz@ShowBB}{\tkz@ShowBB[]}}
+\def\tkz@ShowBB[#1]{%
+ \draw[#1]  (current bounding box.south west) rectangle
+            (current bounding box.north east);
+}
+%<--------------------------------------------------------------------------–>
+\def\tkzClipBB{%
+\clip   (current bounding box.south west) rectangle
+        (current bounding box.north east);
+}
+%<--------------------------------------------------------------------------–>
+\makeatother
+\endinput
