@@ -487,16 +487,6 @@ LATEX;
 \newtheorem*{eje}{Ejemplo}
 \newtheorem{defin}{Definición}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newtheorem{theorem}{Teorema}
-\theoremstyle{definition}
-\newtheorem*{definition}{Definición}
-\newtheorem{ejer}{Problema}
-\newtheorem*{ejem}{Ejemplo resuelto}
-\newtheorem*{eje}{Ejemplo}
-\newtheorem{defin} {Definición}
-
-
 \newif\ifnep
 \newcommand{\N}{\neptrue}
 \newcommand{\NN}{\nepfalse}
