@@ -1014,11 +1014,17 @@
                     @endauth
                     
                     @auth
-                        <button class="btn-icon btn-carrito" 
+                        <button class="btn-icon btn-carrito"
                                 data-problema-id="{{ $problema->id }}"
                                 onclick="toggleCarrito({{ $problema->id }}, this)"
                                 title="Añadir/Quitar del carrito">
                             <span class="carrito-icon">🛒</span>
+                        </button>
+                        <button class="btn-icon btn-report"
+                                onclick="openReportModal({{ $problema->id }})"
+                                title="Reportar un error"
+                                style="font-size:1.1rem;{{ isset($problemasConErrores[$problema->id]) ? 'filter:none;' : 'filter:grayscale(1) brightness(2);' }}">
+                            ⚠️
                         </button>
                     @endauth
                 </div>
@@ -1299,4 +1305,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 </script>
+@auth
+@include('_partials.report-error-modal')
+@endauth
 @endsection

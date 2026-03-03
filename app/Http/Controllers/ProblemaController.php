@@ -177,7 +177,18 @@ class ProblemaController extends Controller
                 // URL de retorno (para volver a la misma página/filtros)
                 $returnUrl = $request->get('return') ? urldecode($request->get('return')) : null;
 
-                return view('problemas.edit', compact('problema', 'temas', 'schoolYears', 'figuras', 'proponents', 'returnUrl'));
+                // Calcular tipo agregado de errores reportados (OR de todos los reportes)
+                $errorReports = \App\Models\ErrorReport::where('problema_id', $id)->get();
+                $errorTipo = '000000000';
+                foreach ($errorReports as $er) {
+                    for ($i = 0; $i < 9; $i++) {
+                        if (($er->tipo[$i] ?? '0') === '1') {
+                            $errorTipo[$i] = '1';
+                        }
+                    }
+                }
+
+                return view('problemas.edit', compact('problema', 'temas', 'schoolYears', 'figuras', 'proponents', 'returnUrl', 'errorTipo'));
             }
 
             public function update(Request $request, $id)
@@ -290,6 +301,9 @@ class ProblemaController extends Controller
                     }
 
                     DB::commit();
+
+                    // Eliminar reportes de error tras guardar el problema
+                    \App\Models\ErrorReport::where('problema_id', $id)->delete();
 
                     // Redirigir a la URL de retorno si existe, si no al índice
                     $returnUrl = $request->input('return_url');
@@ -505,7 +519,10 @@ class ProblemaController extends Controller
     // Obtener problemas usados en hojas con sus años
     $problemasUsados = SheetHelper::getProblemasUsadosConAnio();
 
-    return view('problemas.index', compact('problemas', 'temas', 'totalProblemas', 'problemasEncontrados', 'mostrar', 'schoolYears', 'sourceData', 'proponents', 'problemasUsados'));
+    // IDs de problemas con reportes de error (para mostrar el icono en amarillo)
+    $problemasConErrores = \App\Models\ErrorReport::distinct()->pluck('problema_id')->flip()->all();
+
+    return view('problemas.index', compact('problemas', 'temas', 'totalProblemas', 'problemasEncontrados', 'mostrar', 'schoolYears', 'sourceData', 'proponents', 'problemasUsados', 'problemasConErrores'));
 }
     
     // API para autocompletar topics

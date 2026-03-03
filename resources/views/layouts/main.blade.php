@@ -407,6 +407,9 @@ window.MathJax = {
                             <a href="{{ route('admin.users.index') }}">Administrar usuarios</a>
                             <a href="{{ route('admin.settings') }}">⚙️ Configuración</a>
                         @endif
+                        @if(Auth::user()->rol !== 'user')
+                            <a href="{{ route('problemas.con-errores') }}">⚠️ Problemas con errores</a>
+                        @endif
                         <a href="{{ route('profile.edit') }}">Editar perfil</a>
                         <a href="{{ route('logout') }}"
                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">

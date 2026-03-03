@@ -66,5 +66,10 @@ class Problema extends Model
         }
         return '';
     }
+
+    public function errorReports()
+    {
+        return $this->hasMany(\App\Models\ErrorReport::class, 'problema_id');
+    }
 }
 

@@ -280,4 +280,20 @@
         flex-direction: column;
     }
 }
+
+/* === HIGHLIGHT CAMPOS CON ERRORES REPORTADOS === */
+.field-error > label:first-child {
+    color: #e53e3e;
+    font-weight: 700;
+}
+.field-error > label:first-child::after {
+    content: ' ⚠️';
+    font-size: 0.85em;
+}
+.field-error input,
+.field-error select,
+.field-error textarea {
+    border-color: #e53e3e !important;
+    background: #fff5f5 !important;
+}
 </style>

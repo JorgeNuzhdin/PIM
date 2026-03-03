@@ -26,6 +26,14 @@ Route::middleware('auth')->group(function () {
     Route::put('/perfil', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
 
     Route::get('/problemas', [App\Http\Controllers\ProblemaController::class, 'index'])->name('problemas.index');
+
+    // IMPORTANT: con-errores must be before /{id} to avoid being matched as an ID
+    Route::get('/problemas/con-errores', [App\Http\Controllers\ErrorReportController::class, 'index'])
+         ->name('problemas.con-errores')
+         ->middleware('can.edit.problemas');
+    Route::post('/problemas/{id}/reportar-error', [App\Http\Controllers\ErrorReportController::class, 'store'])
+         ->name('problemas.reportar-error');
+
     Route::get('/problemas/{id}', [App\Http\Controllers\ProblemaController::class, 'show'])->name('problemas.show')->where('id', '[0-9]+');
     Route::get('/api/topics/buscar', [App\Http\Controllers\ProblemaController::class, 'buscarTopics'])->name('topics.buscar');
 

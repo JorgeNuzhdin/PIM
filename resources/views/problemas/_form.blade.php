@@ -28,9 +28,11 @@
 <div style="border-top: 2px solid #e2e8f0; margin: 2rem 0; padding-top: 2rem;"></div>
 @endif
 
+@php $et = $errorTipo ?? '000000000'; @endphp
+
 {{-- Fila 1: Nivel, Tema, Año --}}
 <div class="form-row">
-    <div class="form-group">
+    <div class="form-group {{ $et[0] === '1' ? 'field-error' : '' }}">
         <label for="difficulty">Nivel (1-6)</label>
         <select name="difficulty" id="difficulty">
             <option value="">-- Seleccionar --</option>
@@ -39,8 +41,8 @@
             @endfor
         </select>
     </div>
-    
-    <div class="form-group">
+
+    <div class="form-group {{ $et[1] === '1' ? 'field-error' : '' }}">
         <label for="tema_id">
             Tema
             <small id="tema-auto-indicator" style="color: #48bb78; font-weight: normal; display: none;">
@@ -56,8 +58,8 @@
             @endforeach
         </select>
     </div>
-    
-    <div class="form-group">
+
+    <div class="form-group {{ $et[2] === '1' ? 'field-error' : '' }}">
         <label for="school_year">Año académico</label>
         <select name="school_year" id="school_year">
             <option value="">-- Seleccionar --</option>
@@ -82,14 +84,14 @@
 </div>
 
 {{-- Tags --}}
-<div class="form-group">
+<div class="form-group {{ $et[1] === '1' ? 'field-error' : '' }}">
     <label>Tags</label>
     <div class="tags-container" id="tags-container">
         @php
             $tags = isset($problema) ? $problema->tags->pluck('tag')->toArray() : [];
             $oldTags = old('tags', $tags);
         @endphp
-        
+
         @if(empty($oldTags))
             <div class="tag-input-row" style="position: relative;">
                 <input type="text" name="tags[]" class="tag-input" placeholder="Escribe un tag..." autocomplete="off">
@@ -113,13 +115,13 @@
 </div>
 
 {{-- Título --}}
-<div class="form-group">
+<div class="form-group {{ $et[3] === '1' ? 'field-error' : '' }}">
     <label for="title">Título (opcional)</label>
     <input type="text" name="title" id="title" value="{{ old('title', $problema->title ?? '') }}" placeholder="Título del problema">
 </div>
 
 {{-- Enunciado --}}
-<div class="form-group">
+<div class="form-group {{ $et[4] === '1' ? 'field-error' : '' }}">
     <div class="latex-editor-grid">
         <div>
             <label for="problem_tex">Enunciado (LaTeX) *</label>
@@ -135,13 +137,13 @@
 </div>
 
 {{-- Pistas --}}
-<div class="form-group">
+<div class="form-group {{ $et[5] === '1' ? 'field-error' : '' }}">
     <label for="hints">Pistas</label>
     <textarea name="hints" id="hints" style="min-height: 100px;">{{ old('hints', $problema->hints ?? '') }}</textarea>
 </div>
 
 {{-- Solución --}}
-<div class="form-group">
+<div class="form-group {{ $et[6] === '1' ? 'field-error' : '' }}">
     <div class="latex-editor-grid">
         <div>
             <label for="solution_tex">Solución (LaTeX)</label>
@@ -163,7 +165,7 @@
 </div>
 
 {{-- Fuente --}}
-<div class="form-group">
+<div class="form-group {{ $et[7] === '1' ? 'field-error' : '' }}">
     <label for="source">Fuente</label>
     <input type="text" name="source" id="source" value="{{ old('source', $problema->source ?? '') }}" placeholder="Origen del problema">
 </div>
@@ -202,7 +204,7 @@
 @endif
 
 {{-- Imágenes --}}
-<div class="form-group">
+<div class="form-group {{ $et[8] === '1' ? 'field-error' : '' }}">
     <label>{{ isset($problema) ? 'Añadir nuevas imágenes' : 'Imágenes' }}</label>
     <div class="image-upload-area" onclick="document.getElementById('imagenes').click()">
         <p>📁 Haz clic para {{ isset($problema) ? 'agregar más' : 'seleccionar' }} imágenes</p>
