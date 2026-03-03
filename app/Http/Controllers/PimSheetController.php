@@ -372,39 +372,52 @@ class PimSheetController extends Controller
             abort(404, 'Archivo TEX no disponible.');
         }
 
-        // Preprocesar TEX: corregir \def\group sin valor
-        $texContent = $sheet->tex_sols;
-        if (strpos($texContent, '\def\group{') === false) {
-            $texContent = str_replace('\def\group', '\def\group{0}', $texContent);
+        try {
+            // Preprocesar TEX: corregir \def\group sin valor
+            $texContent = $sheet->tex_sols;
+            if (strpos($texContent, '\def\group{') === false) {
+                $texContent = str_replace('\def\group', '\def\group{0}', $texContent);
+            }
+
+            // Recopilar imágenes
+            $images = $this->gatherImages($sheet);
+
+            // Compilar
+            $compiler = new LatexCompilerService();
+            $result = $compiler->compile($texContent, $images);
+
+            if (!$result['pdf']) {
+                $summary = $result['errorSummary'] ?: 'Error desconocido';
+                Log::error("Error compilando PDF para sheet {$id}. Temp dir: {$result['tempDir']}. Errores: {$summary}");
+                return back()->with('error', 'Error al compilar el PDF: ' . $summary);
+            }
+
+            $baseName = str_replace(' ', '_', $sheet->title) . '_' . $sheet->date_year . '.pdf';
+
+            // Copiar PDF fuera del tempDir para poder limpiarlo
+            $pdfTempPath = storage_path('app/temp/pdf_' . uniqid() . '.pdf');
+            if (!is_dir(dirname($pdfTempPath))) {
+                mkdir(dirname($pdfTempPath), 0755, true);
+            }
+
+            if (!copy($result['pdf'], $pdfTempPath)) {
+                // Si no se puede copiar, servir directamente desde el tempDir sin cleanup
+                Log::warning("No se pudo copiar el PDF a temp, sirviendo desde tempDir para sheet {$id}");
+                return response()->download($result['pdf'], $baseName, [
+                    'Content-Type' => 'application/pdf',
+                ]);
+            }
+
+            $compiler->cleanup($result['tempDir']);
+
+            return response()->download($pdfTempPath, $baseName, [
+                'Content-Type' => 'application/pdf',
+            ])->deleteFileAfterSend(true);
+
+        } catch (\Throwable $e) {
+            Log::error("Excepción en downloadPdf para sheet {$id}: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+            return back()->with('error', 'Error al generar el PDF: ' . $e->getMessage());
         }
-
-        // Recopilar imágenes
-        $images = $this->gatherImages($sheet);
-
-        // Compilar
-        $compiler = new LatexCompilerService();
-        $result = $compiler->compile($texContent, $images);
-
-        if (!$result['pdf']) {
-            $summary = $result['errorSummary'] ?: 'Error desconocido';
-            Log::error("Error compilando PDF para sheet {$id}. Temp dir: {$result['tempDir']}. Errores: {$summary}");
-            // No limpiar para poder inspeccionar el log: $result['tempDir']/document.log
-            return back()->with('error', 'Error al compilar el PDF: ' . $summary);
-        }
-
-        $baseName = str_replace(' ', '_', $sheet->title) . '_' . $sheet->date_year . '.pdf';
-
-        // Copiar PDF fuera del tempDir para poder limpiarlo
-        $pdfTempPath = storage_path('app/temp/pdf_' . uniqid() . '.pdf');
-        if (!is_dir(dirname($pdfTempPath))) {
-            mkdir(dirname($pdfTempPath), 0755, true);
-        }
-        copy($result['pdf'], $pdfTempPath);
-        $compiler->cleanup($result['tempDir']);
-
-        return response()->download($pdfTempPath, $baseName, [
-            'Content-Type' => 'application/pdf',
-        ])->deleteFileAfterSend(true);
     }
 
     /**
