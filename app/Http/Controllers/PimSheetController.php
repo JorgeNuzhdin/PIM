@@ -8,6 +8,7 @@ use App\Models\Tema;
 use App\Models\FigureInIntro;
 use App\Models\Figure;
 use App\Models\Metodo;
+use App\Models\MetodoFigure;
 use App\Models\Subtema;
 use App\Helpers\LatexHelper;
 use App\Helpers\AccessHelper;
@@ -220,16 +221,61 @@ class PimSheetController extends Controller
                             continue;
                         }
 
-                        Metodo::create([
-                            'title'       => $metodoItem['title'],
-                            'method_tex'  => $metodoItem['method_tex'],
-                            'subtema_ids' => implode(',', $validIds),
-                            'tema_id'     => (int) $request->theme,
-                            'user_id'     => Auth::id(),
-                            'institution' => $request->institution ?? 'PIM',
-                        ]);
+                        // Manejar sobrescritura de método existente
+                        $overwrite = !empty($metodoItem['overwrite']) && !empty($metodoItem['existing_id']);
+                        $metodo = null;
 
-                        Log::info('Método creado: ' . $metodoItem['title']);
+                        if ($overwrite) {
+                            $existing = Metodo::find((int) $metodoItem['existing_id']);
+                            if ($existing) {
+                                $existing->update([
+                                    'method_tex'  => $metodoItem['method_tex'],
+                                    'subtema_ids' => implode(',', $validIds),
+                                    'tema_id'     => (int) $request->theme,
+                                    'institution' => $request->institution ?? 'PIM',
+                                ]);
+                                $metodo = $existing;
+                                MetodoFigure::where('metodo_id', $metodo->id)->delete();
+                                Log::info('Método actualizado (sobrescritura): ' . $metodoItem['title']);
+                            } else {
+                                $overwrite = false;
+                            }
+                        }
+
+                        if (!$overwrite) {
+                            $metodo = Metodo::create([
+                                'title'       => $metodoItem['title'],
+                                'method_tex'  => $metodoItem['method_tex'],
+                                'subtema_ids' => implode(',', $validIds),
+                                'tema_id'     => (int) $request->theme,
+                                'user_id'     => Auth::id(),
+                                'institution' => $request->institution ?? 'PIM',
+                            ]);
+                            Log::info('Método creado: ' . $metodoItem['title']);
+                        }
+
+                        // Copiar imágenes del preámbulo de la hoja al método
+                        if ($metodo) {
+                            preg_match_all(
+                                '/\\\\includegraphics(?:\[[^\]]*\])?\{([^}]+)\}/',
+                                $metodoItem['method_tex'],
+                                $imgMatches
+                            );
+                            foreach (array_unique($imgMatches[1] ?? []) as $imgName) {
+                                $imgName = trim($imgName);
+                                if (!$imgName) continue;
+                                $fig = FigureInIntro::where('intro_id', $sheet->id)
+                                                    ->where('title', $imgName)
+                                                    ->first();
+                                if ($fig) {
+                                    MetodoFigure::create([
+                                        'metodo_id' => $metodo->id,
+                                        'title'     => $fig->title,
+                                        'figure'    => $fig->figure,
+                                    ]);
+                                }
+                            }
+                        }
                     }
                 }
             }

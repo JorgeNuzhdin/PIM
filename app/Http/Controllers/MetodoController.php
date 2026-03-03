@@ -3,14 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Metodo;
+use App\Models\MetodoFigure;
 use App\Models\Tema;
 use App\Models\Subtema;
-use App\Models\User;
 use App\Helpers\AccessHelper;
 use App\Services\LatexCompilerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use ZipArchive;
 
 class MetodoController extends Controller
 {
@@ -81,41 +82,42 @@ class MetodoController extends Controller
     public function create()
     {
         $temas = Tema::all();
-        $editores = User::whereIn('rol', ['admin', 'editor'])->orderBy('name')->get();
 
-        return view('metodos.create', compact('temas', 'editores'));
+        return view('metodos.create', compact('temas'));
     }
 
     public function store(Request $request)
     {
-        $rules = [
-            'title' => 'required|string|max:255',
-            'method_tex' => 'required|string',
-            'tema_id' => 'required|exists:temas,id',
-            'subtema_ids' => 'required|array|min:1',
+        $request->validate([
+            'title'         => 'required|string|max:255',
+            'method_tex'    => 'required|string',
+            'tema_id'       => 'required|exists:temas,id',
+            'subtema_ids'   => 'required|array|min:1',
             'subtema_ids.*' => 'exists:subtemas,id',
-            'institution' => 'nullable|string|max:256',
-        ];
+            'institution'   => 'nullable|string|max:256',
+            'imagenes.*'    => 'nullable|file|max:5120',
+        ]);
 
-        if (Auth::user()->isAdmin()) {
-            $rules['user_id'] = 'nullable|exists:users,id';
-        }
-
-        $request->validate($rules);
-
-        $userId = Auth::id();
-        if (Auth::user()->isAdmin() && $request->filled('user_id')) {
-            $userId = $request->user_id;
-        }
-
-        Metodo::create([
-            'title' => $request->title,
-            'method_tex' => $request->method_tex,
+        $metodo = Metodo::create([
+            'title'       => $request->title,
+            'method_tex'  => $request->method_tex,
             'subtema_ids' => implode(',', $request->subtema_ids),
-            'tema_id' => $request->tema_id,
-            'user_id' => $userId,
+            'tema_id'     => $request->tema_id,
+            'user_id'     => Auth::id(),
             'institution' => $request->institution ?? 'PIM',
         ]);
+
+        if ($request->hasFile('imagenes')) {
+            foreach ($request->file('imagenes') as $imagen) {
+                if ($imagen && $imagen->isValid()) {
+                    MetodoFigure::create([
+                        'metodo_id' => $metodo->id,
+                        'title'     => $imagen->getClientOriginalName(),
+                        'figure'    => file_get_contents($imagen->getRealPath()),
+                    ]);
+                }
+            }
+        }
 
         return redirect()->route('metodos.index')->with('success', 'Método creado correctamente.');
     }
@@ -132,9 +134,9 @@ class MetodoController extends Controller
 
         $temas = Tema::all();
         $subtemas = Subtema::where('tema_id', $metodo->tema_id)->orderBy('id')->get();
-        $editores = User::whereIn('rol', ['admin', 'editor'])->orderBy('name')->get();
+        $figuras = MetodoFigure::where('metodo_id', $id)->get();
 
-        return view('metodos.edit', compact('metodo', 'temas', 'subtemas', 'editores'));
+        return view('metodos.edit', compact('metodo', 'temas', 'subtemas', 'figuras'));
     }
 
     public function update(Request $request, $id)
@@ -146,34 +148,34 @@ class MetodoController extends Controller
             abort(403);
         }
 
-        $rules = [
-            'title' => 'required|string|max:255',
-            'method_tex' => 'required|string',
-            'tema_id' => 'required|exists:temas,id',
-            'subtema_ids' => 'required|array|min:1',
+        $request->validate([
+            'title'         => 'required|string|max:255',
+            'method_tex'    => 'required|string',
+            'tema_id'       => 'required|exists:temas,id',
+            'subtema_ids'   => 'required|array|min:1',
             'subtema_ids.*' => 'exists:subtemas,id',
-            'institution' => 'nullable|string|max:256',
-        ];
+            'institution'   => 'nullable|string|max:256',
+            'imagenes.*'    => 'nullable|file|max:5120',
+        ]);
 
-        if ($user->isAdmin()) {
-            $rules['user_id'] = 'nullable|exists:users,id';
-        }
-
-        $request->validate($rules);
-
-        $data = [
-            'title' => $request->title,
-            'method_tex' => $request->method_tex,
+        $metodo->update([
+            'title'       => $request->title,
+            'method_tex'  => $request->method_tex,
             'subtema_ids' => implode(',', $request->subtema_ids),
-            'tema_id' => $request->tema_id,
+            'tema_id'     => $request->tema_id,
             'institution' => $request->institution ?? 'PIM',
-        ];
+        ]);
 
-        if ($user->isAdmin() && $request->filled('user_id')) {
-            $data['user_id'] = $request->user_id;
+        if ($request->hasFile('imagenes')) {
+            foreach ($request->file('imagenes') as $imagen) {
+                if ($imagen && $imagen->isValid()) {
+                    MetodoFigure::updateOrCreate(
+                        ['metodo_id' => $metodo->id, 'title' => $imagen->getClientOriginalName()],
+                        ['figure' => file_get_contents($imagen->getRealPath())]
+                    );
+                }
+            }
         }
-
-        $metodo->update($data);
 
         return redirect()->route('metodos.show', $metodo->id)->with('success', 'Método actualizado correctamente.');
     }
@@ -183,55 +185,31 @@ class MetodoController extends Controller
         if (AccessHelper::isRestricted()) abort(403);
         $metodo = Metodo::findOrFail($id);
 
-        $filename = preg_replace('/[^a-zA-Z0-9_\-áéíóúñÁÉÍÓÚÑ ]/u', '', $metodo->title);
-        $filename = str_replace(' ', '_', $filename) . '.tex';
+        $safeTitle = str_replace(' ', '_', preg_replace('/[^a-zA-Z0-9_\-áéíóúñÁÉÍÓÚÑ ]/u', '', $metodo->title));
+        $figuras = MetodoFigure::where('metodo_id', $id)->get();
 
-        return response($metodo->method_tex)
-            ->header('Content-Type', 'application/x-tex')
-            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
-    }
-
-    public function downloadPdf($id)
-    {
-        if (AccessHelper::isRestricted()) abort(403);
-        $metodo = Metodo::findOrFail($id);
-
-        $texDocument = "\\documentclass[12pt]{article}\n"
-            . "\\usepackage[utf8]{inputenc}\n"
-            . "\\usepackage[T1]{fontenc}\n"
-            . "\\usepackage[spanish]{babel}\n"
-            . "\\usepackage{amsmath,amssymb,amsthm}\n"
-            . "\\usepackage{geometry}\n"
-            . "\\geometry{a4paper, margin=2.5cm}\n"
-            . "\\title{" . $metodo->title . "}\n"
-            . "\\date{}\n"
-            . "\\begin{document}\n"
-            . "\\maketitle\n"
-            . $metodo->method_tex . "\n"
-            . "\\end{document}\n";
-
-        $compiler = new LatexCompilerService();
-        $result = $compiler->compile($texDocument);
-
-        if (!$result['pdf']) {
-            $summary = $result['errorSummary'] ?: 'Error desconocido';
-            Log::error("Error compilando PDF para método {$id}. Temp dir: {$result['tempDir']}. Errores: {$summary}");
-            $compiler->cleanup($result['tempDir']);
-            return back()->with('error', 'Error al compilar el PDF: ' . $summary);
+        if ($figuras->isEmpty()) {
+            return response($metodo->method_tex)
+                ->header('Content-Type', 'application/x-tex')
+                ->header('Content-Disposition', 'attachment; filename="' . $safeTitle . '.tex"');
         }
 
-        $filename = preg_replace('/[^a-zA-Z0-9_\-áéíóúñÁÉÍÓÚÑ ]/u', '', $metodo->title);
-        $filename = str_replace(' ', '_', $filename) . '.pdf';
-
-        $pdfTempPath = storage_path('app/temp/pdf_' . uniqid() . '.pdf');
-        if (!is_dir(dirname($pdfTempPath))) {
-            mkdir(dirname($pdfTempPath), 0755, true);
+        // ZIP con .tex + imágenes
+        $zipPath = storage_path('app/temp/metodo_' . uniqid() . '.zip');
+        if (!is_dir(dirname($zipPath))) {
+            mkdir(dirname($zipPath), 0755, true);
         }
-        copy($result['pdf'], $pdfTempPath);
-        $compiler->cleanup($result['tempDir']);
 
-        return response()->download($pdfTempPath, $filename, [
-            'Content-Type' => 'application/pdf',
+        $zip = new ZipArchive();
+        $zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+        $zip->addFromString($safeTitle . '.tex', $metodo->method_tex);
+        foreach ($figuras as $fig) {
+            $zip->addFromString($fig->title, $fig->figure);
+        }
+        $zip->close();
+
+        return response()->download($zipPath, $safeTitle . '.zip', [
+            'Content-Type' => 'application/zip',
         ])->deleteFileAfterSend(true);
     }
 
@@ -246,6 +224,7 @@ class MetodoController extends Controller
             return response()->json(['success' => false, 'message' => 'Método no encontrado.'], 404);
         }
 
+        MetodoFigure::where('metodo_id', $id)->delete();
         $metodo->delete();
 
         return response()->json(['success' => true, 'message' => 'Método eliminado correctamente.']);
@@ -305,12 +284,12 @@ class MetodoController extends Controller
         }
 
         $request->validate([
-            'nombre' => 'required|string|max:255',
+            'nombre'  => 'required|string|max:255',
             'tema_id' => 'required|exists:temas,id',
         ]);
 
         $subtema = Subtema::firstOrCreate([
-            'nombre' => $request->nombre,
+            'nombre'  => $request->nombre,
             'tema_id' => $request->tema_id,
         ]);
 

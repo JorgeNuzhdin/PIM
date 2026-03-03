@@ -214,7 +214,7 @@
             </div>
         @endif
 
-        <form action="{{ route('metodos.store') }}" method="POST">
+        <form action="{{ route('metodos.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
 
             {{-- Título --}}
@@ -253,20 +253,6 @@
                 <input type="text" name="institution" id="institution" value="{{ old('institution', 'PIM') }}" placeholder="Institución (por defecto PIM)">
             </div>
 
-            {{-- Proponente (solo admin) --}}
-            @if(Auth::user()->isAdmin())
-            <div class="form-group">
-                <label for="user_id">Proponente</label>
-                <select name="user_id" id="user_id">
-                    @foreach($editores as $editor)
-                        <option value="{{ $editor->id }}" {{ old('user_id', Auth::id()) == $editor->id ? 'selected' : '' }}>
-                            {{ $editor->name }} ({{ $editor->rol }})
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-            @endif
-
             {{-- Editor LaTeX --}}
             <div class="form-group">
                 <div class="latex-editor-grid">
@@ -281,6 +267,18 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {{-- Imágenes (aparece si el LaTeX usa \includegraphics) --}}
+            <div id="imagenes-section" class="form-group" style="display:none;">
+                <label>📷 Imágenes detectadas en el LaTeX</label>
+                <ul id="imagenes-list" style="margin:0.25rem 0 0.75rem; padding-left:1.5rem; color:#4a5568; font-size:0.9rem;"></ul>
+                <input type="file" name="imagenes[]" id="imagenes" multiple accept="image/*,.pdf"
+                       style="display:block; margin-top:0.5rem;">
+                <small style="color:#718096; display:block; margin-top:0.25rem;">
+                    Sube las imágenes con los nombres exactos indicados arriba.
+                    Si subes una imagen con el mismo nombre que ya existe, se reemplazará.
+                </small>
             </div>
 
             <div class="form-actions">
@@ -382,6 +380,28 @@ function promptNewSubtema() {
     });
 }
 
+// Detectar imágenes en LaTeX
+function extractImageNames(tex) {
+    const regex = /\\includegraphics(?:\[[^\]]*\])?\{([^}]+)\}/g;
+    const names = new Set();
+    let m;
+    while ((m = regex.exec(tex)) !== null) names.add(m[1].trim());
+    return [...names];
+}
+
+function updateImageSection(tex) {
+    const names = extractImageNames(tex);
+    const section = document.getElementById('imagenes-section');
+    const list = document.getElementById('imagenes-list');
+    if (names.length > 0) {
+        list.innerHTML = names.map(n => `<li><code>${n}</code></li>`).join('');
+        section.style.display = 'block';
+    } else {
+        section.style.display = 'none';
+        list.innerHTML = '';
+    }
+}
+
 // Vista previa LaTeX en tiempo real
 let methodPreviewTimeout;
 
@@ -389,6 +409,8 @@ document.getElementById('method_tex').addEventListener('input', function() {
     clearTimeout(methodPreviewTimeout);
     const texContent = this.value;
     const previewDiv = document.getElementById('method_preview');
+
+    updateImageSection(texContent);
 
     if (!texContent.trim()) {
         previewDiv.innerHTML = '<p style="color: #a0aec0; font-style: italic;">La vista previa aparecerá aquí...</p>';
@@ -425,8 +447,10 @@ document.getElementById('method_tex').addEventListener('input', function() {
 });
 
 // Si hay contenido previo, renderizar al cargar
-if (document.getElementById('method_tex').value.trim()) {
+const _initialTex = document.getElementById('method_tex').value.trim();
+if (_initialTex) {
     document.getElementById('method_tex').dispatchEvent(new Event('input'));
+    updateImageSection(_initialTex);
 }
 
 // Comprobación de duplicados antes de crear el método

@@ -117,16 +117,6 @@
         background-color: #d1fae5;
     }
 
-    .btn-action.download-pdf {
-        color: #e53e3e;
-        font-weight: 700;
-        font-size: 0.85rem;
-    }
-
-    .btn-action.download-pdf:hover {
-        background-color: #fed7d7;
-    }
-
     .btn-action.edit {
         color: #4299e1;
         font-size: 1.1rem;
@@ -244,7 +234,6 @@
                             @if(Auth::user()->rol !== 'user')
                             <a href="{{ route('metodos.download-tex', $metodo->id) }}" class="btn-action download-tex" title="Descargar TEX">TEX⤓</a>
                             @endif
-                            <a href="{{ route('metodos.download-pdf', $metodo->id) }}" class="btn-action download-pdf" title="Descargar PDF">PDF⤓</a>
                             @if(Auth::user()->isAdmin())
                                 <button class="btn-action btn-delete btn-delete-item" onclick="eliminarMetodo({{ $metodo->id }}, '{{ addslashes($metodo->title) }}')" title="Eliminar" style="color:#e53e3e;display:none;">🗑️</button>
                             @endif

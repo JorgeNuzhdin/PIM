@@ -643,6 +643,14 @@
             });
     }
 
+    // Toggle sobrescribir para método duplicado
+    function toggleOverwrite(methodIndex, checked) {
+        if (window._extractedMethods && window._extractedMethods[methodIndex] !== undefined) {
+            window._extractedMethods[methodIndex].overwrite = checked;
+            updateMethodsHiddenField(window._extractedMethods);
+        }
+    }
+
     // Mostrar lista de métodos detectados
     function displayExtractedMethods(methods) {
         const section = document.getElementById('methodsSection');
@@ -672,13 +680,20 @@
             } else {
                 statusText = 'Sin subtema asignado';
             }
+
+            let overwriteHtml = '';
             if (method.is_duplicate) {
-                statusText += ` — ⚠️ Duplicado (Método #${method.dup_id}), no se cargará`;
+                statusText += ` — ⚠️ Duplicado de Método #${method.dup_id}`;
+                const checked = method.overwrite ? 'checked' : '';
+                overwriteHtml = `<label style="font-size:0.82rem;cursor:pointer;display:flex;align-items:center;gap:0.3rem;white-space:nowrap;color:#92400e;">
+                    <input type="checkbox" onchange="toggleOverwrite(${index}, this.checked)" ${checked}> Sobrescribir
+                </label>`;
             }
 
             li.innerHTML = `
                 <span class="method-title">${index + 1}. ${escapeHtml(method.title)}</span>
                 <span class="method-subtema ${statusClass}">${statusText}</span>
+                ${overwriteHtml}
             `;
             list.appendChild(li);
         });
@@ -693,14 +708,17 @@
         return div.innerHTML;
     }
 
-    // Serializar métodos al campo hidden (excluye duplicados y sin subtema)
+    // Serializar métodos al campo hidden (excluye los sin subtema; incluye duplicados solo si overwrite=true)
     function updateMethodsHiddenField(methods) {
         const data = methods
-            .filter(m => m.subtema_ids && m.subtema_ids.length > 0 && !m.is_duplicate)
+            .filter(m => m.subtema_ids && m.subtema_ids.length > 0)
+            .filter(m => !m.is_duplicate || m.overwrite)
             .map(m => ({
                 title: m.title,
                 method_tex: m.content,
-                subtema_ids: m.subtema_ids
+                subtema_ids: m.subtema_ids,
+                overwrite: !!(m.is_duplicate && m.overwrite),
+                existing_id: m.is_duplicate ? m.dup_id : null,
             }));
         document.getElementById('metodos_json').value = JSON.stringify(data);
     }

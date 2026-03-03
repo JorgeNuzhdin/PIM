@@ -41,6 +41,11 @@ class Metodo extends Model
         return Subtema::whereIn('id', $ids)->get();
     }
 
+    public function figures()
+    {
+        return $this->hasMany(\App\Models\MetodoFigure::class, 'metodo_id');
+    }
+
     public function getMethodHtmlProcessedAttribute()
     {
         if ($this->method_tex) {
