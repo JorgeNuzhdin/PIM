@@ -117,7 +117,7 @@
 
 @section('content')
 <div class="home-container">
-    <h1 class="welcome-text">Retos Matemáticos: la plataforma de problemas de matemáticas</h1>
+    <h1 class="welcome-text">Plataforma de Problemas de Matemáticas</h1>
 
     <div class="info-text">
         <p>
