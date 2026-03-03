@@ -30,6 +30,20 @@ class LatexCompilerService
             }
         }
 
+        // Reescribir SkakNew.map con rutas absolutas a los PFBs para que pdflatex
+        // los abra directamente sin depender de kpsewhich (TEXMFHOME no siempre funciona).
+        $pfbDir = resource_path('tex/texmf/fonts/type1/public/skaknew');
+        if (is_dir($pfbDir)) {
+            $mapLines = [
+                "SkakNew-Figurine SkakNew-Figurine <{$pfbDir}/SkakNew-Figurine.pfb",
+                "SkakNew-FigurineBold SkakNew-Figurine-Bold <{$pfbDir}/SkakNew-FigurineBold.pfb",
+                "SkakNew-Diagram SkakNew-Diagram <{$pfbDir}/SkakNew-Diagram.pfb",
+                "SkakNew-DiagramT SkakNew-DiagramT <{$pfbDir}/SkakNew-DiagramT.pfb",
+                "AlphaDia ChessAlphaDiagram <{$pfbDir}/AlphaDia.pfb",
+            ];
+            file_put_contents($tempDir . '/SkakNew.map', implode("\n", $mapLines) . "\n");
+        }
+
         // Escribir imágenes (re-codificar PNGs para compatibilidad con libpng)
         foreach ($images as $name => $binaryData) {
             if (str_ends_with(strtolower($name), '.png')) {
