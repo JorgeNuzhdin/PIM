@@ -21,6 +21,14 @@ class LatexCompilerService
         // Escribir archivo .tex
         file_put_contents($tempDir . '/document.tex', $texContent);
 
+        // Copiar paquetes .sty locales (resources/tex/packages/) al directorio de compilación
+        $packagesDir = resource_path('tex/packages');
+        if (is_dir($packagesDir)) {
+            foreach (glob($packagesDir . '/*.sty') as $styFile) {
+                copy($styFile, $tempDir . '/' . basename($styFile));
+            }
+        }
+
         // Escribir imágenes (re-codificar PNGs para compatibilidad con libpng)
         foreach ($images as $name => $binaryData) {
             if (str_ends_with(strtolower($name), '.png')) {
