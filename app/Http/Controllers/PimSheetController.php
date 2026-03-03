@@ -379,6 +379,10 @@ class PimSheetController extends Controller
                 $texContent = str_replace('\def\group', '\def\group{0}', $texContent);
             }
 
+            // Aplicar modo soluciones según parámetro ?solutions=1 (con) / 0 (sin)
+            $withSolutions = request()->query('solutions', '1') !== '0';
+            $texContent = $this->applyShowSolutions($texContent, $withSolutions);
+
             // Recopilar imágenes
             $images = $this->gatherImages($sheet);
 
@@ -727,5 +731,20 @@ class PimSheetController extends Controller
         $sheet->delete();
 
         return response()->json(['success' => true, 'message' => 'Hoja eliminada correctamente.']);
+    }
+
+    /**
+     * Ajusta \showsolutionstrue / \showsolutionsfalse en el TEX según el modo deseado.
+     */
+    private function applyShowSolutions(string $tex, bool $withSolutions): string
+    {
+        if ($withSolutions) {
+            $tex = preg_replace('/^%+\s*(\\\\showsolutionstrue\b.*)/m', '$1', $tex);
+            $tex = preg_replace('/^(\\\\showsolutionsfalse\b.*)/m', '%$1', $tex);
+        } else {
+            $tex = preg_replace('/^%+\s*(\\\\showsolutionsfalse\b.*)/m', '$1', $tex);
+            $tex = preg_replace('/^(\\\\showsolutionstrue\b.*)/m', '%$1', $tex);
+        }
+        return $tex;
     }
 }

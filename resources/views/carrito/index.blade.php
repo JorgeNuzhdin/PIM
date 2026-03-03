@@ -177,8 +177,11 @@
                  TEX ⤓
             </a>
             @endif
-            <a href="{{ route('carrito.descargar.pdf') }}" class="btn-carrito btn-pdf">
-                 PDF ⤓
+            <a href="{{ route('carrito.descargar.pdf', ['solutions' => '1']) }}" class="btn-carrito btn-pdf" title="PDF con soluciones (para profesores)">
+                 PDF prof ⤓
+            </a>
+            <a href="{{ route('carrito.descargar.pdf', ['solutions' => '0']) }}" class="btn-carrito btn-pdf" style="background-color: #718096;" title="PDF sin soluciones (para alumnos)">
+                 PDF alum ⤓
             </a>
             <a href="{{ route('carrito.presentacion') }}" class="btn-carrito btn-html">
                  HTML

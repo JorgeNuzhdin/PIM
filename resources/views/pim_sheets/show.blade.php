@@ -254,8 +254,11 @@
                 TEX ⤓
             </a>
             @endif
-            <a href="{{ route('pim-sheets.download-pdf', ['id' => $sheet->id]) }}" class="btn btn-primary" style="background-color: #e53e3e;" title="Descargar PDF compilado">
-                PDF ⤓
+            <a href="{{ route('pim-sheets.download-pdf', ['id' => $sheet->id, 'solutions' => '1']) }}" class="btn btn-primary" style="background-color: #e53e3e;" title="PDF con soluciones (para profesores)">
+                PDF prof ⤓
+            </a>
+            <a href="{{ route('pim-sheets.download-pdf', ['id' => $sheet->id, 'solutions' => '0']) }}" class="btn btn-primary" style="background-color: #718096;" title="PDF sin soluciones (para alumnos)">
+                PDF alum ⤓
             </a>
             <a href="{{ route('pim-sheets.index') }}" class="btn btn-secondary">
                 ← Volver al listado

@@ -374,8 +374,11 @@ class CarritoController extends Controller
         return ['packages' => $packages, 'imagenes' => $imagenes, 'contenido' => $contenido];
     }
 
-private function generarPreambulo($packages)
+private function generarPreambulo($packages, bool $withSolutions = true)
 {
+    $solutionsTrue  = $withSolutions ? '\\showsolutionstrue   % para profesores' : '%\\showsolutionstrue   % para profesores';
+    $solutionsFalse = $withSolutions ? '% \\showsolutionsfalse  % para alumnos'  : '\\showsolutionsfalse  % para alumnos';
+
     $preambulo = <<<'LATEX'
 \documentclass[12pt,a4paper]{article}
 
@@ -385,8 +388,9 @@ private function generarPreambulo($packages)
 \newif\ifshowsolutions
 \newif\ifshowinfo
 
-\showsolutionstrue   % para profesores
-% \showsolutionsfalse  % para alumnos
+LATEX;
+    $preambulo .= $solutionsTrue . "\n" . $solutionsFalse . "\n";
+    $preambulo .= <<<'LATEX'
 \showinfotrue        % para ver grupos y títulos en versión genérica
 %\showinfofalse      % para genérica para publicar
 
@@ -667,10 +671,12 @@ private function crearZip($texContent, $imagenesNombres)
             return redirect()->route('carrito.index')->with('error', 'El carrito está vacío');
         }
 
+        $withSolutions = request()->query('solutions', '1') !== '0';
+
         $result = $this->buildTexContent($items);
         $imagenes = $result['imagenes'];
 
-        $preambulo = $this->generarPreambulo($result['packages']);
+        $preambulo = $this->generarPreambulo($result['packages'], $withSolutions);
         $texContent = $preambulo . "\n\n\\begin{document}\n\n" . $result['contenido'] . "\n\\end{document}";
 
         // Recopilar datos binarios de imágenes
