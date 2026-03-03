@@ -322,7 +322,10 @@ window.MathJax = {
 <body>
     <nav class="navbar">
     <div class="logo">
-        <a href="{{ route('homepage') }}">📐 Pequeño Instituto de Matemáticas</a>
+        <a href="{{ route('homepage') }}" style="display:flex; align-items:center; gap:0.5rem;">
+            <img src="{{ asset('images/logoPIM.png') }}" alt="PIM" style="height:2rem; vertical-align:middle;">
+            Pequeño Instituto de Matemáticas
+        </a>
     </div>
     <div style="display: flex; align-items: center; gap: 1.5rem;">
         
