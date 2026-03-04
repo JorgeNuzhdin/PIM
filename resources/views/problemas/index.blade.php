@@ -795,10 +795,12 @@
                             <input type="checkbox" name="mostrar[]" value="solucion" {{ in_array('solucion', $mostrarArray) ? 'checked' : '' }} onchange="updateMostrarText()">
                             Solución
                         </label>
+                        @if(Auth::user()->rol !== 'user')
                         <label class="checkbox-option">
                             <input type="checkbox" name="mostrar[]" value="comentarios" {{ in_array('comentarios', $mostrarArray) ? 'checked' : '' }} onchange="updateMostrarText()">
                             Comentarios
                         </label>
+                        @endif
                         <label class="checkbox-option">
                             <input type="checkbox" name="mostrar[]" value="year" {{ in_array('year', $mostrarArray) ? 'checked' : '' }} onchange="updateMostrarText()">
                             Año académico
@@ -1026,8 +1028,8 @@
                         <button class="btn-icon btn-report"
                                 onclick="openReportModal({{ $problema->id }})"
                                 title="Reportar un error"
-                                style="font-size:1.1rem;{{ isset($problemasConErrores[$problema->id]) ? 'filter:none;' : 'filter:grayscale(1) brightness(2);' }}">
-                            ⚠️
+                                style="{{ isset($problemasConErrores[$problema->id]) ? 'color:#dd6b20;' : 'color:#718096;' }}">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.2em" height="1.2em" fill="currentColor" style="vertical-align:middle;"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
                         </button>
                     @endauth
                 </div>
@@ -1057,8 +1059,8 @@
                 </div>
             @endif
             
-            {{-- Comentarios --}}
-            @if($problema->comments && in_array('comentarios', $mostrarArray))
+            {{-- Comentarios: no visibles para rol user --}}
+            @if($problema->comments && in_array('comentarios', $mostrarArray) && Auth::user()->rol !== 'user')
                 <div class="problema-content problema-comentarios">
                     <strong>💬 Comentarios:</strong>
                     <div class="comentarios-content">

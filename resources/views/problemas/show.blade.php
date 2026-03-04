@@ -138,8 +138,8 @@
             </div>
         @endif
 
-        {{-- Comentarios --}}
-        @if($problema->comments)
+        {{-- Comentarios: no visibles para rol user --}}
+        @if($problema->comments && Auth::user()->rol !== 'user')
             <div class="problema-content problema-comentarios">
                 <strong>💬 Comentarios:</strong>
                 <div class="comentarios-content">{!! nl2br(e($problema->comments)) !!}</div>
