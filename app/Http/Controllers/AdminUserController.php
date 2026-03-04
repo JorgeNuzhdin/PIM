@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Problema;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 
 class AdminUserController extends Controller
@@ -34,13 +36,23 @@ class AdminUserController extends Controller
 
         $users = $query->orderBy('created_at', 'desc')->paginate(20);
 
-        return view('admin.users.index', compact('users'));
+        $minMedalla = (int) Setting::get('min_problemas_medalla', 5);
+        $usuariosConMedalla = Problema::select('proponent_id')
+            ->whereNotNull('proponent_id')
+            ->groupBy('proponent_id')
+            ->havingRaw('COUNT(*) >= ?', [$minMedalla])
+            ->havingRaw('SUM(approved = 0) = 0')
+            ->pluck('proponent_id')
+            ->flip()
+            ->all();
+
+        return view('admin.users.index', compact('users', 'usuariosConMedalla'));
     }
 
     public function updateRol(Request $request, User $user)
     {
         $request->validate([
-            'rol' => 'required|in:user,profesor,editor,admin'
+            'rol' => 'required|in:user,profesor,editor,admin,user_seguro,profesor_seguro'
         ]);
 
         $user->update(['rol' => $request->rol]);

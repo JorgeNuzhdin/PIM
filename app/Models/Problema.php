@@ -24,6 +24,7 @@ class Problema extends Model
         'source',
         'packages',
         'proponent_id',
+        'approved',
     ];
 
     // Relación con el proponente (usuario que subió el problema)

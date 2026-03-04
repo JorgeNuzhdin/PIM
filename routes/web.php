@@ -59,10 +59,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/check-duplicates/metodos', [App\Http\Controllers\MetodoController::class, 'checkDuplicates'])->name('api.check-duplicates.metodos');
     Route::post('/api/check-duplicates/hojas', [App\Http\Controllers\PimSheetController::class, 'checkDuplicates'])->name('api.check-duplicates.hojas');
 
-    // Rutas de problemas (solo para admin/editor)
+    // Crear problema: cualquier usuario autenticado
+    Route::get('/problemas/crear', [App\Http\Controllers\ProblemaController::class, 'create'])->name('problemas.create');
+    Route::post('/problemas', [App\Http\Controllers\ProblemaController::class, 'store'])->name('problemas.store');
+
+    // Editar/borrar: solo admin/editor
     Route::middleware('can.edit.problemas')->group(function () {
-        Route::get('/problemas/crear', [App\Http\Controllers\ProblemaController::class, 'create'])->name('problemas.create');
-        Route::post('/problemas', [App\Http\Controllers\ProblemaController::class, 'store'])->name('problemas.store');
         Route::get('/problemas/{id}/editar', [App\Http\Controllers\ProblemaController::class, 'edit'])->name('problemas.edit');
         Route::put('/problemas/{id}', [App\Http\Controllers\ProblemaController::class, 'update'])->name('problemas.update');
         Route::delete('/problemas/{id}', [App\Http\Controllers\ProblemaController::class, 'destroy'])->name('problemas.destroy');
@@ -97,6 +99,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Configuración general
     Route::get('/settings', [App\Http\Controllers\AdminSettingsController::class, 'index'])->name('settings');
     Route::post('/settings', [App\Http\Controllers\AdminSettingsController::class, 'update'])->name('settings.update');
+
+    // Problemas pendientes de aprobación
+    Route::get('/problemas-pendientes', [App\Http\Controllers\ProblemaController::class, 'pendientes'])->name('problemas.pendientes');
+    Route::post('/problemas/{id}/aprobar', [App\Http\Controllers\ProblemaController::class, 'aprobar'])->name('problemas.aprobar');
 });
 
 // Rutas de Hojas de Problemas (PimSheets)

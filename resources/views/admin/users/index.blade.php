@@ -24,7 +24,9 @@
                 <select name="rol" id="rol">
                     <option value="">Todos</option>
                     <option value="user" {{ request('rol') == 'user' ? 'selected' : '' }}>User</option>
+                    <option value="user_seguro" {{ request('rol') == 'user_seguro' ? 'selected' : '' }}>User seguro</option>
                     <option value="profesor" {{ request('rol') == 'profesor' ? 'selected' : '' }}>Profesor</option>
+                    <option value="profesor_seguro" {{ request('rol') == 'profesor_seguro' ? 'selected' : '' }}>Profesor seguro</option>
                     <option value="editor" {{ request('rol') == 'editor' ? 'selected' : '' }}>Editor</option>
                     <option value="admin" {{ request('rol') == 'admin' ? 'selected' : '' }}>Admin</option>
                 </select>
@@ -95,7 +97,7 @@
                         $reasLabel = $reasonLabels[$reas] ?? ($reas ?: '-');
                     @endphp
                     <tr>
-                        <td>{{ $user->name }}</td>
+                        <td>{{ $user->name }} @if(isset($usuariosConMedalla[$user->id])) 🏅 @endif</td>
                         <td>{{ $user->email }}</td>
                         <td>{{ $user->created_at?->format('d/m/Y H:i') ?? '-' }}</td>
                         <td title="{{ $profLabel }}">{{ Str::limit($profLabel, 22, '…') }}</td>
@@ -111,7 +113,9 @@
                                 @method('PATCH')
                                 <select name="rol" class="rol-select" onchange="this.form.submit()">
                                     <option value="user" {{ $user->rol == 'user' ? 'selected' : '' }}>User</option>
+                                    <option value="user_seguro" {{ $user->rol == 'user_seguro' ? 'selected' : '' }}>User seguro</option>
                                     <option value="profesor" {{ $user->rol == 'profesor' ? 'selected' : '' }}>Profesor</option>
+                                    <option value="profesor_seguro" {{ $user->rol == 'profesor_seguro' ? 'selected' : '' }}>Profesor seguro</option>
                                     <option value="editor" {{ $user->rol == 'editor' ? 'selected' : '' }}>Editor</option>
                                     <option value="admin" {{ $user->rol == 'admin' ? 'selected' : '' }}>Admin</option>
                                 </select>
@@ -308,6 +312,16 @@
 .rol-admin {
     background-color: #d4edda;
     color: #155724;
+}
+
+.rol-user_seguro {
+    background-color: #e2e8f0;
+    color: #2d3748;
+}
+
+.rol-profesor_seguro {
+    background-color: #fef9c3;
+    color: #713f12;
 }
 
 /* Select de rol en acciones */

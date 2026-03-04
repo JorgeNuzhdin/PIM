@@ -60,6 +60,8 @@ class ProblemaController extends Controller
                     $schoolYearText = SchoolYearHelper::getYearName($validated['school_year']);
                 }
                 
+                $approved = Auth::user()->isAutoApproved() ? 1 : 0;
+
                 $problema = Problema::create([
                     'id' => $nextId,
                     'difficulty' => $validated['difficulty'] ?? null,
@@ -71,6 +73,7 @@ class ProblemaController extends Controller
                     'comments' => $validated['comments'] ?? null,
                     'source' => $validated['source'] ?? null,
                     'proponent_id' => Auth::id(),
+                    'approved' => $approved,
                 ]);
                 
                 // Guardar tags (normalizados con Levenshtein)
@@ -140,7 +143,11 @@ class ProblemaController extends Controller
                     ]);
                 }
                 
-                return redirect()->route('problemas.create')->with('success', 'Problema creado exitosamente');
+                $msg = $approved
+                    ? 'Problema creado exitosamente.'
+                    : 'Tu problema ha sido enviado y está pendiente de aprobación. Solo tú y los administradores podéis verlo hasta que sea aprobado.';
+
+                return redirect()->route('problemas.create')->with($approved ? 'success' : 'info', $msg);
                 
             } catch (\Exception $e) {
                 DB::rollBack();
@@ -318,6 +325,21 @@ class ProblemaController extends Controller
                 }
             }
 
+    public function pendientes()
+    {
+        $problemas = Problema::where('approved', 0)
+            ->with(['proponent', 'tags'])
+            ->orderByDesc('id')
+            ->paginate(20);
+        return view('admin.problemas-pendientes', compact('problemas'));
+    }
+
+    public function aprobar($id)
+    {
+        Problema::findOrFail($id)->update(['approved' => 1]);
+        return back()->with('success', "Problema #{$id} aprobado correctamente.");
+    }
+
             public function destroy($id)
             {
                 try {
@@ -343,6 +365,13 @@ class ProblemaController extends Controller
         // Restricción para rol 'user'
         $allowedIds = AccessHelper::allowedProblemIds();
         if ($allowedIds !== null && !in_array($problema->id, $allowedIds)) {
+            abort(403);
+        }
+
+        // Problemas no aprobados: solo autor y admins
+        if (!$problema->approved
+            && !Auth::user()->isAdmin()
+            && $problema->proponent_id !== Auth::id()) {
             abort(403);
         }
 
@@ -372,6 +401,14 @@ class ProblemaController extends Controller
         } else {
             $query->whereIn('id', $allowedProblemIds);
         }
+    }
+
+    // Filtro de visibilidad: los no aprobados solo los ve su autor y los admins
+    if (!Auth::user()->isAdmin()) {
+        $query->where(function ($q) {
+            $q->where('approved', 1)
+              ->orWhere('proponent_id', Auth::id());
+        });
     }
 
     // Filtro por texto (busca en ID, título, problema, solución y fuente)

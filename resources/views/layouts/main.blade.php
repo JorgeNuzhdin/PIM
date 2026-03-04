@@ -406,6 +406,13 @@ window.MathJax = {
                     <div class="user-dropdown-content">
                         @if(Auth::user()->rol === 'admin')
                             <a href="{{ route('admin.users.index') }}">Administrar usuarios</a>
+                            @php $nPend = \App\Models\Problema::where('approved', 0)->count(); @endphp
+                            <a href="{{ route('admin.problemas.pendientes') }}" style="display:flex; align-items:center; justify-content:space-between;">
+                                <span>⏳ Problemas pendientes</span>
+                                @if($nPend > 0)
+                                    <span style="background:#e53e3e; color:white; border-radius:10px; padding:1px 7px; font-size:0.75rem; font-weight:700; margin-left:0.5rem;">{{ $nPend }}</span>
+                                @endif
+                            </a>
                             <a href="{{ route('admin.settings') }}">⚙️ Configuración</a>
                         @endif
                         @if(Auth::user()->canEditProblemas())
@@ -435,6 +442,11 @@ window.MathJax = {
     @if(session('success'))
     <div style="background:#c6f6d5;color:#276749;border:1px solid #68d391;border-radius:6px;padding:0.85rem 1.25rem;margin:1rem auto;max-width:1200px;font-size:0.95rem;">
         ✅ {{ session('success') }}
+    </div>
+    @endif
+    @if(session('info'))
+    <div style="background:#bee3f8;color:#2c5282;border:1px solid #90cdf4;border-radius:6px;padding:0.85rem 1.25rem;margin:1rem auto;max-width:1200px;font-size:0.95rem;">
+        ℹ️ {{ session('info') }}
     </div>
     @endif
     @yield('content')

@@ -67,6 +67,11 @@ class User extends Authenticatable
         return in_array($this->rol, ['admin', 'editor']);
     }
 
+    public function isAutoApproved(): bool
+    {
+        return in_array($this->rol, ['admin', 'editor', 'user_seguro', 'profesor_seguro']);
+    }
+
     /**
      * Send the password reset notification.
      *

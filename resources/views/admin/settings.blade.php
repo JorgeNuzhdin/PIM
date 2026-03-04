@@ -35,6 +35,24 @@
             </div>
         </div>
 
+        <div style="margin-bottom: 1.5rem; padding: 1.25rem; background: #f7fafc; border-radius: 6px;">
+            <label style="display:block; font-weight:600; margin-bottom:0.5rem; color:#2d3748;">
+                Mínimo de problemas para la medalla 🏅
+            </label>
+            <p style="color:#718096; font-size:0.875rem; margin:0 0 0.75rem;">
+                Usuarios que hayan aportado al menos N problemas, todos aprobados, reciben una medalla
+                en la vista de administración de usuarios.
+            </p>
+            <div style="display:flex; align-items:center; gap:1rem;">
+                <input type="number"
+                       name="min_problemas_medalla"
+                       value="{{ old('min_problemas_medalla', $settings['min_problemas_medalla']->value ?? 5) }}"
+                       min="1" max="100"
+                       style="width:80px; padding:0.5rem; border:1px solid #cbd5e0; border-radius:4px; font-size:1rem;">
+                <span style="color:#4a5568;">problema(s)</span>
+            </div>
+        </div>
+
         <button type="submit" style="background:#4299e1;color:white;border:none;padding:0.65rem 1.5rem;border-radius:4px;cursor:pointer;font-size:1rem;">
             💾 Guardar
         </button>

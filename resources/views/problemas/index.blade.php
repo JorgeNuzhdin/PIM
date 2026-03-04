@@ -967,7 +967,12 @@
                 <div class="problema-info">
                     <div class="problema-title-row">
                         <h3>Problema #{{ $problema->id }}</h3>
-                        
+
+                        {{-- Badge pendiente de aprobación --}}
+                        @if(!$problema->approved)
+                            <span style="background:#ed8936; color:white; padding:0.2rem 0.6rem; border-radius:10px; font-size:0.75rem; font-weight:700; white-space:nowrap;">Pendiente</span>
+                        @endif
+
                         {{-- Año académico --}}
                         @if($problema->school_year && in_array('year', $mostrarArray))
                             @php $yearIdx = \App\Helpers\SchoolYearHelper::getYearIndex($problema->school_year); @endphp

@@ -16,10 +16,12 @@ class AdminSettingsController extends Controller
     public function update(Request $request)
     {
         $request->validate([
-            'access_years' => 'required|integer|min:1|max:10',
+            'access_years'          => 'required|integer|min:1|max:10',
+            'min_problemas_medalla' => 'required|integer|min:1|max:100',
         ]);
 
         Setting::set('access_years', $request->access_years);
+        Setting::set('min_problemas_medalla', $request->min_problemas_medalla);
 
         return back()->with('success', 'Configuración guardada.');
     }
