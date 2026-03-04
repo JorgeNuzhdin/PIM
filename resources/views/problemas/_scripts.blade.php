@@ -181,7 +181,7 @@ function extraerEjercicios(contenido) {
         const dificultad = extraerComando(bloqueMetadatos, 'dificultad') || '';
         const fuente = extraerComando(bloqueMetadatos, 'fuente') || '';
         const curso = extraerComando(bloqueMetadatos, 'curso') || '';
-        const titulo = extraerComando(bloqueMetadatos, 'titulo') || extraerComando(bloqueMetadatos, 'title') || '';
+        const titulo = extraerComando(bloqueMetadatos, 'título') || extraerComando(bloqueMetadatos, 'titulo') || extraerComando(bloqueMetadatos, 'title') || '';
         const comentarios = extraerComando(bloqueMetadatos, 'comentarios') || '';
 
         // Extraer enunciado
