@@ -408,7 +408,7 @@ window.MathJax = {
                             <a href="{{ route('admin.users.index') }}">Administrar usuarios</a>
                             <a href="{{ route('admin.settings') }}">⚙️ Configuración</a>
                         @endif
-                        @if(Auth::user()->rol !== 'user')
+                        @if(Auth::user()->canEditProblemas())
                             <a href="{{ route('problemas.con-errores') }}">⚠️ Problemas con errores</a>
                         @endif
                         <a href="{{ route('profile.edit') }}">Editar perfil</a>

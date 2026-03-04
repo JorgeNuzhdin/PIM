@@ -851,9 +851,7 @@
             <div class="form-group form-buttons">
                 <button type="submit" class="btn">Filtrar</button>
                 <a href="{{ route('problemas.index') }}" class="btn btn-secondary">Limpiar</a>
-                @if(Auth::user()->rol !== 'user')
                 <button type="button" class="btn" style="background:#48bb78;color:white;" onclick="addFilteredToCarrito()">Al carrito</button>
-                @endif
             </div>
             @endif
         </div>
