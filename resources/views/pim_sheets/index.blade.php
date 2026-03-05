@@ -466,7 +466,7 @@
                         <td>{{ $sheet->tema->tema ?? '-' }}</td>
                         <td class="actions-cell">
                             <a href="{{ route('pim-sheets.show', ['id' => $sheet->id]) }}" class="btn-action view" title="Ver hoja">👁️</a>
-                            @if(Auth::user()->rol !== 'user')<a href="{{ route('pim-sheets.download', ['id' => $sheet->id]) }}" class="btn-action download-tex" title="Descargar TEX+IMG (ZIP)">TEX⤓</a>@endif
+                            @if(!\App\Helpers\AccessHelper::isRestricted())<a href="{{ route('pim-sheets.download', ['id' => $sheet->id]) }}" class="btn-action download-tex" title="Descargar TEX+IMG (ZIP)">TEX⤓</a>@endif
                             <button class="btn-action download-pdf"
                                     data-url-prof="{{ route('pim-sheets.download-pdf', ['id' => $sheet->id, 'solutions' => '1']) }}"
                                     data-url-alum="{{ route('pim-sheets.download-pdf', ['id' => $sheet->id, 'solutions' => '0']) }}"

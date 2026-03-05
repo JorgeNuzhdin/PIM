@@ -344,7 +344,7 @@ window.MathJax = {
 
             {{-- Métodos: visible solo si no es usuario básico --}}
             @auth
-                @if(Auth::user()->rol !== 'user')
+                @if(!\App\Helpers\AccessHelper::isRestricted())
                     @if(Auth::user()->canEditProblemas())
                         <div class="nav-dropdown">
                             <a href="{{ route('metodos.index') }}" class="nav-dropdown-btn">Métodos ▾</a>

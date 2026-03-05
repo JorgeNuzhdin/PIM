@@ -139,7 +139,7 @@
         @endif
 
         {{-- Comentarios: no visibles para rol user --}}
-        @if($problema->comments && Auth::user()->rol !== 'user')
+        @if($problema->comments && !\App\Helpers\AccessHelper::isRestricted())
             <div class="problema-content problema-comentarios">
                 <strong>💬 Comentarios:</strong>
                 <div class="comentarios-content">{!! nl2br(e($problema->comments)) !!}</div>

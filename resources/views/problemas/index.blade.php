@@ -740,7 +740,7 @@
             </div>
 
             {{-- Filtro por fuente (agrupado) — solo para no-usuarios --}}
-            @if(Auth::user()->rol !== 'user')
+            @if(!\App\Helpers\AccessHelper::isRestricted())
             <div class="form-group">
                 <label for="source">Fuente</label>
                 <select name="source" id="source">
@@ -795,7 +795,7 @@
                             <input type="checkbox" name="mostrar[]" value="solucion" {{ in_array('solucion', $mostrarArray) ? 'checked' : '' }} onchange="updateMostrarText()">
                             Solución
                         </label>
-                        @if(Auth::user()->rol !== 'user')
+                        @if(!\App\Helpers\AccessHelper::isRestricted())
                         <label class="checkbox-option">
                             <input type="checkbox" name="mostrar[]" value="comentarios" {{ in_array('comentarios', $mostrarArray) ? 'checked' : '' }} onchange="updateMostrarText()">
                             Comentarios

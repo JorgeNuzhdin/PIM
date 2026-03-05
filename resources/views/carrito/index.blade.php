@@ -172,7 +172,7 @@
                     </a>
                 @endif
             @endauth
-            @if(Auth::user()->rol !== 'user')
+            @if(!\App\Helpers\AccessHelper::isRestricted())
             <a href="{{ route('carrito.descargar.tex') }}" class="btn-carrito btn-tex">
                  TEX ⤓
             </a>

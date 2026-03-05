@@ -249,7 +249,7 @@
             @endif
         </div>
         <div class="sheet-actions">
-            @if(Auth::user()->rol !== 'user')
+            @if(!\App\Helpers\AccessHelper::isRestricted())
             <a href="{{ route('pim-sheets.download', ['id' => $sheet->id]) }}" class="btn btn-primary" title="Descargar TEX + imágenes">
                 TEX ⤓
             </a>
