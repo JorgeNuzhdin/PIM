@@ -405,7 +405,10 @@ private static function getImSimple($filename)
         $style_th = "border:solid #000; padding:10px; margin:10px;";
         $style_ex = 'border-left: 2px solid red; padding-left:15px; margin-left:10px;';
 
-        // PRIMERO: Extraer bloques TikZ para protegerlos del escape de < y >
+        // PRIMERO: Eliminar entornos tikzcd (tikzjax no los soporta)
+        $t = preg_replace('/\\\\begin\{tikzcd\}.*?\\\\end\{tikzcd\}/s', '', $t);
+
+        // Extraer bloques TikZ para protegerlos del escape de < y >
         self::$tikzBlocks = [];
         $tikzIndex = 0;
         while (($startPos = strpos($t, '\begin{tikzpicture}')) !== false) {
@@ -458,6 +461,8 @@ private static function getImSimple($filename)
         $t = str_replace('\mcm', '\operatorname{mcm}', $t);  // \mcm → operatorname para MathJax
         $t = preg_replace('/\\\\arcsen\b/', '\arcsin', $t);  // \arcsen → \arcsin
         $t = preg_replace('/\\\\sen\b/', '\sin', $t);        // \sen → \sin
+        $t = preg_replace('/\\\\checkmark\b/', '✓', $t);    // \checkmark → ✓
+        $t = preg_replace('/\\\\qed\b/', '■', $t);           // \qed → ■
 
         // Eliminar comandos LaTeX que no tienen equivalente en HTML
         // Comandos de espaciado vertical
