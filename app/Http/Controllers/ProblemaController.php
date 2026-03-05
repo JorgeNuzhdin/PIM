@@ -417,7 +417,7 @@ class ProblemaController extends Controller
     }
 
     // Filtro de visibilidad: los no aprobados solo los ve su autor y los admins
-    if (!Auth::user()->isAdmin()) {
+    if (!Auth::check() || !Auth::user()->isAdmin()) {
         $query->where(function ($q) {
             $q->where('approved', 1)
               ->orWhere('proponent_id', Auth::id());
@@ -511,7 +511,7 @@ class ProblemaController extends Controller
     // Filtro por proponente
     if ($request->filled('proponent_id')) {
         $query->where('proponent_id', $request->proponent_id);
-    } elseif ($request->boolean('solo_mios') && in_array(Auth::user()->rol, ['admin', 'editor'])) {
+    } elseif ($request->boolean('solo_mios') && Auth::check() && in_array(Auth::user()->rol, ['admin', 'editor'])) {
         $query->where('proponent_id', Auth::id());
     }
 
