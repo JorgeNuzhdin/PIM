@@ -2,6 +2,12 @@
 
 @section('title', 'Problemas pendientes de aprobación')
 
+@section('styles')
+<style>
+tr:target td { background-color: #fffbeb; outline: 2px solid #ed8936; }
+</style>
+@endsection
+
 @section('content')
 <div style="max-width:1100px; margin:2rem auto; padding:0 1rem;">
     <h1 style="margin-bottom:0.5rem; color:#2d3748;">⏳ Problemas pendientes de aprobación</h1>
@@ -27,7 +33,7 @@
                 </thead>
                 <tbody>
                     @foreach($problemas as $problema)
-                        <tr style="border-bottom:1px solid #e2e8f0;">
+                        <tr id="problema-{{ $problema->id }}" style="border-bottom:1px solid #e2e8f0;">
                             <td style="padding:0.75rem 1rem; color:#718096; font-size:0.875rem; white-space:nowrap;">
                                 <a href="{{ route('problemas.show', $problema->id) }}" style="color:#4299e1; text-decoration:none; font-weight:600;">
                                     #{{ $problema->id }}
