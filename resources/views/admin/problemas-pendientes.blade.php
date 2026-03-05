@@ -62,6 +62,15 @@
                                    style="margin-left:0.5rem; background:#4299e1; color:white; padding:0.4rem 0.9rem; border-radius:4px; font-size:0.875rem; text-decoration:none;">
                                     ✏️ Editar
                                 </a>
+                                <form action="{{ route('problemas.destroy', $problema->id) }}" method="POST" style="display:inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                            onclick="return confirm('¿Eliminar el problema #{{ $problema->id }}? Esta acción no se puede deshacer.')"
+                                            style="margin-left:0.5rem; background:#fc8181; color:white; border:none; padding:0.4rem 0.9rem; border-radius:4px; cursor:pointer; font-size:0.875rem;">
+                                        🗑️ Eliminar
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                     @endforeach
