@@ -329,19 +329,15 @@ window.MathJax = {
         
         
         <div>
-            {{-- Problemas: link for all, dropdown for editors --}}
+            {{-- Problemas: dropdown para cualquier usuario autenticado --}}
             @auth
-                @if(Auth::user()->canEditProblemas())
-                    <div class="nav-dropdown">
-                        <a href="{{ route('problemas.index') }}" class="nav-dropdown-btn">Problemas ▾</a>
-                        <div class="nav-dropdown-content">
-                            <a href="{{ route('problemas.index') }}">Ver problemas</a>
-                            <a href="{{ route('problemas.create') }}">Añadir problema</a>
-                        </div>
+                <div class="nav-dropdown">
+                    <a href="{{ route('problemas.index') }}" class="nav-dropdown-btn">Problemas ▾</a>
+                    <div class="nav-dropdown-content">
+                        <a href="{{ route('problemas.index') }}">Ver problemas</a>
+                        <a href="{{ route('problemas.create') }}">Añadir problema</a>
                     </div>
-                @else
-                    <a href="{{ route('problemas.index') }}">Problemas</a>
-                @endif
+                </div>
             @else
                 <a href="{{ route('problemas.index') }}">Problemas</a>
             @endauth

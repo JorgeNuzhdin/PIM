@@ -12,7 +12,7 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->unsignedBigInteger('metodo_id')->index();
             $table->string('title');
-            $table->longText('figure');
+            $table->binary('figure', 4294967295); // longblob
             $table->timestamps();
         });
     }

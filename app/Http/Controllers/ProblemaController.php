@@ -175,10 +175,12 @@ class ProblemaController extends Controller
                 $schoolYears = SchoolYearHelper::getAllYears();
                 $figuras = Figure::where('problem_id', $id)->get();
 
-                // Lista de proponentes para admin (solo admins y editores pueden proponer)
+                // Lista de proponentes para admin (todos los usuarios que han aportado al menos un problema)
                 $proponents = [];
                 if (Auth::user()->isAdmin()) {
-                    $proponents = \App\Models\User::whereIn('rol', ['admin', 'editor'])->orderBy('name')->get();
+                    $proponents = \App\Models\User::whereIn('id', function ($q) {
+                        $q->select('proponent_id')->from('pim_problems')->whereNotNull('proponent_id');
+                    })->orderBy('name')->get();
                 }
 
                 // URL de retorno (para volver a la misma página/filtros)
