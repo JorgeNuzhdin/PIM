@@ -403,7 +403,7 @@ window.MathJax = {
                         @if(Auth::user()->rol === 'admin')
                             <a href="{{ route('admin.users.index') }}">Administrar usuarios</a>
                             @php $nPend = \App\Models\Problema::where('approved', 0)->count(); @endphp
-                            <a href="{{ route('problemas.pendientes') }}" style="display:flex; align-items:center; justify-content:space-between;">
+                            <a href="{{ route('admin.problemas.pendientes') }}" style="display:flex; align-items:center; justify-content:space-between;">
                                 <span>⏳ Problemas pendientes</span>
                                 @if($nPend > 0)
                                     <span style="background:#e53e3e; color:white; border-radius:10px; padding:1px 7px; font-size:0.75rem; font-weight:700; margin-left:0.5rem;">{{ $nPend }}</span>

@@ -56,7 +56,7 @@ tr:target td { background-color: #fffbeb; outline: 2px solid #ed8936; }
                                 <div style="color:#a0aec0; font-size:0.75rem;">{{ $problema->proponent->email ?? '' }}</div>
                             </td>
                             <td style="padding:0.75rem 1rem; white-space:nowrap;">
-                                <form action="{{ route('problemas.aprobar', $problema->id) }}" method="POST" style="display:inline;">
+                                <form action="{{ route('admin.problemas.aprobar', $problema->id) }}" method="POST" style="display:inline;">
                                     @csrf
                                     <button type="submit"
                                             onclick="return confirm('¿Aprobar el problema #{{ $problema->id }}?')"

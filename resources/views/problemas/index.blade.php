@@ -973,7 +973,7 @@
                         {{-- Badge pendiente de aprobación --}}
                         @if(!$problema->approved)
                             @if(Auth::user()->isAdmin())
-                                <a href="{{ route('problemas.pendientes') }}#problema-{{ $problema->id }}"
+                                <a href="{{ route('admin.problemas.pendientes') }}#problema-{{ $problema->id }}"
                                    style="background:#ed8936; color:white; padding:0.2rem 0.6rem; border-radius:10px; font-size:0.75rem; font-weight:700; white-space:nowrap; text-decoration:none;">Pendiente ↗</a>
                             @else
                                 <span style="background:#ed8936; color:white; padding:0.2rem 0.6rem; border-radius:10px; font-size:0.75rem; font-weight:700; white-space:nowrap;">Pendiente</span>
