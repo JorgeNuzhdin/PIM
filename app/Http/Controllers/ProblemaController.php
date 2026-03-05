@@ -353,10 +353,16 @@ class ProblemaController extends Controller
                     // Eliminar el problema
                     $problema->delete();
 
-                    return response()->json(['success' => true, 'message' => 'Problema eliminado exitosamente']);
+                    if (request()->expectsJson()) {
+                        return response()->json(['success' => true, 'message' => 'Problema eliminado exitosamente']);
+                    }
+                    return back()->with('success', "Problema #{$id} eliminado correctamente.");
 
                 } catch (\Exception $e) {
-                    return response()->json(['success' => false, 'message' => 'Error al eliminar: ' . $e->getMessage()], 500);
+                    if (request()->expectsJson()) {
+                        return response()->json(['success' => false, 'message' => 'Error al eliminar: ' . $e->getMessage()], 500);
+                    }
+                    return back()->with('error', 'Error al eliminar: ' . $e->getMessage());
                 }
             }
 
@@ -396,12 +402,17 @@ class ProblemaController extends Controller
     $query = Problema::query();
 
     // Restricción para usuarios básicos (rol 'user'): solo problemas usados en hojas accesibles
+    // Los problemas propios del usuario siempre son visibles (incluso pendientes de aprobación)
     $allowedProblemIds = AccessHelper::allowedProblemIds();
     if ($allowedProblemIds !== null) {
+        $userId = Auth::id();
         if (empty($allowedProblemIds)) {
-            $query->whereRaw('1 = 0');
+            $query->where('proponent_id', $userId);
         } else {
-            $query->whereIn('id', $allowedProblemIds);
+            $query->where(function ($q) use ($allowedProblemIds, $userId) {
+                $q->whereIn('id', $allowedProblemIds)
+                  ->orWhere('proponent_id', $userId);
+            });
         }
     }
 

@@ -972,7 +972,12 @@
 
                         {{-- Badge pendiente de aprobación --}}
                         @if(!$problema->approved)
-                            <span style="background:#ed8936; color:white; padding:0.2rem 0.6rem; border-radius:10px; font-size:0.75rem; font-weight:700; white-space:nowrap;">Pendiente</span>
+                            @if(Auth::user()->isAdmin())
+                                <a href="{{ route('problemas.show', $problema->id) }}"
+                                   style="background:#ed8936; color:white; padding:0.2rem 0.6rem; border-radius:10px; font-size:0.75rem; font-weight:700; white-space:nowrap; text-decoration:none;">Pendiente ↗</a>
+                            @else
+                                <span style="background:#ed8936; color:white; padding:0.2rem 0.6rem; border-radius:10px; font-size:0.75rem; font-weight:700; white-space:nowrap;">Pendiente</span>
+                            @endif
                         @endif
 
                         {{-- Año académico --}}

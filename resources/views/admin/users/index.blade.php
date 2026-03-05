@@ -57,67 +57,87 @@
         </form>
     </div>
 
+    @php
+        $sortUrl   = fn($col) => request()->fullUrlWithQuery(['sort' => $col, 'dir' => ($sort === $col && $dir === 'asc') ? 'desc' : 'asc', 'page' => 1]);
+        $sortArrow = fn($col) => $sort === $col ? ($dir === 'asc' ? ' ↑' : ' ↓') : ' ↕';
+        $professionLabels = [
+            'alumno_secundaria'     => 'Alumno secundaria',
+            'alumno_bachillerato'   => 'Alumno bachillerato',
+            'alumno_universitario'  => 'Alumno universitario',
+            'profesor_matematicas'  => 'Profe. matemáticas',
+            'profesor_universitario'=> 'Profe. universitario',
+        ];
+        $reasonLabels = [
+            'estudiar_matematicas' => 'Estudiar matemáticas',
+            'ensenar_matematicas'  => 'Enseñar matemáticas',
+        ];
+    @endphp
+
+    {{-- Control de columnas visibles --}}
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem; flex-wrap:wrap; gap:0.5rem;">
+        <span style="font-size:0.875rem; color:#666;">{{ $users->total() }} usuario(s)</span>
+        <div style="display:flex; align-items:center; gap:1rem; font-size:0.875rem;">
+            <strong>Mostrar:</strong>
+            <label style="cursor:pointer;"><input type="checkbox" id="col-email" onchange="toggleCol('email',this.checked)"> Email</label>
+            <label style="cursor:pointer;"><input type="checkbox" id="col-motivo" onchange="toggleCol('motivo',this.checked)"> Motivo</label>
+            <label style="cursor:pointer;"><input type="checkbox" id="col-problemas" checked onchange="toggleCol('problemas',this.checked)"> Problemas</label>
+        </div>
+    </div>
+
     {{-- Tabla de usuarios --}}
     <div class="table-container">
-        <table class="users-table">
+        <table class="users-table" id="users-table">
             <thead>
                 <tr>
-                    <th>Nombre</th>
-                    <th>Email</th>
-                    <th>Fecha registro</th>
-                    <th>Profesión</th>
-                    <th>Motivo</th>
-                    <th>Rol</th>
+                    <th><a href="{{ $sortUrl('name') }}" class="sort-link">Nombre{!! $sortArrow('name') !!}</a></th>
+                    <th class="col-email" style="display:none;"><a href="{{ $sortUrl('email') }}" class="sort-link">Email{!! $sortArrow('email') !!}</a></th>
+                    <th><a href="{{ $sortUrl('created_at') }}" class="sort-link">Fecha registro{!! $sortArrow('created_at') !!}</a></th>
+                    <th><a href="{{ $sortUrl('profession') }}" class="sort-link">Profesión{!! $sortArrow('profession') !!}</a></th>
+                    <th class="col-motivo" style="display:none;">Motivo</th>
+                    <th><a href="{{ $sortUrl('rol') }}" class="sort-link">Rol{!! $sortArrow('rol') !!}</a></th>
+                    <th class="col-problemas">Problemas</th>
                     <th>Acciones
-                        <button id="btn-enable-delete" onclick="toggleDeleteMode()" title="Habilitar eliminación de usuarios"
-                                style="background:none;border:none;cursor:pointer;font-size:1.1rem;margin-left:0.5rem;opacity:0.4;"
-                                title="Activar modo eliminación">🗑️</button>
+                        <button id="btn-enable-delete" onclick="toggleDeleteMode()" title="Activar modo eliminación"
+                                style="background:none;border:none;cursor:pointer;font-size:1.1rem;margin-left:0.5rem;opacity:0.4;">🗑️</button>
                     </th>
                 </tr>
             </thead>
             <tbody>
-                @php
-                $professionLabels = [
-                    'alumno_secundaria'    => 'Alumno secundaria',
-                    'alumno_bachillerato'  => 'Alumno bachillerato',
-                    'alumno_universitario' => 'Alumno universitario',
-                    'profesor_matematicas' => 'Profe. matemáticas',
-                    'profesor_universitario' => 'Profe. universitario',
-                ];
-                $reasonLabels = [
-                    'estudiar_matematicas' => 'Estudiar matemáticas',
-                    'ensenar_matematicas'  => 'Enseñar matemáticas',
-                ];
-                @endphp
                 @forelse($users as $user)
                     @php
-                        $prof = $user->profession ?? '';
+                        $prof     = $user->profession ?? '';
                         $profLabel = $professionLabels[$prof] ?? ($prof ?: '-');
-                        $reas = $user->reason ?? '';
+                        $reas     = $user->reason ?? '';
                         $reasLabel = $reasonLabels[$reas] ?? ($reas ?: '-');
+                        $pc       = $problemaCounts[$user->id] ?? null;
                     @endphp
                     <tr>
                         <td>{{ $user->name }} @if(isset($usuariosConMedalla[$user->id])) 🏅 @endif</td>
-                        <td>{{ $user->email }}</td>
+                        <td class="col-email" style="display:none;">{{ $user->email }}</td>
                         <td>{{ $user->created_at?->format('d/m/Y H:i') ?? '-' }}</td>
                         <td title="{{ $profLabel }}">{{ Str::limit($profLabel, 22, '…') }}</td>
-                        <td title="{{ $reasLabel }}">{{ Str::limit($reasLabel, 22, '…') }}</td>
+                        <td class="col-motivo" style="display:none;" title="{{ $reasLabel }}">{{ Str::limit($reasLabel, 22, '…') }}</td>
                         <td>
-                            <span class="rol-badge rol-{{ $user->rol }}">
-                                {{ ucfirst($user->rol) }}
-                            </span>
+                            <span class="rol-badge rol-{{ $user->rol }}">{{ ucfirst($user->rol) }}</span>
+                        </td>
+                        <td class="col-problemas" style="font-size:0.875rem; color:#4a5568; white-space:nowrap;">
+                            @if($pc)
+                                <span title="{{ $pc->aprobados }} aprobados / {{ $pc->total }} propuestos">{{ $pc->aprobados }}/{{ $pc->total }}</span>
+                            @else
+                                <span style="color:#cbd5e0;">—</span>
+                            @endif
                         </td>
                         <td>
                             <form action="{{ route('admin.users.updateRol', $user) }}" method="POST" class="rol-form">
                                 @csrf
                                 @method('PATCH')
                                 <select name="rol" class="rol-select" onchange="this.form.submit()">
-                                    <option value="user" {{ $user->rol == 'user' ? 'selected' : '' }}>User</option>
-                                    <option value="user_seguro" {{ $user->rol == 'user_seguro' ? 'selected' : '' }}>User seguro</option>
-                                    <option value="profesor" {{ $user->rol == 'profesor' ? 'selected' : '' }}>Profesor</option>
-                                    <option value="profesor_seguro" {{ $user->rol == 'profesor_seguro' ? 'selected' : '' }}>Profesor seguro</option>
-                                    <option value="editor" {{ $user->rol == 'editor' ? 'selected' : '' }}>Editor</option>
-                                    <option value="admin" {{ $user->rol == 'admin' ? 'selected' : '' }}>Admin</option>
+                                    <option value="user"           {{ $user->rol == 'user'           ? 'selected' : '' }}>User</option>
+                                    <option value="user_seguro"    {{ $user->rol == 'user_seguro'    ? 'selected' : '' }}>User seguro</option>
+                                    <option value="profesor"       {{ $user->rol == 'profesor'       ? 'selected' : '' }}>Profesor</option>
+                                    <option value="profesor_seguro"{{ $user->rol == 'profesor_seguro'? 'selected' : '' }}>Profesor seguro</option>
+                                    <option value="editor"         {{ $user->rol == 'editor'         ? 'selected' : '' }}>Editor</option>
+                                    <option value="admin"          {{ $user->rol == 'admin'          ? 'selected' : '' }}>Admin</option>
                                 </select>
                             </form>
                             <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="delete-user-form" style="display:none;margin-top:0.25rem;">
@@ -133,7 +153,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="empty-row">No se encontraron usuarios.</td>
+                        <td colspan="8" class="empty-row">No se encontraron usuarios.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -368,7 +388,37 @@
     padding: 2px 4px;
 }
 </style>
+<style>
+.sort-link { color: inherit; text-decoration: none; white-space: nowrap; }
+.sort-link:hover { text-decoration: underline; }
+</style>
 <script>
+// ── Columnas visibles (persistidas en localStorage) ──────────────────
+const COLS = ['email', 'motivo', 'problemas'];
+const DEFAULTS = { email: false, motivo: false, problemas: true };
+
+function toggleCol(name, visible) {
+    document.querySelectorAll('.col-' + name).forEach(el => {
+        el.style.display = visible ? '' : 'none';
+    });
+    const prefs = JSON.parse(localStorage.getItem('users_cols') || '{}');
+    prefs[name] = visible;
+    localStorage.setItem('users_cols', JSON.stringify(prefs));
+}
+
+function initCols() {
+    const prefs = JSON.parse(localStorage.getItem('users_cols') || '{}');
+    COLS.forEach(name => {
+        const visible = name in prefs ? prefs[name] : DEFAULTS[name];
+        const cb = document.getElementById('col-' + name);
+        if (cb) cb.checked = visible;
+        toggleCol(name, visible);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', initCols);
+
+// ── Modo eliminación ──────────────────────────────────────────────────
 let deleteMode = false;
 function toggleDeleteMode() {
     deleteMode = !deleteMode;
