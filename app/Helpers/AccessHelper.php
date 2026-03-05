@@ -9,12 +9,12 @@ use Illuminate\Support\Facades\Auth;
 class AccessHelper
 {
     /**
-     * ¿El usuario actual tiene acceso restringido (rol 'user')?
+     * ¿El usuario actual tiene acceso restringido (roles 'user' y 'user_seguro')?
      */
     public static function isRestricted(): bool
     {
         if (!Auth::check()) return false;
-        return Auth::user()->rol === 'user';
+        return in_array(Auth::user()->rol, ['user', 'user_seguro']);
     }
 
     /**
