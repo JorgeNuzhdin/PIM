@@ -646,25 +646,76 @@ $t = preg_replace('/\\\\definecolor\{[^}]+\}\{[^}]+\}\{[^}]+\}/', '', $t);
         $t = str_replace('\begin{sol}', '<br><i>Solución</i>: ', $t);
         $t = str_replace('\end{sol}', '<br>', $t);
 
-        // Tildes y acentos (minúsculas y mayúsculas)
-        $t = str_replace("\'e", 'é', $t);
-        $t = str_replace("\'a", 'á', $t);
-        $t = str_replace("\'o", 'ó', $t);
-        $t = str_replace("\'u", 'ú', $t);
-        $t = str_replace("\'i", 'í', $t);
-        $t = str_replace("\'E", 'É', $t);
-        $t = str_replace("\'A", 'Á', $t);
-        $t = str_replace("\'O", 'Ó', $t);
-        $t = str_replace("\'U", 'Ú', $t);
-        $t = str_replace("\'I", 'Í', $t);
-        // Eñe
-        $t = str_replace('\~n', 'ñ', $t);
-        $t = str_replace('\~N', 'Ñ', $t);
-        // Diéresis
-        $t = str_replace('\"u', 'ü', $t);
-        $t = str_replace('\"U', 'Ü', $t);
-        $t = str_replace('\"o', 'ö', $t);
-        $t = str_replace('\"a', 'ä', $t);
+        // Signos de interrogación/exclamación invertidos
+        $t = str_replace('?`',  '¿', $t);
+        $t = str_replace("?'",  '¿', $t);
+        $t = str_replace('!`',  '¡', $t);
+        $t = str_replace("!'",  '¡', $t);
+
+        // Acentos agudos con llaves: \'{vocal}  (antes que sin llaves)
+        $t = str_replace("\\'{a}", 'á', $t);  $t = str_replace("\\'{A}", 'Á', $t);
+        $t = str_replace("\\'{e}", 'é', $t);  $t = str_replace("\\'{E}", 'É', $t);
+        $t = str_replace("\\'{i}", 'í', $t);  $t = str_replace("\\'{I}", 'Í', $t);
+        $t = str_replace("\\'{o}", 'ó', $t);  $t = str_replace("\\'{O}", 'Ó', $t);
+        $t = str_replace("\\'{u}", 'ú', $t);  $t = str_replace("\\'{U}", 'Ú', $t);
+
+        // Acentos agudos sin llaves: \'vocal
+        $t = str_replace("\'a", 'á', $t);  $t = str_replace("\'A", 'Á', $t);
+        $t = str_replace("\'e", 'é', $t);  $t = str_replace("\'E", 'É', $t);
+        $t = str_replace("\'i", 'í', $t);  $t = str_replace("\'I", 'Í', $t);
+        $t = str_replace("\'o", 'ó', $t);  $t = str_replace("\'O", 'Ó', $t);
+        $t = str_replace("\'u", 'ú', $t);  $t = str_replace("\'U", 'Ú', $t);
+
+        // Acentos graves: \`vocal (con y sin llaves)
+        $t = str_replace('\`{a}', 'à', $t);  $t = str_replace('\`{A}', 'À', $t);
+        $t = str_replace('\`{e}', 'è', $t);  $t = str_replace('\`{E}', 'È', $t);
+        $t = str_replace('\`{i}', 'ì', $t);  $t = str_replace('\`{I}', 'Ì', $t);
+        $t = str_replace('\`{o}', 'ò', $t);  $t = str_replace('\`{O}', 'Ò', $t);
+        $t = str_replace('\`{u}', 'ù', $t);  $t = str_replace('\`{U}', 'Ù', $t);
+        $t = str_replace('\`a',   'à', $t);  $t = str_replace('\`A',   'À', $t);
+        $t = str_replace('\`e',   'è', $t);  $t = str_replace('\`E',   'È', $t);
+        $t = str_replace('\`i',   'ì', $t);  $t = str_replace('\`I',   'Ì', $t);
+        $t = str_replace('\`o',   'ò', $t);  $t = str_replace('\`O',   'Ò', $t);
+        $t = str_replace('\`u',   'ù', $t);  $t = str_replace('\`U',   'Ù', $t);
+
+        // Circunflejo: \^vocal (con y sin llaves)
+        $t = str_replace('\^{a}', 'â', $t);  $t = str_replace('\^{A}', 'Â', $t);
+        $t = str_replace('\^{e}', 'ê', $t);  $t = str_replace('\^{E}', 'Ê', $t);
+        $t = str_replace('\^{i}', 'î', $t);  $t = str_replace('\^{I}', 'Î', $t);
+        $t = str_replace('\^{o}', 'ô', $t);  $t = str_replace('\^{O}', 'Ô', $t);
+        $t = str_replace('\^{u}', 'û', $t);  $t = str_replace('\^{U}', 'Û', $t);
+        $t = str_replace('\^a',   'â', $t);  $t = str_replace('\^A',   'Â', $t);
+        $t = str_replace('\^e',   'ê', $t);  $t = str_replace('\^E',   'Ê', $t);
+        $t = str_replace('\^i',   'î', $t);  $t = str_replace('\^I',   'Î', $t);
+        $t = str_replace('\^o',   'ô', $t);  $t = str_replace('\^O',   'Ô', $t);
+        $t = str_replace('\^u',   'û', $t);  $t = str_replace('\^U',   'Û', $t);
+
+        // Tilde: \~vocal (con y sin llaves)
+        $t = str_replace('\~{n}', 'ñ', $t);  $t = str_replace('\~{N}', 'Ñ', $t);
+        $t = str_replace('\~{a}', 'ã', $t);  $t = str_replace('\~{A}', 'Ã', $t);
+        $t = str_replace('\~{o}', 'õ', $t);  $t = str_replace('\~{O}', 'Õ', $t);
+        $t = str_replace('\~n',   'ñ', $t);  $t = str_replace('\~N',   'Ñ', $t);
+
+        // Diéresis: \"vocal (con y sin llaves)
+        $t = str_replace('\"{a}', 'ä', $t);  $t = str_replace('\"{A}', 'Ä', $t);
+        $t = str_replace('\"{e}', 'ë', $t);  $t = str_replace('\"{E}', 'Ë', $t);
+        $t = str_replace('\"{i}', 'ï', $t);  $t = str_replace('\"{I}', 'Ï', $t);
+        $t = str_replace('\"{o}', 'ö', $t);  $t = str_replace('\"{O}', 'Ö', $t);
+        $t = str_replace('\"{u}', 'ü', $t);  $t = str_replace('\"{U}', 'Ü', $t);
+        $t = str_replace('\"a',   'ä', $t);  $t = str_replace('\"A',   'Ä', $t);
+        $t = str_replace('\"e',   'ë', $t);  $t = str_replace('\"E',   'Ë', $t);
+        $t = str_replace('\"i',   'ï', $t);  $t = str_replace('\"I',   'Ï', $t);
+        $t = str_replace('\"o',   'ö', $t);  $t = str_replace('\"O',   'Ö', $t);
+        $t = str_replace('\"u',   'ü', $t);  $t = str_replace('\"U',   'Ü', $t);
+
+        // Cedilla
+        $t = str_replace('\c{c}', 'ç', $t);  $t = str_replace('\c{C}', 'Ç', $t);
+
+        // Otros
+        $t = str_replace('\ss', 'ß', $t);
+        $t = str_replace('\ae', 'æ', $t);  $t = str_replace('\AE', 'Æ', $t);
+        $t = str_replace('\oe', 'œ', $t);  $t = str_replace('\OE', 'Œ', $t);
+        $t = str_replace('\o',  'ø', $t);  $t = str_replace('\O',  'Ø', $t);
 
 
         // Proof
