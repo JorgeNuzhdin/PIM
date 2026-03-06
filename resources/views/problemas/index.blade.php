@@ -1259,10 +1259,23 @@ function addFilteredToCarrito() {
 }
 
 function eliminarProblema(problemaId) {
-    if (confirm('¿Estás seguro de que quieres eliminar este problema?')) {
-        // TODO: Implementar eliminación
-        alert('Funcionalidad de eliminación pendiente');
-    }
+    if (!confirm('¿Estás seguro de que quieres eliminar este problema?')) return;
+    fetch(`/problemas/${problemaId}`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json',
+        },
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('problema-' + problemaId)?.remove();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(() => alert('Error al eliminar el problema'));
 }
 let deleteMode = false;
 function toggleDeleteMode() {
