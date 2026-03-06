@@ -381,6 +381,8 @@ private function generarPreambulo($packages, bool $withSolutions = true)
 
     $preambulo = <<<'LATEX'
 \documentclass[12pt,a4paper]{article}
+\pdfpagewidth=210mm
+\pdfpageheight=297mm
 
 \newif\ifshowsolutions
 LATEX;
