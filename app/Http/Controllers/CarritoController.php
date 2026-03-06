@@ -398,7 +398,7 @@ LATEX;
 \def\group{0}
 
 \def\logo{logo2526pim.png}
-\def\title{Desigualdades}
+\def\pimtitle{Desigualdades}
 \def\dates{6, 13, 20 y 27 de febrero de 2026}
 \def\datefir{6 de febrero}
 \def\datesec{13 de febrero}
@@ -461,7 +461,7 @@ LATEX;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Geometría de página %%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\geometry{a4paper, top=2cm, bottom=2.5cm, left=2.5cm, right=2.5cm}
+\geometry{a4paper, top=2.5cm, bottom=3cm, left=2.5cm, right=2.5cm}
 \renewcommand{\baselinestretch}{1.1}
 \setlength{\parindent}{1em}
 
@@ -566,6 +566,8 @@ LATEX;
                 $pkgName = $pkg;
                 if (preg_match('/\\\\usepackage(?:\[.*?\])?\{(.+?)\}/', $pkg, $m)) {
                     $pkgName = $m[1];
+                } elseif (preg_match('/\\\\(?:newcommand|renewcommand|DeclareMathOperator|def)\s*\{?(\\\\[A-Za-z@]+)/', $pkg, $m)) {
+                    $pkgName = $m[2]; // e.g. \modd — skip if command already defined in preamble
                 }
                 if (strpos($preambulo, $pkgName) === false) {
                     $preambulo .= $pkg . "\n";
