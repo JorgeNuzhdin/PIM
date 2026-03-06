@@ -334,7 +334,7 @@ class CarritoController extends Controller
 
                 // Agregar paquetes del problema
                 if ($problema->packages) {
-                    $packagesText = preg_replace('/u([0-9a-fA-F]{4})/', '', $problema->packages);
+                    $packagesText = preg_replace_callback('/u([0-9a-fA-F]{4})/', fn($m) => mb_chr(hexdec($m[1]), 'UTF-8'), $problema->packages);
                     $pkgs = preg_split('/[\n,]+/', $packagesText);
                     foreach ($pkgs as $pkg) {
                         $pkg = trim($pkg);
