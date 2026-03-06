@@ -241,6 +241,34 @@
 
         const title = (document.getElementById('title')?.value || '').trim();
         const problemTex = (document.getElementById('problem_tex')?.value || '').trim();
+        const schoolYear = (document.getElementById('school_year')?.value || '').trim();
+
+        // Limpiar errores previos
+        document.querySelectorAll('.field-validation-error').forEach(el => el.remove());
+
+        // Validar campos requeridos
+        const fieldErrors = [];
+        if (!problemTex) {
+            fieldErrors.push({ id: 'problem_tex', msg: 'El enunciado es obligatorio.' });
+        }
+        if (!schoolYear) {
+            fieldErrors.push({ id: 'school_year', msg: 'El año académico es obligatorio.' });
+        }
+
+        if (fieldErrors.length > 0) {
+            e.preventDefault();
+            fieldErrors.forEach(({ id, msg }) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const err = document.createElement('span');
+                err.className = 'field-validation-error';
+                err.style.cssText = 'display:block;color:#e53e3e;font-size:0.85rem;margin-top:0.25rem;font-weight:500;';
+                err.textContent = '⚠ ' + msg;
+                el.parentElement.appendChild(err);
+                if (id === fieldErrors[0].id) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+            return;
+        }
 
         if (!problemTex) return; // sin contenido, no chequeamos
 
