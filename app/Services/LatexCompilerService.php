@@ -46,13 +46,18 @@ class LatexCompilerService
             $skakMapPath = $tempDir . '/SkakNew.map';
             file_put_contents($skakMapPath, implode("\n", $mapLines) . "\n");
 
-            // Prepend \pdfmapfile al documento (es un primitivo pdfTeX, funciona antes de \documentclass)
+            // Insertar \pdfmapfile justo después de \documentclass (primitivo pdfTeX válido en el preámbulo).
+            // Ponerlo ANTES de \documentclass corrompe la geometría de la primera página y puede
+            // provocar que contenido del preámbulo aparezca como texto en el PDF.
             $currentTex = file_get_contents($tempDir . '/document.tex');
             if (strpos($currentTex, '\pdfmapfile') === false) {
-                file_put_contents(
-                    $tempDir . '/document.tex',
-                    "\\pdfmapfile{+{$skakMapPath}}\n" . $currentTex
+                $currentTex = preg_replace(
+                    '/(\\\\documentclass\b[^\n]*\n)/',
+                    "$1\\\\pdfmapfile{+{$skakMapPath}}\n",
+                    $currentTex,
+                    1
                 );
+                file_put_contents($tempDir . '/document.tex', $currentTex);
             }
         }
 

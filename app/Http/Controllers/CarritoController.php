@@ -382,92 +382,67 @@ private function generarPreambulo($packages, bool $withSolutions = true)
     $preambulo = <<<'LATEX'
 \documentclass[12pt,a4paper]{article}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%% Settings %%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newif\ifshowsolutions
-\newif\ifshowinfo
-
 LATEX;
-    $preambulo .= $solutionsTrue . "\n" . $solutionsFalse . "\n";
+    $preambulo .= "\n" . $solutionsTrue . "\n" . $solutionsFalse . "\n";
     $preambulo .= <<<'LATEX'
-\showinfotrue        % para ver grupos y títulos en versión genérica
-%\showinfofalse      % para genérica para publicar
 
-% 0 genérica | 1 Neptuno | 2 Marte | 3 Urano | 4 Júpiter | 5 Venus | 6 Mercurio
-\def\group{0}
-
-\def\logo{logo2526pim.png}
-\def\pimtitle{Desigualdades}
-\def\dates{6, 13, 20 y 27 de febrero de 2026}
-\def\datefir{6 de febrero}
-\def\datesec{13 de febrero}
-\def\datethi{20 de febrero}
-\def\datefou{27 de febrero}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%% Paquetes %%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% Codificación
+% ---------- Paquetes ----------
 \usepackage[utf8]{inputenc}
-
-% Matemáticas
-\usepackage{amsmath}
-\usepackage{amssymb}
-\usepackage{amsthm}
-\usepackage{mathtools}
-\usepackage{mathrsfs}
-\usepackage{latexsym}
-
-% Símbolos y texto
-\usepackage{textcomp}
 \usepackage{gensymb}
-
-% Color
-\usepackage{xcolor}
-
-% Gráficos
-\usepackage{graphicx}
 \usepackage{subcaption}
+\usepackage{amssymb}
+\usepackage{mathtools}
 \usepackage{float}
-
-% TikZ y derivados
-\usepackage{tikz}
+\usepackage{amsthm}
+\usepackage{graphicx,amssymb,latexsym,amsmath,verbatim,amsthm}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.15}
-\usepackage{circuitikz}
-\usepackage{tikz-cd}
-\usepackage{tkz-euclide}
-\usetikzlibrary{arrows,arrows.meta}
+\usepackage{mathrsfs}
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{math,angles,quotes}
+\usepackage{color}
+\usepackage{enumitem}
+\usepackage{textcomp,gensymb}
+\usepackage{multicol}
+\usepackage{ifthen}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usetikzlibrary{positioning}
+\usepackage{tcolorbox}
 \usetikzlibrary{math,angles,quotes}
 \usetikzlibrary{positioning}
-\usetikzlibrary{intersections,through,calc}
+\usepackage{subcaption}
 \usetikzlibrary{patterns}
-
-% Maquetación
-\usepackage{geometry}
-\usepackage{multicol}
-\usepackage{enumitem}
-\usepackage{ifthen}
-\usepackage{array}
+\usepackage{tikz-cd}
+\usepackage{float}
+\usepackage{tikz}
+\usepackage{mathtools}
+\usepackage{gensymb}
+\usepackage{graphicx,amssymb,latexsym,amsmath}
 \usepackage{multirow}
-
-% Otros
-\usepackage{tcolorbox}
+\usepackage{color}
+\usepackage{tikz}
+\usetikzlibrary{patterns}
+\usetikzlibrary{angles,quotes}
+\usepackage{array}
+\usetikzlibrary{arrows}
+\usepackage{tikz-cd}
 \usepackage{twemojis}
-\usepackage{hyperref}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Geometría de página %%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\geometry{a4paper, top=2.5cm, bottom=3cm, left=2.5cm, right=2.5cm}
-\renewcommand{\baselinestretch}{1.1}
-\setlength{\parindent}{1em}
+% ---------- Página (igual que plantilla_hoja) ----------
+\renewcommand{\thepage}{}
+\renewcommand{\baselinestretch}{1}
+\setlength{\parindent}{2em}
+\setlength{\textwidth}{19cm}
+\setlength{\textheight}{27cm}
+\setlength{\topmargin}{-2cm}
+\setlength{\oddsidemargin}{-1.5cm}
+\pagestyle{empty}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Comandos personalizados %%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ---------- Comandos matemáticos ----------
 \DeclareMathOperator{\mcd}{mcd}
 \DeclareMathOperator{\cm}{cm}
 \renewcommand{\min}{\textup{m\'in}\,}
@@ -476,9 +451,7 @@ LATEX;
 \newcommand{\arr}{{\fontfamily{ptm}\selectfont @}}
 \newcommand{\equis}[1]{\draw[color=zzccqq,line width=2pt](#1)-- ++(-3.5pt,3.5pt)-- ++(7pt,-7pt);\draw[color=zzccqq,line width=2pt](#1)-- ++(3.5pt,3.5pt)-- ++(-7pt,-7pt);}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Teoremas %%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ---------- Teoremas ----------
 \newtheorem{theorem}{Teorema}
 \theoremstyle{definition}
 \newtheorem*{definition}{Definición}
@@ -487,68 +460,11 @@ LATEX;
 \newtheorem*{eje}{Ejemplo}
 \newtheorem{defin}{Definición}
 
-\newif\ifnep
-\newcommand{\N}{\neptrue}
-\newcommand{\NN}{\nepfalse}
-\newif\ifmar
-\newcommand{\M}{\martrue}
-\newcommand{\MM}{\marfalse}
-\newif\ifura
-\newcommand{\U}{\uratrue}
-\newcommand{\UU}{\urafalse}
-\newif\ifjup
-\newcommand{\J}{\juptrue}
-\newcommand{\JJ}{\jupfalse}
-\newif\ifven
-\newcommand{\V}{\ventrue}
-\newcommand{\VV}{\venfalse}
-\newif\ifmer
-\newcommand{\X}{\mertrue}
-\newcommand{\XX}{\merfalse}
-
-
-\newif\ifpreamble
-
-\newcommand{\exercise}[1]{
-\ifpreamble{\begin{ejer}#1\end{ejer}}\else{
-\ifnum\group=0{
-\ifshowinfo{\noindent\color{blue}\ifnep{N}\fi\ifmar{M}\fi\ifura{U}\fi\ifjup{J}\fi\ifven{V}\fi\ifmer{X}\fi}\fi
-\begin{ejer}#1\end{ejer}}\fi
-\ifnum\group=1{\ifnep{\begin{ejer}#1\end{ejer}}\fi}\fi
-\ifnum\group=2{\ifmar{\begin{ejer}#1\end{ejer}}\fi}\fi
-\ifnum\group=3{\ifura{\begin{ejer}#1\end{ejer}}\fi}\fi
-\ifnum\group=4{\ifjup{\begin{ejer}#1\end{ejer}}\fi}\fi
-\ifnum\group=5{\ifven{\begin{ejer}#1\end{ejer}}\fi}\fi
-\ifnum\group=6{\ifmer{\begin{ejer}#1\end{ejer}}\fi}\fi
-}\fi
-}
-
-
-
-\newcommand{\solution}[1]{
-\ifshowsolutions{
-\ifpreamble{\begin{proof}[Solución]#1\end{proof}}\else{
-\ifnum\group=0{\begin{proof}[Solución]#1\end{proof}}\fi
-\ifnum\group=1{\ifnep{{\begin{proof}[Solución]#1\end{proof}}}\fi}\fi
-\ifnum\group=2{\ifmar{\begin{proof}[Solución]#1\end{proof}}\fi}\fi
-\ifnum\group=3{\ifura{\begin{proof}[Solución]#1\end{proof}}\fi}\fi
-\ifnum\group=4{\ifjup{\begin{proof}[Solución]#1\end{proof}}\fi}\fi
-\ifnum\group=5{\ifven{\begin{proof}[Solución]#1\end{proof}}\fi}\fi
-\ifnum\group=6{\ifmer{\begin{proof}[Solución]#1\end{proof}}\fi}\fi
-}\fi
-}\fi
-\NN\MM\UU\JJ\VV\XX}
-
-\newcommand{\idtitulo}[1]{
-\ifnum\group=0 \ifshowinfo \noindent{\color{red}#1\\}\fi\fi
-}
-
-
+% ---------- Macros carrito ----------
+\newcommand{\exercise}[1]{\begin{ejer}#1\end{ejer}}
+\newcommand{\solution}[1]{\ifshowsolutions\begin{proof}[Soluci\'on]#1\end{proof}\fi}
+\newcommand{\idtitulo}[1]{\noindent{\color{red}#1\\}}
 \newcommand{\pistas}[1]{\textbf{Pistas:} #1}
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 LATEX;
 
@@ -556,18 +472,17 @@ LATEX;
     $appUrl = config('app.url', url('/'));
     $preambulo .= "\\newcommand{\\pref}[1]{\\href{" . $appUrl . "/problemas/#1}{Problema~#1}}\n";
 
-    // Añadir paquetes específicos de los problemas
+    // Añadir paquetes específicos de los problemas (evitar duplicados)
     if (!empty($packages)) {
         $preambulo .= "\n% Paquetes de problemas\n";
         foreach ($packages as $pkg) {
             $pkg = trim($pkg);
             if ($pkg && !str_starts_with($pkg, '%')) {
-                // Evitar duplicados: comprobar si ya está en el preámbulo
                 $pkgName = $pkg;
                 if (preg_match('/\\\\usepackage(?:\[.*?\])?\{(.+?)\}/', $pkg, $m)) {
                     $pkgName = $m[1];
                 } elseif (preg_match('/\\\\(?:newcommand|renewcommand|DeclareMathOperator|def)\s*\{?(\\\\[A-Za-z@]+)/', $pkg, $m)) {
-                    $pkgName = $m[2]; // e.g. \modd — skip if command already defined in preamble
+                    $pkgName = $m[1];
                 }
                 if (strpos($preambulo, $pkgName) === false) {
                     $preambulo .= $pkg . "\n";
