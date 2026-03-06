@@ -517,6 +517,14 @@ private static function getImSimple($filename)
         $t = preg_replace('/\\\\bibliography\{[^}]*\}/', '', $t);
         $t = preg_replace('/\\\\bibliographystyle\{[^}]*\}/', '', $t);
 
+        // Tilde como acento (\~n → ñ) — debe ir ANTES de ~ → &nbsp;
+        $t = str_replace('\~{n}', 'ñ', $t);  $t = str_replace('\~{N}', 'Ñ', $t);
+        $t = str_replace('\~{a}', 'ã', $t);  $t = str_replace('\~{A}', 'Ã', $t);
+        $t = str_replace('\~{o}', 'õ', $t);  $t = str_replace('\~{O}', 'Õ', $t);
+        $t = str_replace('\~n',   'ñ', $t);  $t = str_replace('\~N',   'Ñ', $t);
+        $t = str_replace('\~a',   'ã', $t);  $t = str_replace('\~A',   'Ã', $t);
+        $t = str_replace('\~o',   'õ', $t);  $t = str_replace('\~O',   'Õ', $t);
+
         // Convertir caracteres especiales de LaTeX
         $t = str_replace('~', '&nbsp;', $t);  // Espacio no separable
         $t = str_replace('\quad', '&emsp;', $t);  // Espacio cuádruple (~1em)
@@ -690,11 +698,6 @@ $t = preg_replace('/\\\\definecolor\{[^}]+\}\{[^}]+\}\{[^}]+\}/', '', $t);
         $t = str_replace('\^o',   'ô', $t);  $t = str_replace('\^O',   'Ô', $t);
         $t = str_replace('\^u',   'û', $t);  $t = str_replace('\^U',   'Û', $t);
 
-        // Tilde: \~vocal (con y sin llaves)
-        $t = str_replace('\~{n}', 'ñ', $t);  $t = str_replace('\~{N}', 'Ñ', $t);
-        $t = str_replace('\~{a}', 'ã', $t);  $t = str_replace('\~{A}', 'Ã', $t);
-        $t = str_replace('\~{o}', 'õ', $t);  $t = str_replace('\~{O}', 'Õ', $t);
-        $t = str_replace('\~n',   'ñ', $t);  $t = str_replace('\~N',   'Ñ', $t);
 
         // Diéresis: \"vocal (con y sin llaves)
         $t = str_replace('\"{a}', 'ä', $t);  $t = str_replace('\"{A}', 'Ä', $t);
