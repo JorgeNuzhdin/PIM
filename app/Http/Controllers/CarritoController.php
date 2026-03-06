@@ -338,7 +338,8 @@ class CarritoController extends Controller
                     $pkgs = preg_split('/[\n,]+/', $packagesText);
                     foreach ($pkgs as $pkg) {
                         $pkg = trim($pkg);
-                        if ($pkg && !in_array($pkg, $packages)) {
+                        // Solo añadir entradas que parezcan comandos LaTeX válidos
+                        if ($pkg && str_starts_with($pkg, '\\') && !in_array($pkg, $packages)) {
                             $packages[] = $pkg;
                         }
                     }
@@ -443,6 +444,7 @@ LATEX;
 \setlength{\topmargin}{-2cm}
 \setlength{\oddsidemargin}{-1.5cm}
 \pagestyle{empty}
+\raggedbottom
 
 % ---------- Comandos matemáticos ----------
 \DeclareMathOperator{\mcd}{mcd}
