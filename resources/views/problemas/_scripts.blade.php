@@ -147,8 +147,10 @@ function procesarArchivoTex(input) {
         
         if (ejercicios.length === 1) {
             // Un solo ejercicio: rellenar el formulario
-            rellenarFormulario(ejercicios[0]);
-            alert('✅ Archivo cargado. Revisa los campos y haz clic en "Crear Problema"');
+            const avisos = rellenarFormulario(ejercicios[0]);
+            let msg = '✅ Archivo cargado. Revisa los campos y haz clic en "Crear Problema"';
+            if (avisos.length > 0) msg = avisos.join('\n') + '\n\n' + msg;
+            alert(msg);
         } else {
             // Múltiples ejercicios: validar + comprobar duplicados + mostrar preview
             analizarYMostrarPreview(ejercicios, contenido);
@@ -261,8 +263,15 @@ function extraerComando(texto, comando) {
     return '';
 }
 
-// Rellenar formulario con datos de un ejercicio
+// Rellenar formulario con datos de un ejercicio; devuelve array de avisos
 function rellenarFormulario(ejercicio) {
+    const avisos = [];
+
+    // Validar enunciado
+    if (!ejercicio.enunciado || !ejercicio.enunciado.trim()) {
+        avisos.push('⚠️ El ejercicio no tiene enunciado.');
+    }
+
     // Dificultad
     if (ejercicio.dificultad) {
         const dif = parseInt(ejercicio.dificultad);
@@ -270,15 +279,17 @@ function rellenarFormulario(ejercicio) {
             document.getElementById('difficulty').value = dif;
         }
     }
-    
+
     // Curso (convertir texto a índice)
     if (ejercicio.curso) {
         const schoolYearIndex = convertirCursoAIndice(ejercicio.curso);
         if (schoolYearIndex) {
             document.getElementById('school_year').value = schoolYearIndex;
+        } else {
+            avisos.push(`⚠️ Curso no reconocido: "${ejercicio.curso}". Selecciónalo manualmente.`);
         }
     }
-    
+
     // Fuente
     if (ejercicio.fuente) {
         document.getElementById('source').value = ejercicio.fuente;
@@ -292,28 +303,32 @@ function rellenarFormulario(ejercicio) {
     // Enunciado
     if (ejercicio.enunciado) {
         document.getElementById('problem_tex').value = ejercicio.enunciado;
+        updatePreview('problem_tex', 'problem_preview');
     }
-    
+
     // Pistas
     if (ejercicio.pistas) {
         document.getElementById('hints').value = ejercicio.pistas;
     }
-    
+
     // Solución
     if (ejercicio.solucion) {
         document.getElementById('solution_tex').value = ejercicio.solucion;
+        updatePreview('solution_tex', 'solution_preview');
     }
-    
+
     // Comentarios
     if (ejercicio.comentarios) {
         document.getElementById('comments').value = ejercicio.comentarios;
     }
-    
+
     // Tags (temas)
     if (ejercicio.temas) {
         const tagsArray = ejercicio.temas.split(',').map(t => t.trim()).filter(t => t);
         cargarTagsEnFormulario(tagsArray);
     }
+
+    return avisos;
 }
 
 // Convertir nombre de curso a índice (case-insensitive)
