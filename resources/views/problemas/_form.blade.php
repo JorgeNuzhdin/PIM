@@ -246,13 +246,27 @@
         // Limpiar errores previos
         document.querySelectorAll('.field-validation-error').forEach(el => el.remove());
 
+        const difficulty  = (document.getElementById('difficulty')?.value  || '').trim();
+        const solutionTex = (document.getElementById('solution_tex')?.value || '').trim();
+        const tagValues   = Array.from(document.querySelectorAll('input[name="tags[]"]'))
+                                 .map(i => i.value.trim()).filter(v => v);
+
         // Validar campos requeridos
         const fieldErrors = [];
         if (!problemTex) {
             fieldErrors.push({ id: 'problem_tex', msg: 'El enunciado es obligatorio.' });
         }
+        if (!solutionTex) {
+            fieldErrors.push({ id: 'solution_tex', msg: 'La solución es obligatoria.' });
+        }
         if (!schoolYear) {
             fieldErrors.push({ id: 'school_year', msg: 'El año académico es obligatorio.' });
+        }
+        if (!difficulty) {
+            fieldErrors.push({ id: 'difficulty', msg: 'El nivel es obligatorio.' });
+        }
+        if (tagValues.length === 0) {
+            fieldErrors.push({ id: 'tags-container', msg: 'Añade al menos un tag.' });
         }
 
         if (fieldErrors.length > 0) {
