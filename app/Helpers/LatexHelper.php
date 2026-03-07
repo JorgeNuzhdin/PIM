@@ -714,11 +714,11 @@ $t = preg_replace('/\\\\definecolor\{[^}]+\}\{[^}]+\}\{[^}]+\}/', '', $t);
         // Cedilla
         $t = str_replace('\c{c}', 'ç', $t);  $t = str_replace('\c{C}', 'Ç', $t);
 
-        // Otros
-        $t = str_replace('\ss', 'ß', $t);
-        $t = str_replace('\ae', 'æ', $t);  $t = str_replace('\AE', 'Æ', $t);
-        $t = str_replace('\oe', 'œ', $t);  $t = str_replace('\OE', 'Œ', $t);
-        $t = str_replace('\o',  'ø', $t);  $t = str_replace('\O',  'Ø', $t);
+        // Otros — usar regex para no consumir el \o de \overrightarrow, etc.
+        $t = preg_replace('/\\\\ss(?![a-zA-Z])/', 'ß', $t);
+        $t = preg_replace('/\\\\ae(?![a-zA-Z])/', 'æ', $t);  $t = preg_replace('/\\\\AE(?![a-zA-Z])/', 'Æ', $t);
+        $t = preg_replace('/\\\\oe(?![a-zA-Z])/', 'œ', $t);  $t = preg_replace('/\\\\OE(?![a-zA-Z])/', 'Œ', $t);
+        $t = preg_replace('/\\\\o(?![a-zA-Z])/',  'ø', $t);  $t = preg_replace('/\\\\O(?![a-zA-Z])/',  'Ø', $t);
 
 
         // Proof
