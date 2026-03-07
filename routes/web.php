@@ -138,18 +138,57 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
                 $log .= "✅ #{$problem->id} → " . ($temas[$temaIds->first()] ?? $temaIds->first()) . "\n";
                 $set++;
             } else {
-                $names = $temaIds->map(fn($id) => ($temas[$id] ?? $id))->implode(', ');
-                $conflicts[] = "#{$problem->id}: {$names}";
+                $tagList = $tags->pluck('tag')->implode(', ');
+                $conflicts[] = [
+                    'problem_id' => $problem->id,
+                    'tags'       => $tagList,
+                    'tema_ids'   => $temaIds->toArray(),
+                ];
                 $skipped++;
             }
         }
 
         $log .= "\n{$set} asignados, {$skipped} saltados.\n";
-        if ($conflicts) {
-            $log .= "\nConflictos (asigna manualmente desde el editor):\n" . implode("\n", $conflicts) . "\n";
+
+        if (empty($conflicts)) {
+            return '<pre>' . htmlspecialchars($log) . '</pre>';
         }
-        return '<pre>' . htmlspecialchars($log) . '</pre>';
+
+        // Mostrar formulario interactivo para resolver conflictos
+        $html  = '<pre>' . htmlspecialchars($log) . '</pre>';
+        $html .= '<h3 style="font-family:sans-serif;">Conflictos a resolver (' . count($conflicts) . ')</h3>';
+        $html .= '<form method="POST" action="/admin/run-migration/populate-temas-conflictos" style="font-family:sans-serif;">';
+        $html .= '<input type="hidden" name="_token" value="' . csrf_token() . '">';
+        foreach ($conflicts as $c) {
+            $pid = $c['problem_id'];
+            $html .= '<div style="margin:1rem 0;padding:1rem;border:1px solid #ccc;border-radius:4px;">';
+            $html .= '<strong>Problema #' . $pid . '</strong> — Tags: ' . htmlspecialchars($c['tags']);
+            $html .= '<br><div style="margin-top:0.5rem;">';
+            foreach ($c['tema_ids'] as $tid) {
+                $temaName = htmlspecialchars($temas[$tid] ?? $tid);
+                $html .= "<label style='margin-right:1.5rem;'><input type='radio' name='tema[{$pid}]' value='{$tid}'> {$temaName}</label>";
+            }
+            $html .= "<label><input type='radio' name='tema[{$pid}]' value='' checked> Omitir</label>";
+            $html .= '</div></div>';
+        }
+        $html .= '<button type="submit" style="padding:0.5rem 1.25rem;background:#3490dc;color:white;border:none;border-radius:4px;cursor:pointer;font-size:1rem;">Asignar temas seleccionados</button>';
+        $html .= '</form>';
+        return $html;
     })->name('admin.run-migration.populate-temas');
+
+    Route::post('/run-migration/populate-temas-conflictos', function (\Illuminate\Http\Request $request) {
+        $assigned = 0;
+        foreach ($request->input('tema', []) as $problemId => $temaId) {
+            if ($temaId === '' || $temaId === null) continue;
+            \Illuminate\Support\Facades\DB::table('pim_problems')
+                ->where('id', (int) $problemId)
+                ->whereNull('tema_id')
+                ->update(['tema_id' => (int) $temaId]);
+            $assigned++;
+        }
+        $link = '<a href="/admin/run-migration/populate-temas">Volver a ejecutar</a>';
+        return '<pre style="font-family:sans-serif;">✅ ' . $assigned . ' problema(s) asignado(s). ' . $link . '</pre>';
+    })->name('admin.run-migration.populate-temas-conflictos');
 
     // Migración manual: añadir tema_id a pim_problems (ejecutar una sola vez desde el navegador)
     Route::get('/run-migration/tema-id', function () {
