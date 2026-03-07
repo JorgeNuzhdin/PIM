@@ -422,65 +422,33 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
             $temaIds = $resolvedLc->map(fn($lc) => $temaIdByLc[$lc] ?? null)->filter()->unique()->values();
 
-            if ($temaIds->count() === 1) {
-                \Illuminate\Support\Facades\DB::table('pim_problems')
-                    ->where('id', $problem->id)
-                    ->update(['tema_id' => $temaIds->first()]);
-                $log .= "✅ #{$problem->id} → " . ($temaNameById[$temaIds->first()] ?? $temaIds->first()) . "\n";
-                $set++;
-            } elseif ($temaIds->count() > 1) {
-                $conflicts[] = [
-                    'problem_id' => $problem->id,
-                    'tags'       => $tagNames->implode(', '),
-                    'tema_ids'   => $temaIds->toArray(),
-                ];
-                $skipped++;
-            } else {
-                $skipped++;
+            if ($temaIds->isEmpty()) { $skipped++; continue; }
+
+            // Si hay varios temas, prioridad fija sin preguntar: Geometría > Aritmética > Combinatoria > Métodos
+            $priority = ['geometría', 'aritmética', 'combinatoria', 'métodos'];
+            $winner   = null;
+            foreach ($priority as $temaLc) {
+                foreach ($temaIds as $tid) {
+                    if (mb_strtolower($temaNameById[$tid] ?? '') === $temaLc) {
+                        $winner = $tid;
+                        break 2;
+                    }
+                }
             }
-        }
+            if (!$winner) { $skipped++; continue; }
 
-        $log .= "\n{$set} asignados, {$skipped} saltados.\n";
-
-        if (empty($conflicts)) {
-            return '<pre>' . htmlspecialchars($log) . '</pre>';
-        }
-
-        // Formulario interactivo para conflictos reales
-        $html  = '<pre>' . htmlspecialchars($log) . '</pre>';
-        $html .= '<h3 style="font-family:sans-serif;">Conflictos a resolver (' . count($conflicts) . ')</h3>';
-        $html .= '<form method="POST" action="/admin/run-migration/populate-temas-conflictos" style="font-family:sans-serif;">';
-        $html .= '<input type="hidden" name="_token" value="' . csrf_token() . '">';
-        foreach ($conflicts as $c) {
-            $pid = $c['problem_id'];
-            $html .= '<div style="margin:1rem 0;padding:1rem;border:1px solid #ccc;border-radius:4px;">';
-            $html .= '<strong>Problema #' . $pid . '</strong> — Tags: ' . htmlspecialchars($c['tags']);
-            $html .= '<br><div style="margin-top:0.5rem;">';
-            foreach ($c['tema_ids'] as $tid) {
-                $temaName = htmlspecialchars($temaNameById[$tid] ?? $tid);
-                $html .= "<label style='margin-right:1.5rem;'><input type='radio' name='tema[{$pid}]' value='{$tid}'> {$temaName}</label>";
-            }
-            $html .= "<label><input type='radio' name='tema[{$pid}]' value='' checked> Omitir</label>";
-            $html .= '</div></div>';
-        }
-        $html .= '<button type="submit" style="padding:0.5rem 1.25rem;background:#3490dc;color:white;border:none;border-radius:4px;cursor:pointer;font-size:1rem;">Asignar temas seleccionados</button>';
-        $html .= '</form>';
-        return $html;
-    })->name('admin.run-migration.populate-temas');
-
-    Route::post('/run-migration/populate-temas-conflictos', function (\Illuminate\Http\Request $request) {
-        $assigned = 0;
-        foreach ($request->input('tema', []) as $problemId => $temaId) {
-            if ($temaId === '' || $temaId === null) continue;
             \Illuminate\Support\Facades\DB::table('pim_problems')
-                ->where('id', (int) $problemId)
-                ->whereNull('tema_id')
-                ->update(['tema_id' => (int) $temaId]);
-            $assigned++;
+                ->where('id', $problem->id)
+                ->update(['tema_id' => $winner]);
+            $marker = $temaIds->count() > 1 ? '⚡' : '✅';
+            $log .= "{$marker} #{$problem->id} → " . ($temaNameById[$winner] ?? $winner) . "\n";
+            $set++;
         }
-        $link = '<a href="/admin/run-migration/populate-temas">Volver a ejecutar</a>';
-        return '<pre style="font-family:sans-serif;">✅ ' . $assigned . ' problema(s) asignado(s). ' . $link . '</pre>';
-    })->name('admin.run-migration.populate-temas-conflictos');
+
+        $log .= "\n{$set} asignados, {$skipped} saltados (sin tag reconocido).\n";
+        return '<pre>' . htmlspecialchars($log) . '</pre>';
+
+    })->name('admin.run-migration.populate-temas');
 
     // Migración manual: añadir tema_id a pim_problems (ejecutar una sola vez desde el navegador)
     Route::get('/run-migration/tema-id', function () {
