@@ -8,8 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasColumn('pim_problems', 'tema_id')) {
+            return; // ya existe (añadida manualmente via browser)
+        }
         Schema::table('pim_problems', function (Blueprint $table) {
-            $table->unsignedBigInteger('tema_id')->nullable()->after('source');
+            $table->integer('tema_id')->nullable()->after('source'); // temas.id es int(11)
             $table->foreign('tema_id')->references('id')->on('temas')->onDelete('set null');
         });
     }
