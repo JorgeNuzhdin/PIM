@@ -8,23 +8,24 @@ use Illuminate\Support\Facades\DB;
 class FixMissingBackslashes extends Command
 {
     protected $signature   = 'problemas:fix-backslashes {--dry-run : Mostrar cambios sin aplicarlos}';
-    protected $description = 'Añade \ antes de comandos LaTeX conocidos que aparecen sin él en title, problem_tex y solution_tex';
+    protected $description = 'Añade \ antes de comandos LaTeX conocidos que aparecen sin él, SOLO dentro de entornos matemáticos';
 
-    // Comandos LaTeX que no pueden aparecer como palabras normales en español
+    // Solo comandos que no pueden confundirse con palabras españolas.
+    // Excluidos deliberadamente: sin, cos, tan, color, log, exp, max, min, etc.
     private const COMMANDS = [
         'overrightarrow', 'overleftarrow', 'overleftrightarrow',
         'overline', 'underline', 'widehat', 'widetilde',
         'overbrace', 'underbrace',
         'operatorname', 'displaystyle', 'textstyle', 'scriptstyle',
         'mathbb', 'mathbf', 'mathcal', 'mathit', 'mathsf', 'mathrm', 'mathscr', 'mathfrak',
-        'textbf', 'textit', 'textrm', 'texttt', 'emph',
+        'textbf', 'textit', 'textrm', 'texttt',
         'dfrac', 'tfrac', 'cfrac',
         'binom', 'dbinom',
         'sqrt', 'frac',
         'sum', 'prod', 'int', 'oint', 'iint',
         'infty', 'partial',
         'alpha','beta','gamma','delta','epsilon','varepsilon','zeta','eta',
-        'theta','vartheta','iota','kappa','lambda','mu','nu','xi','pi','varpi',
+        'theta','vartheta','iota','kappa','lambda','mu','nu','xi','varpi',
         'rho','varrho','sigma','varsigma','tau','upsilon','phi','varphi','chi','psi','omega',
         'Gamma','Delta','Theta','Lambda','Xi','Pi','Sigma','Upsilon','Phi','Psi','Omega',
         'cdot','cdots','ldots','vdots','ddots',
@@ -39,15 +40,12 @@ class FixMissingBackslashes extends Command
         'left','right',
         'begin','end',
         'quad','qquad','hspace','vspace',
-        'noindent','newline',
-        'color','textcolor',
+        'textcolor',
         'boxed','underset','overset','stackrel',
         'pmod','bmod',
-        'sin','cos','tan','cot','sec','csc',
         'arcsin','arccos','arctan',
-        'log','ln','exp',
-        'lim','max','min','inf','sup','gcd',
-        'det','dim','ker','rank','tr',
+        'lim','gcd',
+        'det','ker',
     ];
 
     public function handle(): int
@@ -95,17 +93,29 @@ class FixMissingBackslashes extends Command
         return 0;
     }
 
+    /**
+     * Aplica las correcciones SOLO dentro de entornos matemáticos:
+     *   $$...$$   \[...\]   $...$   \(...\)
+     */
     private function fixBackslashes(string $text): string
     {
+        // Orden: $$ antes de $ para evitar que $ capture la mitad de $$
+        return preg_replace_callback(
+            '/(\$\$[\s\S]*?\$\$|\\\\\[[\s\S]*?\\\\\]|\$[^$\n]*?\$|\\\\\([\s\S]*?\\\\\))/u',
+            fn($m) => $this->fixCommandsInMath($m[0]),
+            $text
+        ) ?? $text;
+    }
+
+    private function fixCommandsInMath(string $math): string
+    {
         foreach (self::COMMANDS as $cmd) {
-            // Añade \ antes del comando solo si NO está precedido ya por \
-            // El lookahead permite que vaya seguido de { [ espacio o fin de línea
-            $text = preg_replace(
+            $math = preg_replace(
                 '/(?<!\\\\)\b' . preg_quote($cmd, '/') . '\b/',
                 '\\' . $cmd,
-                $text
+                $math
             );
         }
-        return $text;
+        return $math;
     }
 }
