@@ -66,10 +66,10 @@ class ProblemaController extends Controller
                     'id' => $nextId,
                     'difficulty' => $validated['difficulty'] ?? null,
                     'school_year' => $schoolYearText,
-                    'title' => $validated['title'] ?? null,
-                    'problem_tex' => $validated['problem_tex'],
-                    'hints' => $validated['hints'] ?? null,
-                    'solution_tex' => $validated['solution_tex'] ?? null,
+                    'title' => self::decodeUnicodeEscapes($validated['title'] ?? null),
+                    'problem_tex' => self::decodeUnicodeEscapes($validated['problem_tex']),
+                    'hints' => self::decodeUnicodeEscapes($validated['hints'] ?? null),
+                    'solution_tex' => self::decodeUnicodeEscapes($validated['solution_tex'] ?? null),
                     'comments' => $validated['comments'] ?? null,
                     'source' => $validated['source'] ?? null,
                     'proponent_id' => Auth::id(),
@@ -230,10 +230,10 @@ class ProblemaController extends Controller
                     $updateData = [
                         'difficulty' => $validated['difficulty'],
                         'school_year' => $schoolYearText,
-                        'title' => $validated['title'],
-                        'problem_tex' => $validated['problem_tex'],
-                        'hints' => $validated['hints'],
-                        'solution_tex' => $validated['solution_tex'],
+                        'title' => self::decodeUnicodeEscapes($validated['title']),
+                        'problem_tex' => self::decodeUnicodeEscapes($validated['problem_tex']),
+                        'hints' => self::decodeUnicodeEscapes($validated['hints']),
+                        'solution_tex' => self::decodeUnicodeEscapes($validated['solution_tex']),
                         'comments' => $validated['comments'],
                         'source' => $validated['source'],
                     ];
@@ -687,5 +687,15 @@ class ProblemaController extends Controller
     private function normalizePrefix(string $text, int $len = 100): string
     {
         return substr(trim(preg_replace('/\s+/', ' ', $text)), 0, $len);
+    }
+
+    /**
+     * Decodifica secuencias uXXXX (p.ej. u005c → \) que pueden aparecer si el texto
+     * pasó por JSON.stringify sin un JSON.parse correcto o por algún export externo.
+     */
+    private static function decodeUnicodeEscapes(?string $text): ?string
+    {
+        if ($text === null) return null;
+        return preg_replace_callback('/u([0-9a-fA-F]{4})/', fn($m) => mb_chr(hexdec($m[1]), 'UTF-8'), $text);
     }
 }
