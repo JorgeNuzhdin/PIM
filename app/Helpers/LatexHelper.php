@@ -714,11 +714,11 @@ $t = preg_replace('/\\\\definecolor\{[^}]+\}\{[^}]+\}\{[^}]+\}/', '', $t);
         // Cedilla
         $t = str_replace('\c{c}', 'ç', $t);  $t = str_replace('\c{C}', 'Ç', $t);
 
-        // Otros — usar regex para no consumir el \o de \overrightarrow, etc.
+        // Otros (símbolos no españoles que sí pueden aparecer en textos académicos)
         $t = preg_replace('/\\\\ss(?![a-zA-Z])/', 'ß', $t);
         $t = preg_replace('/\\\\ae(?![a-zA-Z])/', 'æ', $t);  $t = preg_replace('/\\\\AE(?![a-zA-Z])/', 'Æ', $t);
         $t = preg_replace('/\\\\oe(?![a-zA-Z])/', 'œ', $t);  $t = preg_replace('/\\\\OE(?![a-zA-Z])/', 'Œ', $t);
-        $t = preg_replace('/\\\\o(?![a-zA-Z])/',  'ø', $t);  $t = preg_replace('/\\\\O(?![a-zA-Z])/',  'Ø', $t);
+        // \o y \O (ø, Ø) eliminados: no se usan en español y causan conflicto con \overrightarrow, \overleftarrow, etc.
 
 
         // Proof
