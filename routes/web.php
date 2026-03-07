@@ -122,24 +122,279 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     })->name('admin.run-migration.populate-temas-debug');
 
     Route::get('/run-migration/populate-temas', function () {
-        // Reglas fijas: tag → nombre de tema (tienen prioridad sobre topic_tema)
+        // Reglas: mb_strtolower(tag) → mb_strtolower(nombre_tema)
+        // Las claves y valores están todos en minúsculas para matching insensible a mayúsculas
         $tagRules = [
-            'Geometría'        => 'Geometría',
-            'Geometria'        => 'Geometría',
-            'Aritmética'       => 'Aritmética',
-            'Aritmetica'       => 'Aritmética',
-            'Combinatoria'     => 'Combinatoria',
-            'Invariantes'      => 'Métodos',
-            'Congruencias'     => 'Geometría',
-            'Sistema binario'  => 'Aritmética',
-            'Sistema ternario' => 'Aritmética',
-            'Inducción'        => 'Métodos',
-            'Induccion'        => 'Métodos',
+            // ── Geometría ──────────────────────────────────────────────────
+            'geometría'                          => 'geometría',
+            'geometría analítica'                => 'geometría',
+            'geometría discreta'                 => 'geometría',
+            'geometría. paridad.'                => 'geometría',
+            'ángulo central'                     => 'geometría',
+            'ángulos'                            => 'geometría',
+            'ángulos en una circunferencia'      => 'geometría',
+            'ángulos exteriores'                 => 'geometría',
+            'ángulos inscritos'                  => 'geometría',
+            'área del círculo'                   => 'geometría',
+            'área del triángulo'                 => 'geometría',
+            'áreas'                              => 'geometría',
+            'árbol de steiner'                   => 'geometría',
+            'bisectriz'                          => 'geometría',
+            'círculo de los nueve puntos'        => 'geometría',
+            'círculos'                           => 'geometría',
+            'circuncentro'                       => 'geometría',
+            'circunferencia inscrita'            => 'geometría',
+            'circunferencias'                    => 'geometría',
+            'congruencias'                       => 'geometría',
+            'construcción'                       => 'geometría',
+            'construcción complementaria'        => 'geometría',
+            'construcción con regla y compás'    => 'geometría',
+            'construcciones'                     => 'geometría',
+            'coordenadas'                        => 'geometría',
+            'cuadrados'                          => 'geometría',
+            'cuadrilátero cíclico'               => 'geometría',
+            'cuadriláteros'                      => 'geometría',
+            'cubo'                               => 'geometría',
+            'diagonales'                         => 'geometría',
+            'distancias'                         => 'geometría',
+            'división de figuras'                => 'geometría',
+            'esfera'                             => 'geometría',
+            'estereometría'                      => 'geometría',
+            'figuras convexas'                   => 'geometría',
+            'fórmula de euler generalizada'      => 'geometría',
+            'fórmula de herón'                   => 'geometría',
+            'homotecia'                          => 'geometría',
+            'incentro'                           => 'geometría',
+            'inversión'                          => 'geometría',
+            'isometrías'                         => 'geometría',
+            'línea media'                        => 'geometría',
+            'longitud'                           => 'geometría',
+            'lugar geométrico'                   => 'geometría',
+            'medianas'                           => 'geometría',
+            'mediatriz'                          => 'geometría',
+            'ortocentro'                         => 'geometría',
+            'ortopolo'                           => 'geometría',
+            'parábola'                           => 'geometría',
+            'paralelogramos'                     => 'geometría',
+            'pentágonos'                         => 'geometría',
+            'perímetro'                          => 'geometría',
+            'pitágoras'                          => 'geometría',
+            'planimetría'                        => 'geometría',
+            'poliedros'                          => 'geometría',
+            'polígonos'                          => 'geometría',
+            'potencia de punto'                  => 'geometría',
+            'producto escalar'                   => 'geometría',
+            'producto vectorial'                 => 'geometría',
+            'proyección ortogonal'               => 'geometría',
+            'puntos notables'                    => 'geometría',
+            'razón áurea'                        => 'geometría',
+            'recta de euler'                     => 'geometría',
+            'recta de simpson'                   => 'geometría',
+            'rectas'                             => 'geometría',
+            'semejanza'                          => 'geometría',
+            'semicírculo'                        => 'geometría',
+            'simetría'                           => 'geometría',
+            'tales'                              => 'geometría',
+            'tangencia'                          => 'geometría',
+            'tangentes'                          => 'geometría',
+            'teorema de ceva'                    => 'geometría',
+            'teorema de la bisectriz'            => 'geometría',
+            'teorema de pitágoras'               => 'geometría',
+            'teorema de tales'                   => 'geometría',
+            'teorema del seno'                   => 'geometría',
+            'ternas pitagóricas'                 => 'geometría',
+            'teselaciones'                       => 'geometría',
+            'tetraedro'                          => 'geometría',
+            'transformaciones'                   => 'geometría',
+            'transformaciones del plano'         => 'geometría',
+            'trapecios'                          => 'geometría',
+            'triangulaciones'                    => 'geometría',
+            'triángulo inscrito'                 => 'geometría',
+            'triángulos'                         => 'geometría',
+            'triángulos equiláteros'             => 'geometría',
+            'triángulos isósceles'               => 'geometría',
+            'triángulos semejantes'              => 'geometría',
+            'triángulos similares'               => 'geometría',
+            'trigonometría'                      => 'geometría',
+            'vectores'                           => 'geometría',
+            'visión espacial'                    => 'geometría',
+            // ── Aritmética ─────────────────────────────────────────────────
+            'aritmética'                         => 'aritmética',
+            'aritmética modular'                 => 'aritmética',
+            'algoritmo de euclides'              => 'aritmética',
+            'algoritmo de la división'           => 'aritmética',
+            'bases de numeración'                => 'aritmética',
+            'criterios de divisibilidad'         => 'aritmética',
+            'descenso infinito'                  => 'aritmética',
+            'descomposición en factores'         => 'aritmética',
+            'dígitos'                            => 'aritmética',
+            'divisibilidad'                      => 'aritmética',
+            'divisibilidad por 11'               => 'aritmética',
+            'división'                           => 'aritmética',
+            'divisores'                          => 'aritmética',
+            'factoriales'                        => 'aritmética',
+            'factorización'                      => 'aritmética',
+            'función de euler'                   => 'aritmética',
+            'función sigma'                      => 'aritmética',
+            'gran teorema de fermat'             => 'aritmética',
+            'identidad de bézout'                => 'aritmética',
+            'irracionalidad'                     => 'aritmética',
+            'máximo común divisor'               => 'aritmética',
+            'máximo divisor común'               => 'aritmética',
+            'múltiplos'                          => 'aritmética',
+            'números enteros'                    => 'aritmética',
+            'números irracionales'               => 'aritmética',
+            'números naturales'                  => 'aritmética',
+            'números primos'                     => 'aritmética',
+            'parte entera'                       => 'aritmética',
+            'pequeño teorema de fermat'          => 'aritmética',
+            'potencias'                          => 'aritmética',
+            'potencias de 2'                     => 'aritmética',
+            'primos'                             => 'aritmética',
+            'producto de euler'                  => 'aritmética',
+            'raíces cuadradas'                   => 'aritmética',
+            'raíces de la unidad'                => 'aritmética',
+            'repunits'                           => 'aritmética',
+            'restos'                             => 'aritmética',
+            'sistema binario'                    => 'aritmética',
+            'sistema decimal'                    => 'aritmética',
+            'sistema posicional'                 => 'aritmética',
+            'sistema ternario'                   => 'aritmética',
+            'sistemas de numeración'             => 'aritmética',
+            'suma de las cifras'                 => 'aritmética',
+            'teorema chino del resto'            => 'aritmética',
+            'teorema de bezout'                  => 'aritmética',
+            'teorema de fermat'                  => 'aritmética',
+            'teorema fundamental de la aritmética' => 'aritmética',
+            'teoría de números'                  => 'aritmética',
+            'última cifra'                       => 'aritmética',
+            // ── Combinatoria ───────────────────────────────────────────────
+            'combinatoria'                       => 'combinatoria',
+            'combinatoria geométrica'            => 'combinatoria',
+            'árboles'                            => 'combinatoria',
+            'árboles generadores'                => 'combinatoria',
+            'asignaciones'                       => 'combinatoria',
+            'binomio de newton'                  => 'combinatoria',
+            'biyecciones'                        => 'combinatoria',
+            'cadenas de markov'                  => 'combinatoria',
+            'caminos'                            => 'combinatoria',
+            'caminos de dyck'                    => 'combinatoria',
+            'cartas'                             => 'combinatoria',
+            'característica de euler'            => 'combinatoria',
+            'centro del grafo'                   => 'combinatoria',
+            'cerillas'                           => 'combinatoria',
+            'ciclo hamiltoniano'                 => 'combinatoria',
+            'ciclos'                             => 'combinatoria',
+            'codificación'                       => 'combinatoria',
+            'códigos'                            => 'combinatoria',
+            'coloración'                         => 'combinatoria',
+            'coloración por aristas'             => 'combinatoria',
+            'coloraciones'                       => 'combinatoria',
+            'combinaciones'                      => 'combinatoria',
+            'conectividad'                       => 'combinatoria',
+            'conexidad'                          => 'combinatoria',
+            'conjuntos'                          => 'combinatoria',
+            'conteo doble'                       => 'combinatoria',
+            'cortes'                             => 'combinatoria',
+            'cuadrículas'                        => 'combinatoria',
+            'dados'                              => 'combinatoria',
+            'demostración probabilística'        => 'combinatoria',
+            'distribución binomial'              => 'combinatoria',
+            'distribución de poisson'            => 'combinatoria',
+            'doble conteo'                       => 'combinatoria',
+            'emparejamientos perfectos'          => 'combinatoria',
+            'esperanza'                          => 'combinatoria',
+            'estadística'                        => 'combinatoria',
+            'etiquetado'                         => 'combinatoria',
+            'exclusión'                          => 'combinatoria',
+            'funciones generatrices'             => 'combinatoria',
+            'grafo bipartito regular'            => 'combinatoria',
+            'grafo de petersen'                  => 'combinatoria',
+            'grafo dual'                         => 'combinatoria',
+            'grafos'                             => 'combinatoria',
+            'grafos bipartitos'                  => 'combinatoria',
+            'grafos completos'                   => 'combinatoria',
+            'grafos dirigidos'                   => 'combinatoria',
+            'grafos eulerianos'                  => 'combinatoria',
+            'grafos hamiltonianos'               => 'combinatoria',
+            'grafos planares'                    => 'combinatoria',
+            'grafos regulares'                   => 'combinatoria',
+            'hamiltonicidad'                     => 'combinatoria',
+            'handshaking lemma'                  => 'combinatoria',
+            'isomorfismo'                        => 'combinatoria',
+            'juegos'                             => 'combinatoria',
+            'juegos de estrategia'               => 'combinatoria',
+            'manhattan'                          => 'combinatoria',
+            'método probabilístico'              => 'combinatoria',
+            'nim'                                => 'combinatoria',
+            'nim-sumas'                          => 'combinatoria',
+            'número cromático'                   => 'combinatoria',
+            'números combinatorios'              => 'combinatoria',
+            'números de catalán'                 => 'combinatoria',
+            'números de fibonacci'               => 'combinatoria',
+            'números de lucas'                   => 'combinatoria',
+            'números de ramsey'                  => 'combinatoria',
+            'números de stirling'                => 'combinatoria',
+            'números triangulares'               => 'combinatoria',
+            'palabras'                           => 'combinatoria',
+            'palomar'                            => 'combinatoria',
+            'particiones'                        => 'combinatoria',
+            'paseo aleatorio'                    => 'combinatoria',
+            'permutaciones'                      => 'combinatoria',
+            'plano de fano'                      => 'combinatoria',
+            'poliminos'                          => 'combinatoria',
+            'principio de exclusión-inclusión'   => 'combinatoria',
+            'principio de inclusión-exclusión'   => 'combinatoria',
+            'principio del palomar'              => 'combinatoria',
+            'probabilidad'                       => 'combinatoria',
+            'probabilidad condicional'           => 'combinatoria',
+            'probabilidad geométrica'            => 'combinatoria',
+            'random walk'                        => 'combinatoria',
+            'recorrido euleriano'                => 'combinatoria',
+            'recorrido hamiltoniano'             => 'combinatoria',
+            'recurrencias'                       => 'combinatoria',
+            'rompecabezas'                       => 'combinatoria',
+            'subconjuntos'                       => 'combinatoria',
+            'sucesión de fibonacci'              => 'combinatoria',
+            'tableros'                           => 'combinatoria',
+            'tablas'                             => 'combinatoria',
+            'teorema de hall'                    => 'combinatoria',
+            'teorema de mantel'                  => 'combinatoria',
+            'teorema de turán'                   => 'combinatoria',
+            'teoría de juegos'                   => 'combinatoria',
+            'torneos'                            => 'combinatoria',
+            'triángulo de pascal'                => 'combinatoria',
+            'varianza'                           => 'combinatoria',
+            'votaciones'                         => 'combinatoria',
+            // ── Métodos ────────────────────────────────────────────────────
+            'invariantes'                        => 'métodos',
+            'inducción'                          => 'métodos',
+            'semiinvariantes'                    => 'métodos',
+            'reducción al absurdo'               => 'métodos',
+            'reductio ad absurdum'               => 'métodos',
+            'construcción de ejemplos'           => 'métodos',
+            'contraejemplos'                     => 'métodos',
+            'método de pequeñas variaciones'     => 'métodos',
+            'principio del extremo'              => 'métodos',
+            'principio de la palanca'            => 'métodos',
+            'cambio de lenguaje'                 => 'métodos',
+            'cambio de variable'                 => 'métodos',
+            'nuevas variables'                   => 'métodos',
+            'análisis de casos'                  => 'métodos',
+            'estudio de casos'                   => 'métodos',
+            'estrategia'                         => 'métodos',
+            'estrategias'                        => 'métodos',
+            'razonamientos largos'               => 'métodos',
+            'pensamiento lateral'                => 'métodos',
+            'iteraciones'                        => 'métodos',
+            'demostraciones'                     => 'métodos',
+            'algoritmo voraz'                    => 'métodos',
         ];
 
-        // temas: nombre → id  y  id → nombre
-        $temaIdByName = \Illuminate\Support\Facades\DB::table('temas')->pluck('id', 'tema');
-        $temaNameById = \Illuminate\Support\Facades\DB::table('temas')->pluck('tema', 'id');
+        // Temas: nombre_lowercase → id  (insensible a cómo estén guardados en BD)
+        $temasRaw     = \Illuminate\Support\Facades\DB::table('temas')->select('id', 'tema')->get();
+        $temaIdByLc   = $temasRaw->mapWithKeys(fn($t) => [mb_strtolower($t->tema) => $t->id]);
+        $temaNameById = $temasRaw->pluck('tema', 'id');
 
         $problems = \Illuminate\Support\Facades\DB::table('pim_problems')
             ->whereNull('tema_id')
@@ -155,34 +410,32 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         $log = '';
 
         foreach ($problems as $problem) {
-            $tags = $tagsByProblem->get($problem->id, collect());
+            $tags     = $tagsByProblem->get($problem->id, collect());
             $tagNames = $tags->pluck('tag');
 
-            // Resolver usando reglas fijas
-            $resolvedNames = $tagNames
-                ->map(fn($tag) => $tagRules[$tag] ?? null)
+            // mb_strtolower para matching insensible a mayúsculas/acentos de capitalización
+            $resolvedLc = $tagNames
+                ->map(fn($tag) => $tagRules[mb_strtolower($tag)] ?? null)
                 ->filter()->unique()->values();
 
-            if ($resolvedNames->isEmpty()) { $skipped++; continue; }
+            if ($resolvedLc->isEmpty()) { $skipped++; continue; }
 
-            if ($resolvedNames->count() === 1) {
-                $temaName = $resolvedNames->first();
-                $temaId   = $temaIdByName[$temaName] ?? null;
-                if (!$temaId) { $skipped++; continue; }
+            $temaIds = $resolvedLc->map(fn($lc) => $temaIdByLc[$lc] ?? null)->filter()->unique()->values();
+
+            if ($temaIds->count() === 1) {
                 \Illuminate\Support\Facades\DB::table('pim_problems')
                     ->where('id', $problem->id)
-                    ->update(['tema_id' => $temaId]);
-                $log .= "✅ #{$problem->id} → {$temaName}\n";
+                    ->update(['tema_id' => $temaIds->first()]);
+                $log .= "✅ #{$problem->id} → " . ($temaNameById[$temaIds->first()] ?? $temaIds->first()) . "\n";
                 $set++;
-            } else {
-                // Conflicto real: tags apuntan a temas distintos
-                $temaIds = $resolvedNames->map(fn($n) => $temaIdByName[$n] ?? null)->filter()->unique()->values();
+            } elseif ($temaIds->count() > 1) {
                 $conflicts[] = [
                     'problem_id' => $problem->id,
                     'tags'       => $tagNames->implode(', '),
-                    'tema_names' => $resolvedNames->toArray(),
                     'tema_ids'   => $temaIds->toArray(),
                 ];
+                $skipped++;
+            } else {
                 $skipped++;
             }
         }
@@ -203,8 +456,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             $html .= '<div style="margin:1rem 0;padding:1rem;border:1px solid #ccc;border-radius:4px;">';
             $html .= '<strong>Problema #' . $pid . '</strong> — Tags: ' . htmlspecialchars($c['tags']);
             $html .= '<br><div style="margin-top:0.5rem;">';
-            foreach ($c['tema_ids'] as $i => $tid) {
-                $temaName = htmlspecialchars($c['tema_names'][$i] ?? ($temaNameById[$tid] ?? $tid));
+            foreach ($c['tema_ids'] as $tid) {
+                $temaName = htmlspecialchars($temaNameById[$tid] ?? $tid);
                 $html .= "<label style='margin-right:1.5rem;'><input type='radio' name='tema[{$pid}]' value='{$tid}'> {$temaName}</label>";
             }
             $html .= "<label><input type='radio' name='tema[{$pid}]' value='' checked> Omitir</label>";
