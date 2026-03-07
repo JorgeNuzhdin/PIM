@@ -52,7 +52,7 @@
         <select name="tema_id" id="tema_id">
             <option value="">-- Seleccionar --</option>
             @foreach($temas as $tema)
-                <option value="{{ $tema->id }}" {{ old('tema_id') == $tema->id ? 'selected' : '' }}>
+                <option value="{{ $tema->id }}" {{ old('tema_id', $problema->tema_id ?? '') == $tema->id ? 'selected' : '' }}>
                     {{ $tema->tema }}
                 </option>
             @endforeach

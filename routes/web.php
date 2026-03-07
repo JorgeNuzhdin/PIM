@@ -103,6 +103,23 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Problemas pendientes de aprobación
     Route::get('/problemas-pendientes', [App\Http\Controllers\ProblemaController::class, 'pendientes'])->name('problemas.pendientes');
     Route::post('/problemas/{id}/aprobar', [App\Http\Controllers\ProblemaController::class, 'aprobar'])->name('problemas.aprobar');
+
+    // Migración manual: añadir tema_id a pim_problems (ejecutar una sola vez desde el navegador)
+    Route::get('/run-migration/tema-id', function () {
+        $exists = \Illuminate\Support\Facades\Schema::hasColumn('pim_problems', 'tema_id');
+        if ($exists) {
+            return '<pre>✅ La columna tema_id ya existe en pim_problems. No es necesario hacer nada.</pre>';
+        }
+        try {
+            \Illuminate\Support\Facades\Schema::table('pim_problems', function ($table) {
+                $table->unsignedBigInteger('tema_id')->nullable()->after('source');
+                $table->foreign('tema_id')->references('id')->on('temas')->onDelete('set null');
+            });
+            return '<pre>✅ Columna tema_id añadida correctamente a pim_problems con FK a temas.</pre>';
+        } catch (\Exception $e) {
+            return '<pre>❌ Error: ' . htmlspecialchars($e->getMessage()) . '</pre>';
+        }
+    })->name('admin.run-migration.tema-id');
 });
 
 // Rutas de Hojas de Problemas (PimSheets)

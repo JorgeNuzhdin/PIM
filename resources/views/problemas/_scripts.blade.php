@@ -326,6 +326,23 @@ function rellenarFormulario(ejercicio) {
     if (ejercicio.temas) {
         const tagsArray = ejercicio.temas.split(',').map(t => t.trim()).filter(t => t);
         cargarTagsEnFormulario(tagsArray);
+
+        // Auto-detectar tema desde el primer tag conocido
+        if (tagsArray.length > 0) {
+            fetch('{{ route("tema.desde.tag") }}?tag=' + encodeURIComponent(tagsArray[0]))
+                .then(r => r.json())
+                .then(data => {
+                    if (data.tema_id) {
+                        const temaSelect = document.getElementById('tema_id');
+                        if (temaSelect) {
+                            temaSelect.value = data.tema_id;
+                            const indicator = document.getElementById('tema-auto-indicator');
+                            if (indicator) indicator.style.display = 'inline';
+                        }
+                    }
+                })
+                .catch(() => {});
+        }
     }
 
     return avisos;

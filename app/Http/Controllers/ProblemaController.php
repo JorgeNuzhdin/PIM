@@ -65,6 +65,7 @@ class ProblemaController extends Controller
                 $problema = Problema::create([
                     'id' => $nextId,
                     'difficulty' => $validated['difficulty'] ?? null,
+                    'tema_id' => $validated['tema_id'] ?? null,
                     'school_year' => $schoolYearText,
                     'title' => self::decodeUnicodeEscapes($validated['title'] ?? null),
                     'problem_tex' => self::decodeUnicodeEscapes($validated['problem_tex']),
@@ -229,6 +230,7 @@ class ProblemaController extends Controller
                     // Datos a actualizar
                     $updateData = [
                         'difficulty' => $validated['difficulty'],
+                        'tema_id' => $validated['tema_id'] ?? null,
                         'school_year' => $schoolYearText,
                         'title' => self::decodeUnicodeEscapes($validated['title']),
                         'problem_tex' => self::decodeUnicodeEscapes($validated['problem_tex']),
