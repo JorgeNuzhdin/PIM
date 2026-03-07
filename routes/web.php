@@ -105,6 +105,22 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/problemas/{id}/aprobar', [App\Http\Controllers\ProblemaController::class, 'aprobar'])->name('problemas.aprobar');
 
     // Rellenar tema_id en pim_problems a partir de tags → topic_tema
+    Route::get('/run-migration/populate-temas-debug', function () {
+        // Muestra los tags distintos de problemas sin tema_id
+        $tags = \Illuminate\Support\Facades\DB::table('problemas_tags')
+            ->join('pim_problems', 'problemas_tags.problem_id', '=', 'pim_problems.id')
+            ->whereNull('pim_problems.tema_id')
+            ->select('problemas_tags.tag')
+            ->distinct()
+            ->orderBy('problemas_tags.tag')
+            ->pluck('tag');
+        $out = "Tags distintos en problemas sin tema_id (" . $tags->count() . "):\n\n";
+        foreach ($tags as $t) {
+            $out .= json_encode($t) . "\n"; // json_encode muestra escapes unicode si los hay
+        }
+        return '<pre>' . htmlspecialchars($out) . '</pre>';
+    })->name('admin.run-migration.populate-temas-debug');
+
     Route::get('/run-migration/populate-temas', function () {
         // Reglas fijas: tag → nombre de tema (tienen prioridad sobre topic_tema)
         $tagRules = [
