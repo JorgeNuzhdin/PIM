@@ -14,8 +14,16 @@ return new class extends Migration
             $table->dropForeign('topic_tema_ibfk_1');
         });
 
-        // Asegurarse de que todos los valores existentes en topic_tema
-        // también existan en tags (para que la nueva FK no falle)
+        // Copiar pim_topics → tags (los que no existan ya)
+        $pimTopics = DB::table('pim_topics')->pluck('title');
+        foreach ($pimTopics as $title) {
+            $exists = DB::table('tags')->where('title', $title)->exists();
+            if (!$exists) {
+                DB::table('tags')->insert(['title' => $title]);
+            }
+        }
+
+        // Copiar también cualquier valor de topic_tema que no esté en tags
         $orphans = DB::table('topic_tema')
             ->leftJoin('tags', 'topic_tema.topic_title', '=', 'tags.title')
             ->whereNull('tags.title')
