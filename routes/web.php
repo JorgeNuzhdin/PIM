@@ -106,11 +106,24 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Rellenar tema_id en pim_problems a partir de tags → topic_tema
     Route::get('/run-migration/populate-temas', function () {
-        $tagToTema = \Illuminate\Support\Facades\DB::table('topic_tema')
-            ->whereNotNull('tema_id')
-            ->pluck('tema_id', 'topic_title');   // [tag => tema_id]
+        // Reglas fijas: tag → nombre de tema (tienen prioridad sobre topic_tema)
+        $tagRules = [
+            'Geometría'        => 'Geometría',
+            'Geometria'        => 'Geometría',
+            'Aritmética'       => 'Aritmética',
+            'Aritmetica'       => 'Aritmética',
+            'Combinatoria'     => 'Combinatoria',
+            'Invariantes'      => 'Métodos',
+            'Congruencias'     => 'Geometría',
+            'Sistema binario'  => 'Aritmética',
+            'Sistema ternario' => 'Aritmética',
+            'Inducción'        => 'Métodos',
+            'Induccion'        => 'Métodos',
+        ];
 
-        $temas = \Illuminate\Support\Facades\DB::table('temas')->pluck('tema', 'id');
+        // temas: nombre → id  y  id → nombre
+        $temaIdByName = \Illuminate\Support\Facades\DB::table('temas')->pluck('id', 'tema');
+        $temaNameById = \Illuminate\Support\Facades\DB::table('temas')->pluck('tema', 'id');
 
         $problems = \Illuminate\Support\Facades\DB::table('pim_problems')
             ->whereNull('tema_id')
@@ -127,21 +140,31 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
         foreach ($problems as $problem) {
             $tags = $tagsByProblem->get($problem->id, collect());
-            $temaIds = $tags->map(fn($t) => $tagToTema[$t->tag] ?? null)->filter()->unique()->values();
+            $tagNames = $tags->pluck('tag');
 
-            if ($temaIds->isEmpty()) { $skipped++; continue; }
+            // Resolver usando reglas fijas
+            $resolvedNames = $tagNames
+                ->map(fn($tag) => $tagRules[$tag] ?? null)
+                ->filter()->unique()->values();
 
-            if ($temaIds->count() === 1) {
+            if ($resolvedNames->isEmpty()) { $skipped++; continue; }
+
+            if ($resolvedNames->count() === 1) {
+                $temaName = $resolvedNames->first();
+                $temaId   = $temaIdByName[$temaName] ?? null;
+                if (!$temaId) { $skipped++; continue; }
                 \Illuminate\Support\Facades\DB::table('pim_problems')
                     ->where('id', $problem->id)
-                    ->update(['tema_id' => $temaIds->first()]);
-                $log .= "✅ #{$problem->id} → " . ($temas[$temaIds->first()] ?? $temaIds->first()) . "\n";
+                    ->update(['tema_id' => $temaId]);
+                $log .= "✅ #{$problem->id} → {$temaName}\n";
                 $set++;
             } else {
-                $tagList = $tags->pluck('tag')->implode(', ');
+                // Conflicto real: tags apuntan a temas distintos
+                $temaIds = $resolvedNames->map(fn($n) => $temaIdByName[$n] ?? null)->filter()->unique()->values();
                 $conflicts[] = [
                     'problem_id' => $problem->id,
-                    'tags'       => $tagList,
+                    'tags'       => $tagNames->implode(', '),
+                    'tema_names' => $resolvedNames->toArray(),
                     'tema_ids'   => $temaIds->toArray(),
                 ];
                 $skipped++;
@@ -154,7 +177,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             return '<pre>' . htmlspecialchars($log) . '</pre>';
         }
 
-        // Mostrar formulario interactivo para resolver conflictos
+        // Formulario interactivo para conflictos reales
         $html  = '<pre>' . htmlspecialchars($log) . '</pre>';
         $html .= '<h3 style="font-family:sans-serif;">Conflictos a resolver (' . count($conflicts) . ')</h3>';
         $html .= '<form method="POST" action="/admin/run-migration/populate-temas-conflictos" style="font-family:sans-serif;">';
@@ -164,8 +187,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             $html .= '<div style="margin:1rem 0;padding:1rem;border:1px solid #ccc;border-radius:4px;">';
             $html .= '<strong>Problema #' . $pid . '</strong> — Tags: ' . htmlspecialchars($c['tags']);
             $html .= '<br><div style="margin-top:0.5rem;">';
-            foreach ($c['tema_ids'] as $tid) {
-                $temaName = htmlspecialchars($temas[$tid] ?? $tid);
+            foreach ($c['tema_ids'] as $i => $tid) {
+                $temaName = htmlspecialchars($c['tema_names'][$i] ?? ($temaNameById[$tid] ?? $tid));
                 $html .= "<label style='margin-right:1.5rem;'><input type='radio' name='tema[{$pid}]' value='{$tid}'> {$temaName}</label>";
             }
             $html .= "<label><input type='radio' name='tema[{$pid}]' value='' checked> Omitir</label>";
