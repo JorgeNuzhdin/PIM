@@ -81,6 +81,7 @@
             <label style="cursor:pointer;"><input type="checkbox" id="col-email" onchange="toggleCol('email',this.checked)"> Email</label>
             <label style="cursor:pointer;"><input type="checkbox" id="col-motivo" onchange="toggleCol('motivo',this.checked)"> Motivo</label>
             <label style="cursor:pointer;"><input type="checkbox" id="col-problemas" checked onchange="toggleCol('problemas',this.checked)"> Problemas</label>
+            <label style="cursor:pointer;"><input type="checkbox" id="col-reportes" onchange="toggleCol('reportes',this.checked)"> Reportes</label>
         </div>
     </div>
 
@@ -95,7 +96,8 @@
                     <th><a href="{{ $sortUrl('profession') }}" class="sort-link">Profesión{!! $sortArrow('profession') !!}</a></th>
                     <th class="col-motivo" style="display:none;">Motivo</th>
                     <th><a href="{{ $sortUrl('rol') }}" class="sort-link">Rol{!! $sortArrow('rol') !!}</a></th>
-                    <th class="col-problemas">Problemas</th>
+                    <th class="col-problemas"><a href="{{ $sortUrl('problemas') }}" class="sort-link">Problemas{!! $sortArrow('problemas') !!}</a></th>
+                    <th class="col-reportes" style="display:none;"><a href="{{ $sortUrl('reportes') }}" class="sort-link">Reportes{!! $sortArrow('reportes') !!}</a></th>
                     <th>Acciones
                         <button id="btn-enable-delete" onclick="toggleDeleteMode()" title="Activar modo eliminación"
                                 style="background:none;border:none;cursor:pointer;font-size:1.1rem;margin-left:0.5rem;opacity:0.4;">🗑️</button>
@@ -110,6 +112,7 @@
                         $reas     = $user->reason ?? '';
                         $reasLabel = $reasonLabels[$reas] ?? ($reas ?: '-');
                         $pc       = $problemaCounts[$user->id] ?? null;
+                        $ec       = $errorCounts[$user->id] ?? null;
                     @endphp
                     <tr>
                         <td>{{ $user->name }} @if(isset($usuariosConMedalla[$user->id])) 🏅 @endif</td>
@@ -123,6 +126,13 @@
                         <td class="col-problemas" style="font-size:0.875rem; color:#4a5568; white-space:nowrap;">
                             @if($pc)
                                 <span title="{{ $pc->aprobados }} aprobados / {{ $pc->total }} propuestos">{{ $pc->aprobados }}/{{ $pc->total }}</span>
+                            @else
+                                <span style="color:#cbd5e0;">—</span>
+                            @endif
+                        </td>
+                        <td class="col-reportes" style="display:none; font-size:0.875rem; color:#4a5568; white-space:nowrap;">
+                            @if($ec)
+                                <span>{{ $ec->total }}</span>
                             @else
                                 <span style="color:#cbd5e0;">—</span>
                             @endif
@@ -394,8 +404,8 @@
 </style>
 <script>
 // ── Columnas visibles (persistidas en localStorage) ──────────────────
-const COLS = ['email', 'motivo', 'problemas'];
-const DEFAULTS = { email: false, motivo: false, problemas: true };
+const COLS = ['email', 'motivo', 'problemas', 'reportes'];
+const DEFAULTS = { email: false, motivo: false, problemas: true, reportes: false };
 
 function toggleCol(name, visible) {
     document.querySelectorAll('.col-' + name).forEach(el => {

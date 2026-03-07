@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Problema;
+use App\Models\ErrorReport;
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AdminUserController extends Controller
 {
@@ -31,10 +33,20 @@ class AdminUserController extends Controller
         }
 
         // Ordenación
-        $sortable = ['name', 'email', 'created_at', 'rol', 'profession'];
+        $sortable = ['name', 'email', 'created_at', 'rol', 'profession', 'problemas', 'reportes'];
         $sort = in_array($request->get('sort'), $sortable) ? $request->get('sort') : 'created_at';
         $dir  = $request->get('dir') === 'asc' ? 'asc' : 'desc';
-        $users = $query->orderBy($sort, $dir)->paginate(20);
+        $dirSafe = $dir === 'asc' ? 'ASC' : 'DESC';
+
+        if ($sort === 'problemas') {
+            $query->orderByRaw("(SELECT COUNT(*) FROM pim_problems WHERE proponent_id = users.id AND approved = 1) $dirSafe");
+        } elseif ($sort === 'reportes') {
+            $query->orderByRaw("(SELECT COUNT(*) FROM error_reports WHERE user_id = users.id) $dirSafe");
+        } else {
+            $query->orderBy($sort, $dir);
+        }
+
+        $users = $query->paginate(20);
 
         // Medalla
         $minMedalla = (int) Setting::get('min_problemas_medalla', 5);
@@ -58,7 +70,14 @@ class AdminUserController extends Controller
             ->get()
             ->keyBy('proponent_id');
 
-        return view('admin.users.index', compact('users', 'usuariosConMedalla', 'problemaCounts', 'sort', 'dir'));
+        // Conteo de reportes por usuario
+        $errorCounts = ErrorReport::select('user_id', DB::raw('COUNT(*) as total'))
+            ->whereNotNull('user_id')
+            ->groupBy('user_id')
+            ->get()
+            ->keyBy('user_id');
+
+        return view('admin.users.index', compact('users', 'usuariosConMedalla', 'problemaCounts', 'errorCounts', 'sort', 'dir'));
     }
 
     public function updateRol(Request $request, User $user)
