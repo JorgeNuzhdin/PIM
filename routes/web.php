@@ -106,19 +106,54 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Migración manual: añadir tema_id a pim_problems (ejecutar una sola vez desde el navegador)
     Route::get('/run-migration/tema-id', function () {
-        $exists = \Illuminate\Support\Facades\Schema::hasColumn('pim_problems', 'tema_id');
-        if ($exists) {
+        if (\Illuminate\Support\Facades\Schema::hasColumn('pim_problems', 'tema_id')) {
             return '<pre>✅ La columna tema_id ya existe en pim_problems. No es necesario hacer nada.</pre>';
         }
+        $log = '';
+        // 1. Averiguar el tipo real de temas.id para usarlo en la FK
         try {
-            \Illuminate\Support\Facades\Schema::table('pim_problems', function ($table) {
-                $table->unsignedBigInteger('tema_id')->nullable()->after('source');
-                $table->foreign('tema_id')->references('id')->on('temas')->onDelete('set null');
-            });
-            return '<pre>✅ Columna tema_id añadida correctamente a pim_problems con FK a temas.</pre>';
+            $col = \Illuminate\Support\Facades\DB::select("
+                SELECT DATA_TYPE, COLUMN_TYPE
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME   = 'temas'
+                  AND COLUMN_NAME  = 'id'
+                LIMIT 1
+            ");
+            $dataType   = strtolower($col[0]->DATA_TYPE   ?? 'bigint');
+            $columnType = strtolower($col[0]->COLUMN_TYPE ?? 'bigint unsigned');
+            $unsigned   = str_contains($columnType, 'unsigned');
+            $log .= "temas.id → DATA_TYPE={$dataType}, COLUMN_TYPE={$columnType}\n";
         } catch (\Exception $e) {
-            return '<pre>❌ Error: ' . htmlspecialchars($e->getMessage()) . '</pre>';
+            $dataType = 'bigint'; $unsigned = true;
+            $log .= "No se pudo leer temas.id, usando bigint unsigned por defecto\n";
         }
+
+        // 2. Añadir columna (sin FK primero para que no falle el ALTER)
+        try {
+            \Illuminate\Support\Facades\DB::statement(
+                "ALTER TABLE pim_problems ADD COLUMN tema_id " .
+                strtoupper($dataType) . ($unsigned ? " UNSIGNED" : "") .
+                " NULL AFTER source"
+            );
+            $log .= "✅ Columna tema_id añadida.\n";
+        } catch (\Exception $e) {
+            return '<pre>❌ Error al añadir columna: ' . htmlspecialchars($e->getMessage()) . "\n$log</pre>";
+        }
+
+        // 3. Intentar añadir FK (puede fallar si hay datos huérfanos u otro problema)
+        try {
+            \Illuminate\Support\Facades\DB::statement(
+                "ALTER TABLE pim_problems
+                 ADD CONSTRAINT pim_problems_tema_id_foreign
+                 FOREIGN KEY (tema_id) REFERENCES temas(id) ON DELETE SET NULL"
+            );
+            $log .= "✅ FK añadida correctamente.\n";
+        } catch (\Exception $e) {
+            $log .= "⚠️ FK NO añadida (la columna funciona igual sin ella): " . $e->getMessage() . "\n";
+        }
+
+        return '<pre>' . htmlspecialchars($log) . '</pre>';
     })->name('admin.run-migration.tema-id');
 });
 
