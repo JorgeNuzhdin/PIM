@@ -104,6 +104,53 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/problemas-pendientes', [App\Http\Controllers\ProblemaController::class, 'pendientes'])->name('problemas.pendientes');
     Route::post('/problemas/{id}/aprobar', [App\Http\Controllers\ProblemaController::class, 'aprobar'])->name('problemas.aprobar');
 
+    // Rellenar tema_id en pim_problems a partir de tags → topic_tema
+    Route::get('/run-migration/populate-temas', function () {
+        $tagToTema = \Illuminate\Support\Facades\DB::table('topic_tema')
+            ->whereNotNull('tema_id')
+            ->pluck('tema_id', 'topic_title');   // [tag => tema_id]
+
+        $temas = \Illuminate\Support\Facades\DB::table('temas')->pluck('tema', 'id');
+
+        $problems = \Illuminate\Support\Facades\DB::table('pim_problems')
+            ->whereNull('tema_id')
+            ->select('id')
+            ->get();
+
+        $tagsByProblem = \Illuminate\Support\Facades\DB::table('problemas_tags')
+            ->select('problem_id', 'tag')
+            ->get()
+            ->groupBy('problem_id');
+
+        $set = 0; $skipped = 0; $conflicts = [];
+        $log = '';
+
+        foreach ($problems as $problem) {
+            $tags = $tagsByProblem->get($problem->id, collect());
+            $temaIds = $tags->map(fn($t) => $tagToTema[$t->tag] ?? null)->filter()->unique()->values();
+
+            if ($temaIds->isEmpty()) { $skipped++; continue; }
+
+            if ($temaIds->count() === 1) {
+                \Illuminate\Support\Facades\DB::table('pim_problems')
+                    ->where('id', $problem->id)
+                    ->update(['tema_id' => $temaIds->first()]);
+                $log .= "✅ #{$problem->id} → " . ($temas[$temaIds->first()] ?? $temaIds->first()) . "\n";
+                $set++;
+            } else {
+                $names = $temaIds->map(fn($id) => ($temas[$id] ?? $id))->implode(', ');
+                $conflicts[] = "#{$problem->id}: {$names}";
+                $skipped++;
+            }
+        }
+
+        $log .= "\n{$set} asignados, {$skipped} saltados.\n";
+        if ($conflicts) {
+            $log .= "\nConflictos (asigna manualmente desde el editor):\n" . implode("\n", $conflicts) . "\n";
+        }
+        return '<pre>' . htmlspecialchars($log) . '</pre>';
+    })->name('admin.run-migration.populate-temas');
+
     // Migración manual: añadir tema_id a pim_problems (ejecutar una sola vez desde el navegador)
     Route::get('/run-migration/tema-id', function () {
         if (\Illuminate\Support\Facades\Schema::hasColumn('pim_problems', 'tema_id')) {
