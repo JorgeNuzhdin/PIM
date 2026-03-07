@@ -44,9 +44,9 @@ class PimSheetController extends Controller
             $query->where('date_year', $request->year);
         }
 
-        // Filtro por grupo (planet)
+        // Filtro por grupo (planet es array serializado: buscar por substring)
         if ($request->filled('planet')) {
-            $query->where('planet', $request->planet);
+            $query->where('planet', 'LIKE', '%' . $request->planet . '%');
         }
 
         // Filtro por institución
@@ -82,7 +82,18 @@ class PimSheetController extends Controller
 
         // Obtener listas para filtros
         $years = PimSheet::distinct()->orderBy('date_year', 'desc')->pluck('date_year');
-        $planets = PimSheet::distinct()->orderBy('planet')->pluck('planet');
+
+        // planet es un array serializado: extraer todos los valores individuales únicos
+        $planets = PimSheet::whereNotNull('planet')->pluck('planet')
+            ->flatMap(function ($p) {
+                $decoded = json_decode($p, true);
+                if (is_array($decoded)) return $decoded;
+                return array_map('trim', explode(',', $p));
+            })
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
         $institutions = PimSheet::distinct()->orderBy('institution')->pluck('institution');
         $temas = Tema::orderBy('tema')->get();
 
