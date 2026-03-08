@@ -57,6 +57,7 @@ class SourceHelper
         'Andreescu' => ['\bAndreescu\b'],
         'Zeitz' => ['\bZeitz\b'],
         'R. Smullyan' => ['\bSmullyan\b', 'La dama o el tigre', 'The Lady or the Tiger'],
+        'Martínez Sandoval' => ['Mart[ií]nez\s*Sandoval', 'ecuaciones\s*funcionales'],
         // Sitios web y círculos
         'We Solve Problems' => ['We\s*Solve\s*Problems', 'wesolveproblems'],
         'Problems.ru' => ['problems\.ru', 'problems\.com\.ru'],
