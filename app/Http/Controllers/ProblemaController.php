@@ -785,9 +785,9 @@ class ProblemaController extends Controller
         $items = $request->input('items', []);
         $results = [];
 
-        // Cargar solo los primeros 100 chars de problem_tex para evitar OOM
+        // Cargar 300 chars (100 post-normalización + margen para espacios/saltos iniciales)
         $allProblems = Problema::whereNotNull('problem_tex')
-            ->selectRaw('id, title, SUBSTRING(problem_tex, 1, 100) AS problem_tex')
+            ->selectRaw('id, title, SUBSTRING(problem_tex, 1, 300) AS problem_tex')
             ->get();
 
         foreach ($items as $index => $item) {
@@ -799,7 +799,7 @@ class ProblemaController extends Controller
 
             foreach ($allProblems as $p) {
                 if ($contentMatch === null && $contentPrefix !== '' &&
-                    $this->normalizePrefix($p->problem_tex) === $contentPrefix) {
+                    levenshtein($this->normalizePrefix($p->problem_tex), $contentPrefix) <= 7) {
                     $contentMatch = ['id' => $p->id];
                 }
                 if ($titleMatch === null && $title !== '' &&

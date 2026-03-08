@@ -654,6 +654,11 @@ async function importarMultiplesEjercicios(ejercicios) {
                 });
             }
 
+            // Tema
+            if (ejercicio.tema_id) {
+                formData.append('tema_id', ejercicio.tema_id);
+            }
+
             // Buscar imágenes referenciadas en este ejercicio
             const contenidoEjercicio = (ejercicio.enunciado || '') + (ejercicio.solucion || '') + (ejercicio.pistas || '');
             const imagenesEjercicio = extraerNombresImagenes(contenidoEjercicio);
@@ -791,11 +796,32 @@ async function analizarYMostrarPreview(ejercicios, contenido) {
         console.warn('Error al verificar duplicados:', e);
     }
 
+    // Paso 3: detectar tema desde tags (en paralelo)
+    const temaPromises = ejercicios.map(ej => {
+        const tags = (ej.temas || '').split(',').map(t => t.trim()).filter(t => t);
+        if (!tags.length) return Promise.resolve(null);
+        const params = new URLSearchParams();
+        tags.forEach(t => params.append('tags[]', t));
+        return fetch('{{ route("tema.desde.tag") }}?' + params.toString())
+            .then(r => r.json())
+            .catch(() => null);
+    });
+    const temaResults = await Promise.all(temaPromises);
+    temaResults.forEach((tr, i) => { analisis[i].temaResolucion = tr; });
+
     mostrarPreviewProblemas(ejercicios, analisis, contenido);
 }
 
 // Mostrar overlay de preview con tabla interactiva
 function mostrarPreviewProblemas(ejercicios, analisis, contenido) {
+    // Extraer opciones de tema del select existente en la página
+    const temaSelectEl = document.getElementById('tema_id');
+    const temaOpts = temaSelectEl
+        ? Array.from(temaSelectEl.options).filter(o => o.value).map(o => ({ value: o.value, text: o.text.trim() }))
+        : [];
+    const buildTemaOptions = (selectedId) =>
+        temaOpts.map(o => `<option value="${o.value}"${String(o.value) === String(selectedId) ? ' selected' : ''}>${o.text}</option>`).join('');
+
     const overlay = document.createElement('div');
     overlay.id = 'preview-problemas-overlay';
     overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.55);z-index:10000;overflow-y:auto;padding:2rem 0;box-sizing:border-box;';
@@ -824,6 +850,9 @@ function mostrarPreviewProblemas(ejercicios, analisis, contenido) {
             ? `<ul style="margin:0;padding-left:1.2rem;font-size:0.8rem;color:#718096;">${a.issues.map(s => `<li>${s}</li>`).join('')}</ul>`
             : '<span style="color:#68d391;font-size:0.85rem;">OK</span>';
 
+        const temaResol = a.temaResolucion;
+        const preselected = (temaResol && !temaResol.conflict && temaResol.tema_id) ? temaResol.tema_id : '';
+
         return `<tr style="${rowBg}">
             <td style="padding:0.4rem 0.5rem;text-align:center;">
                 <input type="checkbox" class="preview-checkbox" data-index="${i}" ${checked} ${disabled}>
@@ -831,6 +860,12 @@ function mostrarPreviewProblemas(ejercicios, analisis, contenido) {
             <td style="padding:0.4rem 0.5rem;text-align:center;font-size:1.1rem;">${icon}</td>
             <td style="padding:0.4rem 0.5rem;text-align:center;font-weight:600;">${i + 1}</td>
             <td style="padding:0.4rem 0.5rem;font-family:monospace;font-size:0.82rem;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${enunciado}">${enunciado || '(sin enunciado)'}…</td>
+            <td style="padding:0.4rem 0.5rem;">
+                <select class="preview-tema-select" data-index="${i}" style="font-size:0.8rem;max-width:140px;" ${disabled}>
+                    <option value="">-- Tema --</option>
+                    ${buildTemaOptions(preselected)}
+                </select>
+            </td>
             <td style="padding:0.4rem 0.5rem;">${issuesHtml}</td>
         </tr>`;
     }).join('');
@@ -847,6 +882,7 @@ function mostrarPreviewProblemas(ejercicios, analisis, contenido) {
                             <th style="padding:0.5rem;width:36px;"></th>
                             <th style="padding:0.5rem;width:32px;">#</th>
                             <th style="padding:0.5rem;text-align:left;">Enunciado</th>
+                            <th style="padding:0.5rem;text-align:left;">Tema</th>
                             <th style="padding:0.5rem;text-align:left;">Estado / Detalles</th>
                         </tr>
                     </thead>
@@ -883,7 +919,12 @@ function mostrarPreviewProblemas(ejercicios, analisis, contenido) {
             return;
         }
 
-        const seleccionados = selectedIndices.map(i => ejercicios[i]);
+        const seleccionados = selectedIndices.map(i => {
+            const ej = Object.assign({}, ejercicios[i]);
+            const temaEl = overlay.querySelector(`.preview-tema-select[data-index="${i}"]`);
+            ej.tema_id = temaEl ? temaEl.value : '';
+            return ej;
+        });
         document.body.removeChild(overlay);
         prepararYCargarSeleccionados(seleccionados, contenido);
     };
