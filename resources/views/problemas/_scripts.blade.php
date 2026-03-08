@@ -327,18 +327,22 @@ function rellenarFormulario(ejercicio) {
         const tagsArray = ejercicio.temas.split(',').map(t => t.trim()).filter(t => t);
         cargarTagsEnFormulario(tagsArray);
 
-        // Auto-detectar tema desde el primer tag conocido
+        // Auto-detectar tema desde todos los tags
         if (tagsArray.length > 0) {
-            fetch('{{ route("tema.desde.tag") }}?tag=' + encodeURIComponent(tagsArray[0]))
+            const params = new URLSearchParams();
+            tagsArray.forEach(t => params.append('tags[]', t));
+            fetch('{{ route("tema.desde.tag") }}?' + params.toString())
                 .then(r => r.json())
                 .then(data => {
-                    if (data.tema_id) {
-                        const temaSelect = document.getElementById('tema_id');
-                        if (temaSelect) {
-                            temaSelect.value = data.tema_id;
-                            const indicator = document.getElementById('tema-auto-indicator');
-                            if (indicator) indicator.style.display = 'inline';
-                        }
+                    const temaSelect = document.getElementById('tema_id');
+                    const indicator  = document.getElementById('tema-auto-indicator');
+                    // Limpiar prompt anterior si existe
+                    document.getElementById('tema-conflict-prompt')?.remove();
+                    if (!data.conflict && data.tema_id) {
+                        if (temaSelect) temaSelect.value = data.tema_id;
+                        if (indicator)  indicator.style.display = 'inline';
+                    } else if (data.conflict && data.options?.length > 0) {
+                        mostrarSelectorTema(data.options);
                     }
                 })
                 .catch(() => {});
@@ -346,6 +350,34 @@ function rellenarFormulario(ejercicio) {
     }
 
     return avisos;
+}
+
+// Mostrar selector inline cuando hay varios temas posibles
+function mostrarSelectorTema(options) {
+    document.getElementById('tema-conflict-prompt')?.remove();
+    const temaSelect = document.getElementById('tema_id');
+    if (!temaSelect) return;
+
+    const prompt = document.createElement('div');
+    prompt.id = 'tema-conflict-prompt';
+    prompt.style.cssText = 'margin-top:0.4rem;padding:0.5rem 0.75rem;background:#fffbeb;border:1px solid #d69e2e;border-radius:4px;font-size:0.875rem;';
+    prompt.innerHTML = '<span style="color:#744210;">⚠️ Posibles temas:</span> ';
+
+    options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = opt.nombre;
+        btn.style.cssText = 'margin:0 0.25rem;padding:0.2rem 0.6rem;border:1px solid #d69e2e;border-radius:3px;background:white;cursor:pointer;font-size:0.875rem;';
+        btn.onclick = () => {
+            temaSelect.value = opt.id;
+            const indicator = document.getElementById('tema-auto-indicator');
+            if (indicator) indicator.style.display = 'inline';
+            prompt.remove();
+        };
+        prompt.appendChild(btn);
+    });
+
+    temaSelect.parentElement.appendChild(prompt);
 }
 
 // Convertir nombre de curso a índice (case-insensitive)
