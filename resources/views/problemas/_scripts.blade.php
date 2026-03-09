@@ -387,16 +387,32 @@ function convertirCursoAIndice(curso) {
 
     // Mapa de cursos normalizados (todo en mayúsculas)
     const cursos = {
+        // Dígito solo → Primaria
+        '1': 1, '1º': 1,
+        '2': 2, '2º': 2,
+        '3': 3, '3º': 3,
+        '4': 4, '4º': 4,
+        '5': 5, '5º': 5,
+        '6': 6, '6º': 6,
+        // Primaria explícita
         '1 PRIMARIA': 1, '1º PRIMARIA': 1, '1PRIMARIA': 1, '1ºPRIMARIA': 1,
         '2 PRIMARIA': 2, '2º PRIMARIA': 2, '2PRIMARIA': 2, '2ºPRIMARIA': 2,
         '3 PRIMARIA': 3, '3º PRIMARIA': 3, '3PRIMARIA': 3, '3ºPRIMARIA': 3,
         '4 PRIMARIA': 4, '4º PRIMARIA': 4, '4PRIMARIA': 4, '4ºPRIMARIA': 4,
         '5 PRIMARIA': 5, '5º PRIMARIA': 5, '5PRIMARIA': 5, '5ºPRIMARIA': 5,
         '6 PRIMARIA': 6, '6º PRIMARIA': 6, '6PRIMARIA': 6, '6ºPRIMARIA': 6,
+        // ESO (bare → 1 ESO por defecto) + alias Secundaria
+        'ESO': 7, 'SECUNDARIA': 7,
         '1 ESO': 7, '1º ESO': 7, '1ESO': 7, '1ºESO': 7,
+        '1 SECUNDARIA': 7, '1º SECUNDARIA': 7, '1SECUNDARIA': 7, '1ºSECUNDARIA': 7,
         '2 ESO': 8, '2º ESO': 8, '2ESO': 8, '2ºESO': 8,
+        '2 SECUNDARIA': 8, '2º SECUNDARIA': 8, '2SECUNDARIA': 8, '2ºSECUNDARIA': 8,
         '3 ESO': 9, '3º ESO': 9, '3ESO': 9, '3ºESO': 9,
+        '3 SECUNDARIA': 9, '3º SECUNDARIA': 9, '3SECUNDARIA': 9, '3ºSECUNDARIA': 9,
         '4 ESO': 10, '4º ESO': 10, '4ESO': 10, '4ºESO': 10,
+        '4 SECUNDARIA': 10, '4º SECUNDARIA': 10, '4SECUNDARIA': 10, '4ºSECUNDARIA': 10,
+        // Bach (bare → 1 Bach por defecto)
+        'BACH': 11, 'BACHILLERATO': 11,
         '1 BACHILLERATO': 11, '1º BACHILLERATO': 11, '1 BACH': 11, '1º BACH': 11, '1BACHILLERATO': 11, '1ºBACHILLERATO': 11, '1BACH': 11, '1ºBACH': 11,
         '2 BACHILLERATO': 12, '2º BACHILLERATO': 12, '2 BACH': 12, '2º BACH': 12, '2BACHILLERATO': 12, '2ºBACHILLERATO': 12, '2BACH': 12, '2ºBACH': 12
     };
