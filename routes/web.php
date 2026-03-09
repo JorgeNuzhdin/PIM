@@ -104,6 +104,17 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/problemas-pendientes', [App\Http\Controllers\ProblemaController::class, 'pendientes'])->name('problemas.pendientes');
     Route::post('/problemas/{id}/aprobar', [App\Http\Controllers\ProblemaController::class, 'aprobar'])->name('problemas.aprobar');
 
+    // Limpiar caché de vistas compiladas
+    Route::get('/clear-views', function () {
+        $path = storage_path('framework/views');
+        $count = 0;
+        foreach (glob($path . '/*.php') as $file) {
+            @unlink($file);
+            $count++;
+        }
+        return "✅ {$count} vistas compiladas eliminadas. Las vistas se recompilarán al acceder.";
+    })->name('admin.clear-views');
+
     // Rellenar tema_id en pim_problems a partir de tags → topic_tema
     Route::get('/run-migration/populate-temas-debug', function () {
         // Muestra los tags distintos de problemas sin tema_id
