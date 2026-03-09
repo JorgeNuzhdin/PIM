@@ -12,7 +12,7 @@ use App\Http\Controllers\MetodoController;
 
 
 Route::get('/', [HomePageController::class, 'index'])->name('homepage');
-require __DIR__.'/auth.php';
+Auth::routes();
 
 
 Route::middleware(['auth'])->prefix('hojas')->name('hojas.')->group(function () {
