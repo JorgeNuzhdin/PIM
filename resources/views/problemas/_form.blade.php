@@ -215,10 +215,54 @@
 </div>
 
 {{-- Botones --}}
+@if(isset($problema))
+    <input type="hidden" name="mark_solved" id="mark_solved_problema" value="0">
+@endif
 <div class="form-actions">
     <a href="{{ route('problemas.index') }}" class="btn-cancel">Cancelar</a>
-    <button type="submit" class="btn-primary" id="btn-submit-problema">{{ isset($problema) ? 'Actualizar' : 'Crear' }} Problema</button>
+    @if(isset($problema))
+        <button type="button" class="btn-primary" id="btn-submit-problema">Actualizar Problema</button>
+    @else
+        <button type="submit" class="btn-primary" id="btn-submit-problema">Crear Problema</button>
+    @endif
 </div>
+
+@if(isset($problema))
+{{-- Modal resolución errores al actualizar --}}
+@php $hasUnsolvedErrors = $hasUnsolvedErrors ?? false; @endphp
+@if($hasUnsolvedErrors)
+<div id="resolverErroresProblemaModal" style="display:none; position:fixed; inset:0; z-index:3000; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
+    <div style="background:white; border-radius:8px; padding:1.5rem; width:90%; max-width:420px; box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+        <h3 style="margin:0 0 0.8rem; color:#2d3748; font-size:1.05rem;">¿Marcar errores como resueltos?</h3>
+        <p style="color:#718096; font-size:0.9rem; margin:0 0 1.2rem;">Este problema tiene errores reportados pendientes. ¿Quieres marcarlos como resueltos al guardar?</p>
+        <div style="display:flex; gap:0.8rem; justify-content:flex-end;">
+            <button type="button" onclick="submitProblemaResuelto(false)"
+                style="padding:0.5rem 1.1rem; border:1px solid #cbd5e0; border-radius:4px; background:white; cursor:pointer; font-size:0.9rem; color:#4a5568;">
+                No
+            </button>
+            <button type="button" onclick="submitProblemaResuelto(true)"
+                style="padding:0.5rem 1.1rem; border:none; border-radius:4px; background:#48bb78; color:white; cursor:pointer; font-size:0.9rem; font-weight:600;">
+                Sí, marcar resueltos
+            </button>
+        </div>
+    </div>
+</div>
+@endif
+<script>
+document.getElementById('btn-submit-problema').addEventListener('click', function() {
+    @if($hasUnsolvedErrors)
+    document.getElementById('resolverErroresProblemaModal').style.display = 'flex';
+    @else
+    this.closest('form').submit();
+    @endif
+});
+function submitProblemaResuelto(marcar) {
+    document.getElementById('mark_solved_problema').value = marcar ? '1' : '0';
+    document.getElementById('resolverErroresProblemaModal').style.display = 'none';
+    document.getElementById('btn-submit-problema').closest('form').submit();
+}
+</script>
+@endif
 
 @if(!isset($problema))
 <div id="duplicate-warning" style="display:none; margin-top:1rem; padding:1rem 1.25rem; border-radius:6px; border:1px solid #d69e2e; background:#fffbeb; color:#744210;">

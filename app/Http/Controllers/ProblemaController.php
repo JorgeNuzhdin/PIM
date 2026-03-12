@@ -186,8 +186,8 @@ class ProblemaController extends Controller
                 // URL de retorno (para volver a la misma página/filtros)
                 $returnUrl = $request->get('return') ? urldecode($request->get('return')) : null;
 
-                // Calcular tipo agregado de errores reportados (OR de todos los reportes)
-                $errorReports = \App\Models\ErrorReport::where('problema_id', $id)->get();
+                // Calcular tipo agregado de errores reportados pendientes (OR de todos los reportes sin resolver)
+                $errorReports = \App\Models\ErrorReport::where('problema_id', $id)->where('solved', false)->get();
                 $errorTipo = '000000000';
                 foreach ($errorReports as $er) {
                     for ($i = 0; $i < 9; $i++) {
@@ -196,8 +196,9 @@ class ProblemaController extends Controller
                         }
                     }
                 }
+                $hasUnsolvedErrors = $errorReports->isNotEmpty();
 
-                return view('problemas.edit', compact('problema', 'temas', 'schoolYears', 'figuras', 'proponents', 'returnUrl', 'errorTipo'));
+                return view('problemas.edit', compact('problema', 'temas', 'schoolYears', 'figuras', 'proponents', 'returnUrl', 'errorTipo', 'hasUnsolvedErrors'));
             }
 
             public function update(Request $request, $id)
@@ -312,8 +313,10 @@ class ProblemaController extends Controller
 
                     DB::commit();
 
-                    // Marcar reportes de error como resueltos tras guardar el problema
-                    \App\Models\ErrorReport::where('problema_id', $id)->update(['solved' => true]);
+                    // Marcar reportes de error como resueltos solo si el usuario lo solicitó
+                    if ($request->boolean('mark_solved')) {
+                        \App\Models\ErrorReport::where('problema_id', $id)->where('solved', false)->update(['solved' => true]);
+                    }
 
                     // Redirigir a la URL de retorno si existe, si no al índice
                     $returnUrl = $request->input('return_url');

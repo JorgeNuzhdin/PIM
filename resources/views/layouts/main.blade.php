@@ -413,6 +413,7 @@ window.MathJax = {
                         @endif
                         @if(Auth::user()->canEditProblemas())
                             <a href="{{ route('problemas.con-errores') }}">⚠️ Problemas con errores</a>
+                            <a href="{{ route('metodos.con-errores') }}">⚠️ Métodos con errores</a>
                         @endif
                         <a href="{{ route('profile.edit') }}">Editar perfil</a>
                         <a href="{{ route('logout') }}"

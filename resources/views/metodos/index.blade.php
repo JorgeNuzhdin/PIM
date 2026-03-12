@@ -217,7 +217,12 @@
             <tbody>
                 @foreach($metodos as $metodo)
                     <tr>
-                        <td><a href="{{ route('metodos.show', $metodo->id) }}" class="metodo-link">{{ $metodo->title }}</a></td>
+                        <td>
+                            <a href="{{ route('metodos.show', $metodo->id) }}" class="metodo-link">{{ $metodo->title }}</a>
+                            @if(Auth::user()->canEditProblemas() && isset($metodosConErrores[$metodo->id]))
+                                <span style="display:inline-block; background:#f59e0b; color:white; border-radius:10px; padding:1px 7px; font-size:0.75rem; font-weight:700; margin-left:0.4rem;" title="Tiene errores reportados">!</span>
+                            @endif
+                        </td>
                         <td><span class="tag">{{ $metodo->tema->tema }}</span></td>
                         <td>
                             @foreach($metodo->preloadedSubtemas as $subtema)

@@ -123,6 +123,9 @@
             <h1>{{ $metodo->title }}</h1>
             @auth
                 <button class="btn-carrito-show" id="btn-carrito-metodo" data-metodo-id="{{ $metodo->id }}" onclick="toggleCarritoMetodo({{ $metodo->id }}, this)" title="Añadir al carrito">🛒</button>
+                <button type="button" onclick="openReportMetodoModal({{ $metodo->id }})"
+                    style="background:none; border:1px solid #e2e8f0; border-radius:4px; padding:0.35rem 0.65rem; cursor:pointer; font-size:1rem; color:#718096; line-height:1;"
+                    title="Reportar un error en este método">⚠️</button>
                 @if(Auth::user()->isAdmin() || (Auth::user()->canEditProblemas() && $metodo->user_id === Auth::id()))
                     <a href="{{ route('metodos.edit', $metodo->id) }}" class="edit-icon" title="Editar método">&#9998;</a>
                 @endif
@@ -193,5 +196,6 @@ function toggleCarritoMetodo(metodoId, button) {
     });
 }
 </script>
+@include('_partials.report-error-metodo-modal')
 @endsection
 @endauth

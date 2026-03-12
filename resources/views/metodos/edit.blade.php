@@ -304,11 +304,32 @@
                 </small>
             </div>
 
+            <input type="hidden" name="mark_solved" id="mark_solved_metodo" value="0">
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                <button type="button" class="btn btn-primary" id="btn-guardar-metodo">Guardar Cambios</button>
                 <a href="{{ route('metodos.show', $metodo->id) }}" class="btn btn-secondary">Cancelar</a>
             </div>
         </form>
+
+        {{-- Modal resolución errores --}}
+        @if($hasUnsolvedErrors ?? false)
+        <div id="resolverErroresMetodoModal" style="display:none; position:fixed; inset:0; z-index:3000; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
+            <div style="background:white; border-radius:8px; padding:1.5rem; width:90%; max-width:420px; box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+                <h3 style="margin:0 0 0.8rem; color:#2d3748; font-size:1.05rem;">¿Marcar errores como resueltos?</h3>
+                <p style="color:#718096; font-size:0.9rem; margin:0 0 1.2rem;">Este método tiene errores reportados pendientes. ¿Quieres marcarlos como resueltos al guardar?</p>
+                <div style="display:flex; gap:0.8rem; justify-content:flex-end;">
+                    <button type="button" onclick="submitMetodoSolved(false)"
+                        style="padding:0.5rem 1.1rem; border:1px solid #cbd5e0; border-radius:4px; background:white; cursor:pointer; font-size:0.9rem; color:#4a5568;">
+                        No
+                    </button>
+                    <button type="button" onclick="submitMetodoSolved(true)"
+                        style="padding:0.5rem 1.1rem; border:none; border-radius:4px; background:#48bb78; color:white; cursor:pointer; font-size:0.9rem; font-weight:600;">
+                        Sí, marcar resueltos
+                    </button>
+                </div>
+            </div>
+        </div>
+        @endif
     </div>
 </div>
 @endsection
@@ -456,6 +477,21 @@ const _initialTexEdit = document.getElementById('method_tex').value.trim();
 if (_initialTexEdit) {
     document.getElementById('method_tex').dispatchEvent(new Event('input'));
     updateImageSection(_initialTexEdit);
+}
+
+// Resolución de errores al guardar
+const _hasUnsolvedErrorsMetodo = {{ ($hasUnsolvedErrors ?? false) ? 'true' : 'false' }};
+document.getElementById('btn-guardar-metodo').addEventListener('click', function() {
+    if (_hasUnsolvedErrorsMetodo) {
+        document.getElementById('resolverErroresMetodoModal').style.display = 'flex';
+    } else {
+        document.querySelector('form').submit();
+    }
+});
+function submitMetodoSolved(marcar) {
+    document.getElementById('mark_solved_metodo').value = marcar ? '1' : '0';
+    document.getElementById('resolverErroresMetodoModal').style.display = 'none';
+    document.querySelector('form').submit();
 }
 </script>
 @endsection

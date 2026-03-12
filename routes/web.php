@@ -73,6 +73,12 @@ Route::middleware('auth')->group(function () {
 
     // Métodos: listado y detalle visible para todos los autenticados
     Route::get('/metodos', [MetodoController::class, 'index'])->name('metodos.index');
+    // IMPORTANT: con-errores must be before /{id} to avoid being matched as an ID
+    Route::get('/metodos/con-errores', [App\Http\Controllers\MetodoErrorReportController::class, 'index'])
+         ->name('metodos.con-errores')
+         ->middleware('can.edit.problemas');
+    Route::post('/metodos/{id}/reportar-error', [App\Http\Controllers\MetodoErrorReportController::class, 'store'])
+         ->name('metodos.reportar-error');
     Route::get('/metodos/{id}', [MetodoController::class, 'show'])->name('metodos.show')->where('id', '[0-9]+');
     Route::get('/metodos/{id}/descargar-tex', [MetodoController::class, 'downloadTex'])->name('metodos.download-tex')->where('id', '[0-9]+');
 

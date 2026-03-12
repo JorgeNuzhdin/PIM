@@ -46,6 +46,11 @@ class Metodo extends Model
         return $this->hasMany(\App\Models\MetodoFigure::class, 'metodo_id');
     }
 
+    public function errorReports()
+    {
+        return $this->hasMany(\App\Models\MetodoErrorReport::class, 'metodo_id');
+    }
+
     public function getMethodHtmlProcessedAttribute()
     {
         if ($this->method_tex) {

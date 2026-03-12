@@ -65,7 +65,9 @@ class MetodoController extends Controller
 
         $institutions = Metodo::distinct()->orderBy('institution')->pluck('institution');
 
-        return view('metodos.index', compact('metodos', 'temas', 'subtemas', 'institutions'));
+        $metodosConErrores = \App\Models\MetodoErrorReport::where('solved', false)->distinct()->pluck('metodo_id')->flip()->all();
+
+        return view('metodos.index', compact('metodos', 'temas', 'subtemas', 'institutions', 'metodosConErrores'));
     }
 
     public function show($id)
@@ -136,7 +138,16 @@ class MetodoController extends Controller
         $subtemas = Subtema::where('tema_id', $metodo->tema_id)->orderBy('id')->get();
         $figuras = MetodoFigure::where('metodo_id', $id)->get();
 
-        return view('metodos.edit', compact('metodo', 'temas', 'subtemas', 'figuras'));
+        $errorReports = \App\Models\MetodoErrorReport::where('metodo_id', $id)->where('solved', false)->get();
+        $errorTipo = '00000';
+        foreach ($errorReports as $er) {
+            for ($i = 0; $i < 5; $i++) {
+                if (($er->tipo[$i] ?? '0') === '1') $errorTipo[$i] = '1';
+            }
+        }
+        $hasUnsolvedErrors = $errorReports->isNotEmpty();
+
+        return view('metodos.edit', compact('metodo', 'temas', 'subtemas', 'figuras', 'errorTipo', 'hasUnsolvedErrors'));
     }
 
     public function update(Request $request, $id)
@@ -175,6 +186,10 @@ class MetodoController extends Controller
                     );
                 }
             }
+        }
+
+        if ($request->boolean('mark_solved')) {
+            \App\Models\MetodoErrorReport::where('metodo_id', $id)->where('solved', false)->update(['solved' => true]);
         }
 
         return redirect()->route('metodos.show', $metodo->id)->with('success', 'Método actualizado correctamente.');
