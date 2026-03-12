@@ -124,8 +124,10 @@
             @auth
                 <button class="btn-carrito-show" id="btn-carrito-metodo" data-metodo-id="{{ $metodo->id }}" onclick="toggleCarritoMetodo({{ $metodo->id }}, this)" title="Añadir al carrito">🛒</button>
                 <button type="button" onclick="openReportMetodoModal({{ $metodo->id }})"
-                    style="background:none; border:1px solid #e2e8f0; border-radius:4px; padding:0.35rem 0.65rem; cursor:pointer; font-size:1rem; color:#718096; line-height:1;"
-                    title="Reportar un error en este método">⚠️</button>
+                    style="background:none; border:1px solid #e2e8f0; border-radius:4px; padding:0.35rem 0.65rem; cursor:pointer; color:#718096; line-height:1;"
+                    title="Reportar un error en este método">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.2em" height="1.2em" fill="currentColor" style="vertical-align:middle;"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+                </button>
                 @if(Auth::user()->isAdmin() || (Auth::user()->canEditProblemas() && $metodo->user_id === Auth::id()))
                     <a href="{{ route('metodos.edit', $metodo->id) }}" class="edit-icon" title="Editar método">&#9998;</a>
                 @endif
