@@ -16,7 +16,14 @@ window.MathJax = {
         displayMath: [['$$', '$$'], ['\\[', '\\]']],
         processEscapes: true,
         processEnvironments: true,
-        packages: {'[+]': ['color']}
+        packages: {'[+]': ['color']},
+        macros: {
+            R: '\\mathbb{R}',
+            Z: '\\mathbb{Z}',
+            N: '\\mathbb{N}',
+            Q: '\\mathbb{Q}',
+            C: '\\mathbb{C}',
+        }
     },
     options: {
         skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
