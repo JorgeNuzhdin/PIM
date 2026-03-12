@@ -427,9 +427,9 @@ private static function getImSimple($filename)
         }
 
         // Expandir macros de conjuntos numéricos (\R, \Z) antes de proteger el math
-        // Busca \R o \Z seguido de }, ), ^, _ para distinguirlos de otros comandos
-        $t = preg_replace('/\\\\R(?=[}\)^_\s,\.;!])/', '\\mathbb{R}', $t);
-        $t = preg_replace('/\\\\Z(?=[}\)^_\s,\.;!])/', '\\mathbb{Z}', $t);
+        // Busca \R o \Z seguido de }, ), ^, _, $, \, [, o espacio/puntuación
+        $t = preg_replace('/\\\\R(?=[}\)^_\$\\\\\[\s,\.;!])/', '\\mathbb{R}', $t);
+        $t = preg_replace('/\\\\Z(?=[}\)^_\$\\\\\[\s,\.;!])/', '\\mathbb{Z}', $t);
 
         // Extraer bloques math para protegerlos de transformaciones de texto (\textbf, \underline, etc.)
         self::$mathBlocks = [];
