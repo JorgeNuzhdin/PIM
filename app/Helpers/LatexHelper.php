@@ -12,7 +12,8 @@ class LatexHelper
     private static $countRetoResuelto = 0;
     private static $isPreambleContext = false;
     private static $debugMessages = [];
-    private static $tikzBlocks = [];  
+    private static $tikzBlocks = [];
+    private static $mathBlocks = [];
     private static function debug($message, $data = null)
     {
         $debugInfo = $message;
@@ -424,6 +425,37 @@ private static function getImSimple($filename)
                 break; // No se encontró \end{tikzpicture}, salir del bucle
             }
         }
+
+        // Extraer bloques math para protegerlos de transformaciones de texto (\textbf, \underline, etc.)
+        self::$mathBlocks = [];
+        $mathIndex = 0;
+        // Primero \[...\] y \(...\)
+        $t = preg_replace_callback('/\\\\\[[\s\S]*?\\\\\]/s', function ($m) use (&$mathIndex) {
+            $placeholder = "###MATH_{$mathIndex}###";
+            self::$mathBlocks[$placeholder] = $m[0];
+            $mathIndex++;
+            return $placeholder;
+        }, $t);
+        $t = preg_replace_callback('/\\\\\([\s\S]*?\\\\\)/s', function ($m) use (&$mathIndex) {
+            $placeholder = "###MATH_{$mathIndex}###";
+            self::$mathBlocks[$placeholder] = $m[0];
+            $mathIndex++;
+            return $placeholder;
+        }, $t);
+        // Luego $$...$$ (antes de $...$)
+        $t = preg_replace_callback('/\$\$[\s\S]*?\$\$/s', function ($m) use (&$mathIndex) {
+            $placeholder = "###MATH_{$mathIndex}###";
+            self::$mathBlocks[$placeholder] = $m[0];
+            $mathIndex++;
+            return $placeholder;
+        }, $t);
+        // Finalmente $...$ (inline math)
+        $t = preg_replace_callback('/\$[^\$]+?\$/s', function ($m) use (&$mathIndex) {
+            $placeholder = "###MATH_{$mathIndex}###";
+            self::$mathBlocks[$placeholder] = $m[0];
+            $mathIndex++;
+            return $placeholder;
+        }, $t);
 
           $t = str_replace(['u000au000au000au000a', 'u000au000au000a', 'u000au000a', 'u000a', 'u000d', 'u0009'], ["\n\n", "\n\n", "\n\n", "\n", "\r", "\t"], $t);
     $t = str_replace(['\u000a\u000a\u000a\u000a', '\u000a\u000a\u000a', '\u000a\u000a', '\u000a', '\u000d', '\u0009'], ["\n\n", "\n\n", "\n\n", "\n", "\r", "\t"], $t);
@@ -1046,6 +1078,11 @@ $t = str_replace('\end{verbatim}', '</code></pre>', $t);
 $t = str_replace('&&&LT&&&', '&lt;', $t);
     $t = str_replace('&&&GT&&&', '&gt;', $t);
 $t = str_replace( 'PCTG','\%', $t);
+
+// Restaurar bloques math (que fueron protegidos al inicio)
+foreach (self::$mathBlocks as $placeholder => $mathContent) {
+    $t = str_replace($placeholder, $mathContent, $t);
+}
 
 // Restaurar bloques TikZ (que fueron protegidos al inicio)
 foreach (self::$tikzBlocks as $placeholder => $tikzHtml) {
