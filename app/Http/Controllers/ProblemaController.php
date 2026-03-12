@@ -571,7 +571,7 @@ class ProblemaController extends Controller
     $problemasUsados = SheetHelper::getProblemasUsadosConAnio();
 
     // IDs de problemas con reportes de error (para mostrar el icono en amarillo)
-    $problemasConErrores = \App\Models\ErrorReport::distinct()->pluck('problema_id')->flip()->all();
+    $problemasConErrores = \App\Models\ErrorReport::where('solved', false)->distinct()->pluck('problema_id')->flip()->all();
 
     return view('problemas.index', compact('problemas', 'temas', 'totalProblemas', 'problemasEncontrados', 'mostrar', 'schoolYears', 'sourceData', 'proponents', 'problemasUsados', 'problemasConErrores'));
 }
