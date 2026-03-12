@@ -426,6 +426,11 @@ private static function getImSimple($filename)
             }
         }
 
+        // Expandir macros de conjuntos numéricos (\R, \Z) antes de proteger el math
+        // Busca \R o \Z seguido de }, ), ^, _ para distinguirlos de otros comandos
+        $t = preg_replace('/\\\\R(?=[}\)^_\s,\.;!])/', '\\mathbb{R}', $t);
+        $t = preg_replace('/\\\\Z(?=[}\)^_\s,\.;!])/', '\\mathbb{Z}', $t);
+
         // Extraer bloques math para protegerlos de transformaciones de texto (\textbf, \underline, etc.)
         self::$mathBlocks = [];
         $mathIndex = 0;
@@ -913,6 +918,9 @@ $t = preg_replace('/\\\\definecolor\{[^}]+\}\{[^}]+\}\{[^}]+\}/', '', $t);
             $t = $sc['before'] . '<span style="font-variant: small-caps;">' . $sc['inside'] . '</span>' . $sc['after'];
             $sc = self::fromAtoB('\textsc{', '}', $t);
         }
+
+        // \qed y \qedhere → cuadrado de fin de demostración
+        $t = str_replace(['\qedhere', '\qed'], '<span style="float:right;">&#9632;</span>', $t);
 
         // Rules
         $rule = self::fromAtoB('\*rule[', ']', $t);

@@ -481,17 +481,18 @@ if (_initialTexEdit) {
 
 // Resolución de errores al guardar
 const _hasUnsolvedErrorsMetodo = {{ ($hasUnsolvedErrors ?? false) ? 'true' : 'false' }};
+const _metodoEditForm = document.getElementById('btn-guardar-metodo').closest('form');
 document.getElementById('btn-guardar-metodo').addEventListener('click', function() {
     if (_hasUnsolvedErrorsMetodo) {
         document.getElementById('resolverErroresMetodoModal').style.display = 'flex';
     } else {
-        document.querySelector('form').submit();
+        _metodoEditForm.submit();
     }
 });
 function submitMetodoSolved(marcar) {
     document.getElementById('mark_solved_metodo').value = marcar ? '1' : '0';
     document.getElementById('resolverErroresMetodoModal').style.display = 'none';
-    document.querySelector('form').submit();
+    _metodoEditForm.submit();
 }
 </script>
 @endsection
