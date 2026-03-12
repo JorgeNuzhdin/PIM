@@ -347,6 +347,12 @@ class CarritoController extends Controller
 
                 $titulo = $problema->title ?? 'sin-titulo';
                 $contenido .= "\n\\idtitulo{\\#" . $problema->id . ": " . $titulo . "}\n";
+                if ($problema->school_year) {
+                    $contenido .= "\\nivel{" . SchoolYearHelper::getYearName($problema->school_year) . "}\n";
+                }
+                if ($problema->source) {
+                    $contenido .= "\\year{" . $problema->source . "}\n";
+                }
                 $contenido .= "\\exercise{";
                 $contenido .= $this->sanitizeTexForMacroArg($problema->problem_tex);
                 $contenido .= "}\n";
@@ -469,6 +475,8 @@ LATEX;
 \newcommand{\solution}[1]{\ifshowsolutions\begin{proof}[Soluci\'on]#1\end{proof}\fi}
 \newcommand{\idtitulo}[1]{\noindent{\color{red}#1\\}}
 \newcommand{\pistas}[1]{\textbf{Pistas:} #1}
+\newcommand{\nivel}[1]{\noindent{\small\color{gray}\textbf{Nivel:} #1}\par}
+\def\year#1{\noindent{\small\color{gray}\textbf{Fuente:} #1}\par}
 
 LATEX;
 

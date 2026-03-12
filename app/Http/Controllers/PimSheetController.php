@@ -337,8 +337,13 @@ class PimSheetController extends Controller
             abort(500, 'No se pudo crear el archivo ZIP.');
         }
 
+        // Para la descarga (hoja con soluciones): activar \showinfotrue, desactivar \showinfofalse
+        $texContent = $sheet->tex_sols;
+        $texContent = preg_replace('/^%+\s*(\\\\showinfotrue\b.*)/m',  '$1',   $texContent);
+        $texContent = preg_replace('/^(\\\\showinfofalse\b.*)/m',       '%$1',  $texContent);
+
         // Añadir archivo TEX
-        $zip->addFromString($texFilename, $sheet->tex_sols);
+        $zip->addFromString($texFilename, $texContent);
 
         // Extraer nombres de imágenes del contenido TEX
         $imagenesEnTex = $this->extractImageNamesFromTex($sheet->tex_sols);

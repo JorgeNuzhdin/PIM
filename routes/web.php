@@ -3,6 +3,7 @@
 
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\HojaController;
@@ -103,6 +104,21 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Problemas pendientes de aprobación
     Route::get('/problemas-pendientes', [App\Http\Controllers\ProblemaController::class, 'pendientes'])->name('problemas.pendientes');
     Route::post('/problemas/{id}/aprobar', [App\Http\Controllers\ProblemaController::class, 'aprobar'])->name('problemas.aprobar');
+
+    // Migración: añadir columna solved a error_reports
+    Route::get('/run-migration/add-solved-to-error-reports', function () {
+        try {
+            if (!Schema::hasColumn('error_reports', 'solved')) {
+                Schema::table('error_reports', function ($table) {
+                    $table->boolean('solved')->default(false)->after('tipo');
+                });
+                return '✅ Columna solved añadida a error_reports.';
+            }
+            return 'ℹ️ La columna solved ya existe.';
+        } catch (\Exception $e) {
+            return '❌ Error: ' . $e->getMessage();
+        }
+    })->name('admin.run-migration.solved-error-reports');
 
     // Limpiar caché de vistas compiladas
     Route::get('/clear-views', function () {

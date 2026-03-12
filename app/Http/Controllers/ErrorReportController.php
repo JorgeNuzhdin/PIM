@@ -34,8 +34,8 @@ class ErrorReportController extends Controller
      */
     public function index()
     {
-        $problemas = Problema::whereHas('errorReports')
-            ->with(['errorReports.user', 'tags'])
+        $problemas = Problema::whereHas('errorReports', fn($q) => $q->where('solved', false))
+            ->with(['errorReports' => fn($q) => $q->where('solved', false)->with('user'), 'tags'])
             ->orderBy('id')
             ->paginate(20);
 

@@ -312,8 +312,8 @@ class ProblemaController extends Controller
 
                     DB::commit();
 
-                    // Eliminar reportes de error tras guardar el problema
-                    \App\Models\ErrorReport::where('problema_id', $id)->delete();
+                    // Marcar reportes de error como resueltos tras guardar el problema
+                    \App\Models\ErrorReport::where('problema_id', $id)->update(['solved' => true]);
 
                     // Redirigir a la URL de retorno si existe, si no al índice
                     $returnUrl = $request->input('return_url');

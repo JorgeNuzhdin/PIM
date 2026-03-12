@@ -8,7 +8,7 @@ class ErrorReport extends Model
 {
     protected $table = 'error_reports';
 
-    protected $fillable = ['problema_id', 'user_id', 'reporte', 'tipo'];
+    protected $fillable = ['problema_id', 'user_id', 'reporte', 'tipo', 'solved'];
 
     public function problema()
     {
