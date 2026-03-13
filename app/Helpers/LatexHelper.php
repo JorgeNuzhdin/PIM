@@ -1001,6 +1001,23 @@ $t = str_replace('\end{flushleft}', '</div>', $t);
 $t = str_replace('\begin{flushright}', '<div style="text-align: right;">', $t);
 $t = str_replace('\end{flushright}', '</div>', $t);
 
+// \subsubsection{...} → <h4>
+$sub3 = self::fromAtoB('\subsubsection{', '}', $t);
+while ($sub3['inside'] != '') {
+    $t = $sub3['before'] . '<h4 style="margin:1rem 0 0.4rem; font-size:1rem; font-weight:700; color:#2d3748;">' . $sub3['inside'] . '</h4>' . $sub3['after'];
+    $sub3 = self::fromAtoB('\subsubsection{', '}', $t);
+}
+
+// \begin{multicols}{N}...\end{multicols} → CSS columns
+$t = preg_replace_callback(
+    '/\\\\begin\{multicols\}\{(\d+)\}([\s\S]*?)\\\\end\{multicols\}/s',
+    function ($m) {
+        $cols = max(1, (int) $m[1]);
+        return '<div style="column-count:' . $cols . '; column-gap:1.5rem;">' . $m[2] . '</div>';
+    },
+    $t
+);
+
 // Citas y quotation
 $t = str_replace('\begin{quote}', '<blockquote>', $t);
 $t = str_replace('\end{quote}', '</blockquote>', $t);
