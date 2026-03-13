@@ -1008,12 +1008,43 @@ while ($sub3['inside'] != '') {
     $sub3 = self::fromAtoB('\subsubsection{', '}', $t);
 }
 
-// \begin{multicols}{N}...\end{multicols} → CSS columns
+// \begin{multicols}{N}...\end{multicols} → flex columns con distribución equitativa
 $t = preg_replace_callback(
     '/\\\\begin\{multicols\}\{(\d+)\}([\s\S]*?)\\\\end\{multicols\}/s',
     function ($m) {
         $cols = max(1, (int) $m[1]);
-        return '<div style="column-count:' . $cols . '; column-gap:1.5rem;">' . $m[2] . '</div>';
+        $content = trim($m[2]);
+
+        // Si el contenido es una lista (ol/ul), distribuir ítems equitativamente
+        if (preg_match('/^<(ol|ul)([^>]*)>([\s\S]*)<\/\1>\s*$/s', $content, $lm)) {
+            $tag     = $lm[1];
+            $attrs   = $lm[2];  // p.ej. ' type="a"'
+            $inner   = $lm[3];
+
+            // Los <li> no tienen </li>, separar por <li>
+            $parts = preg_split('/<li>/', $inner);
+            $items = array_values(array_filter(array_map('trim', $parts)));
+            $count = count($items);
+
+            if ($count > 0) {
+                $perCol = (int) ceil($count / $cols);
+                $html = '<div style="display:flex; gap:1.5rem; align-items:flex-start;">';
+                $startIdx = 0;
+                foreach (array_chunk($items, $perCol) as $chunk) {
+                    $startAttr = ($tag === 'ol' && $startIdx > 0) ? ' start="' . ($startIdx + 1) . '"' : '';
+                    $html .= '<div style="flex:1;"><' . $tag . $attrs . $startAttr . '>';
+                    foreach ($chunk as $item) {
+                        $html .= '<li>' . $item;
+                    }
+                    $html .= '</' . $tag . '></div>';
+                    $startIdx += count($chunk);
+                }
+                return $html . '</div>';
+            }
+        }
+
+        // Fallback para contenido no-lista: CSS column-count
+        return '<div style="column-count:' . $cols . '; column-gap:1.5rem;">' . $content . '</div>';
     },
     $t
 );
