@@ -426,6 +426,9 @@ private static function getImSimple($filename)
             }
         }
 
+        // \vec{} y \Vec{} → \overrightarrow{} (dentro del math, antes de protegerlo)
+        $t = str_replace(['\vec{', '\Vec{'], '\overrightarrow{', $t);
+
         // Extraer bloques math para protegerlos de transformaciones de texto (\textbf, \underline, etc.)
         self::$mathBlocks = [];
         $mathIndex = 0;
@@ -1081,6 +1084,9 @@ $t = str_replace('\end{verbatim}', '</code></pre>', $t);
 $t = str_replace('&&&LT&&&', '&lt;', $t);
     $t = str_replace('&&&GT&&&', '&gt;', $t);
 $t = str_replace( 'PCTG','\%', $t);
+
+// \degree fuera de math → símbolo °
+$t = str_replace('\degree', '°', $t);
 
 // Restaurar bloques math (que fueron protegidos al inicio)
 foreach (self::$mathBlocks as $placeholder => $mathContent) {

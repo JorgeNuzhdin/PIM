@@ -23,6 +23,8 @@ window.MathJax = {
             N: '\\mathbb{N}',
             Q: '\\mathbb{Q}',
             C: '\\mathbb{C}',
+            degree: '^{\\circ}',
+            Vec: ['\\overrightarrow{#1}', 1],
         }
     },
     options: {
