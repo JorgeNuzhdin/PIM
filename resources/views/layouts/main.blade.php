@@ -25,6 +25,9 @@ window.MathJax = {
             C: '\\mathbb{C}',
             degree: '^{\\circ}',
             Vec: ['\\overrightarrow{#1}', 1],
+            Isom: '\\mathrm{Isom}',
+            Id: '\\mathrm{Id}',
+            Na: '\\mathbb{N}',
         }
     },
     options: {
