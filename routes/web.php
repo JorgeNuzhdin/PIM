@@ -69,6 +69,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/problemas/{id}/editar', [App\Http\Controllers\ProblemaController::class, 'edit'])->name('problemas.edit');
         Route::put('/problemas/{id}', [App\Http\Controllers\ProblemaController::class, 'update'])->name('problemas.update');
         Route::delete('/problemas/{id}', [App\Http\Controllers\ProblemaController::class, 'destroy'])->name('problemas.destroy');
+        Route::post('/problemas/{id}/preview-pdf', [App\Http\Controllers\ProblemaController::class, 'previewPdf'])->name('problemas.preview-pdf');
     });
 
     // Métodos: listado y detalle visible para todos los autenticados

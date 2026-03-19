@@ -837,4 +837,115 @@ class ProblemaController extends Controller
         if ($text === null) return null;
         return preg_replace_callback('/u([0-9a-fA-F]{4})/', fn($m) => mb_chr(hexdec($m[1]), 'UTF-8'), $text);
     }
+
+    public function previewPdf(Request $request, $id)
+    {
+        $problema = Problema::findOrFail($id);
+
+        $problemTex  = $request->input('problem_tex',  $problema->problem_tex  ?? '');
+        $solutionTex = $request->input('solution_tex', $problema->solution_tex ?? '');
+        $packages    = $request->input('packages',     $problema->packages     ?? '');
+
+        // Preamble (mismo conjunto de paquetes que el carrito)
+        $preambulo = $this->buildPreviewPreamble($packages);
+
+        $body  = "\\exercise{" . $problemTex . "}\n";
+        if (trim($solutionTex) !== '') {
+            $body .= "\n\\solution{" . $solutionTex . "}\n";
+        }
+
+        $texContent = $preambulo . "\n\n\\begin{document}\n\n" . $body . "\n\\end{document}";
+
+        // Recopilar imágenes referenciadas en el tex
+        $imageData = [];
+        preg_match_all('/\\\\includegraphics(?:\[.*?\])?\{([^}]+)\}/', $problemTex . ' ' . $solutionTex, $matches);
+        foreach ($matches[1] as $imgName) {
+            $imgNameClean = preg_replace('/\.(png|jpg|jpeg|gif|pdf)$/i', '', $imgName);
+            $figure = Figure::where('problem_id', $id)
+                            ->where(function ($q) use ($imgName, $imgNameClean) {
+                                $q->where('title', $imgName)->orWhere('title', $imgNameClean);
+                            })->first();
+            if ($figure && $figure->figure) {
+                $imageData[$imgName] = $figure->figure;
+            }
+        }
+
+        $compiler = new \App\Services\LatexCompilerService();
+        $result   = $compiler->compile($texContent, $imageData);
+
+        if (!$result['pdf']) {
+            $compiler->cleanup($result['tempDir']);
+            $summary = $result['errorSummary'] ?: 'Error desconocido de compilación';
+            return response()->json(['error' => $summary], 422);
+        }
+
+        $pdfContent = file_get_contents($result['pdf']);
+        $compiler->cleanup($result['tempDir']);
+
+        return response($pdfContent, 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="preview.pdf"',
+        ]);
+    }
+
+    private function buildPreviewPreamble(string $packages = ''): string
+    {
+        $preamble = <<<'LATEX'
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amssymb,mathtools,amsmath,amsthm}
+\usepackage{graphicx,latexsym}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.15}
+\usepackage{mathrsfs}
+\usepackage{tikz}
+\usetikzlibrary{arrows,arrows.meta,math,angles,quotes,positioning,patterns}
+\usepackage{tikz-cd}
+\usepackage{color,xcolor}
+\usepackage{enumitem}
+\usepackage{textcomp,gensymb}
+\usepackage{multicol}
+\usepackage{tcolorbox}
+\usepackage{subcaption}
+\usepackage{float,multirow,array}
+\usepackage{hyperref}
+\usepackage{ifthen}
+\usepackage{twemojis}
+
+\newif\ifshowsolutions
+\showsolutionstrue
+
+\setlength{\textwidth}{19cm}
+\setlength{\textheight}{27cm}
+\setlength{\topmargin}{-2cm}
+\setlength{\oddsidemargin}{-1.5cm}
+\pagestyle{empty}
+\raggedbottom
+
+\DeclareMathOperator{\mcd}{mcd}
+\newcommand{\modd}[1]{\ (\mathrm{m\acute{o}d}\ #1)}
+\newcommand{\ubrace}[2]{\underset{#1}{\underbrace{#2}}}
+
+\newtheorem{ejer}{Problema}
+\theoremstyle{definition}
+\newtheorem*{definition}{Definición}
+\newtheorem*{ejem}{Ejemplo resuelto}
+
+\newcommand{\exercise}[1]{\begin{ejer}#1\end{ejer}}
+\newcommand{\solution}[1]{\ifshowsolutions\begin{proof}[Solución]#1\end{proof}\fi}
+\newcommand{\pistas}[1]{\textbf{Pistas:} #1}
+LATEX;
+
+        if ($packages) {
+            $pkgsText = preg_replace_callback('/u([0-9a-fA-F]{4})/', fn($m) => mb_chr(hexdec($m[1]), 'UTF-8'), $packages);
+            foreach (preg_split('/[\n,]+/', $pkgsText) as $pkg) {
+                $pkg = trim($pkg);
+                if ($pkg && str_starts_with($pkg, '\\') && strpos($preamble, $pkg) === false) {
+                    $preamble .= "\n" . $pkg;
+                }
+            }
+        }
+
+        return $preamble;
+    }
 }

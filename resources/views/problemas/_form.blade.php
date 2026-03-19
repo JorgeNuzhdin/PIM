@@ -221,11 +221,52 @@
 <div class="form-actions">
     <a href="{{ route('problemas.index') }}" class="btn-cancel">Cancelar</a>
     @if(isset($problema))
+        <button type="button" id="btn-preview-pdf" onclick="previewPdf()"
+                style="background:#718096;color:white;border:none;padding:0.5rem 1.1rem;border-radius:4px;cursor:pointer;font-weight:600;font-size:0.95rem;">
+            PDF
+        </button>
         <button type="button" class="btn-primary" id="btn-submit-problema">Actualizar Problema</button>
     @else
         <button type="submit" class="btn-primary" id="btn-submit-problema">Crear Problema</button>
     @endif
 </div>
+@if(isset($problema))
+<script>
+async function previewPdf() {
+    const btn = document.getElementById('btn-preview-pdf');
+    btn.textContent = 'Compilando…';
+    btn.disabled = true;
+
+    const problemTex  = document.getElementById('problem_tex')?.value  ?? '';
+    const solutionTex = document.getElementById('solution_tex')?.value ?? '';
+    const packages    = document.getElementById('packages')?.value      ?? '';
+
+    try {
+        const resp = await fetch('{{ route("problemas.preview-pdf", $problema->id) }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            body: JSON.stringify({ problem_tex: problemTex, solution_tex: solutionTex, packages }),
+        });
+
+        if (!resp.ok) {
+            const data = await resp.json().catch(() => ({}));
+            alert('Error de compilación:\n' + (data.error ?? 'Error desconocido'));
+            return;
+        }
+
+        const blob = await resp.blob();
+        const url  = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (e) {
+        alert('Error al generar el PDF: ' + e.message);
+    } finally {
+        btn.textContent = 'PDF';
+        btn.disabled = false;
+    }
+}
+</script>
+@endif
 
 @if(isset($problema))
 {{-- Modal resolución errores al actualizar --}}
