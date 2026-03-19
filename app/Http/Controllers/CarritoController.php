@@ -12,6 +12,7 @@ use App\Models\ProblemaTag;
 use App\Models\TopicTema;
 use App\Models\Figure;
 use App\Services\LatexCompilerService;
+use App\Services\LatexDocumentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -301,7 +302,7 @@ class CarritoController extends Controller
         $result = $this->buildTexContent($items);
 
         // Crear el preámbulo
-        $preambulo = $this->generarPreambulo($result['packages']);
+        $preambulo = LatexDocumentService::buildPreamble($result['packages']);
 
         // Contenido completo del TEX
         $texContent = $preambulo . "\n\n\\begin{document}\n\n" . $result['contenido'] . "\n\\end{document}";
@@ -333,15 +334,9 @@ class CarritoController extends Controller
                 $problema = $item->problema;
 
                 // Agregar paquetes del problema
-                if ($problema->packages) {
-                    $packagesText = preg_replace_callback('/u([0-9a-fA-F]{4})/', fn($m) => mb_chr(hexdec($m[1]), 'UTF-8'), $problema->packages);
-                    $pkgs = preg_split('/[\n,]+/', $packagesText);
-                    foreach ($pkgs as $pkg) {
-                        $pkg = trim($pkg);
-                        // Solo añadir entradas que parezcan comandos LaTeX válidos
-                        if ($pkg && str_starts_with($pkg, '\\') && !in_array($pkg, $packages)) {
-                            $packages[] = $pkg;
-                        }
+                foreach (LatexDocumentService::parsePackages($problema->packages) as $pkg) {
+                    if (!in_array($pkg, $packages)) {
+                        $packages[] = $pkg;
                     }
                 }
 
@@ -354,16 +349,16 @@ class CarritoController extends Controller
                     $contenido .= "\\year{" . SchoolYearHelper::getYearName($problema->school_year) . "}\n";
                 }
                 $contenido .= "\\exercise{";
-                $contenido .= $this->sanitizeTexForMacroArg($problema->problem_tex);
+                $contenido .= LatexDocumentService::sanitizeTexForMacroArg($problema->problem_tex);
                 $contenido .= "}\n";
 
                 if ($problema->hints) {
-                    $contenido .= "\n\\pistas{" . $this->sanitizeTexForMacroArg($problema->hints) . "}\n";
+                    $contenido .= "\n\\pistas{" . LatexDocumentService::sanitizeTexForMacroArg($problema->hints) . "}\n";
                 }
 
                 if ($problema->solution_tex) {
                     $contenido .= "\n\\solution{";
-                    $contenido .= $this->sanitizeTexForMacroArg($problema->solution_tex);
+                    $contenido .= LatexDocumentService::sanitizeTexForMacroArg($problema->solution_tex);
                     $contenido .= "}\n";
                 }
 
@@ -592,7 +587,7 @@ private function crearZip($texContent, $imagenesNombres)
         $result = $this->buildTexContent($items);
         $imagenes = $result['imagenes'];
 
-        $preambulo = $this->generarPreambulo($result['packages'], $withSolutions);
+        $preambulo = LatexDocumentService::buildPreamble($result['packages'], $withSolutions);
 
         $logoPath = resource_path('LogoPIMgeneral.png');
 
