@@ -44,6 +44,16 @@ class MetodoController extends Controller
             $query->where('institution', $request->institution);
         }
 
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'LIKE', '%' . $search . '%')
+                  ->orWhere('method_tex', 'LIKE', '%' . $search . '%');
+            });
+            // Título primero, luego solo texto
+            $query->orderByRaw('CASE WHEN title LIKE ? THEN 0 ELSE 1 END', ['%' . $search . '%']);
+        }
+
         $metodos = $query->orderBy('id', 'desc')->get();
 
         // Pre-cargar subtemas para evitar N+1 en la vista

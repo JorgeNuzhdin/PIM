@@ -23,13 +23,43 @@
         align-items: center;
     }
 
-    .filtros select {
+    .filtros select, .filtros input[type="text"] {
         padding: 0.5rem 0.75rem;
         border: 1px solid #cbd5e0;
         border-radius: 6px;
         font-size: 1rem;
         background: white;
+    }
+
+    .filtros select {
         min-width: 200px;
+    }
+
+    .filtros .search-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .filtros .search-wrap input {
+        min-width: 220px;
+        padding-right: 2rem;
+    }
+
+    .filtros .search-wrap .clear-search {
+        position: absolute;
+        right: 0.5rem;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #a0aec0;
+        font-size: 1rem;
+        line-height: 1;
+        padding: 0;
+    }
+
+    .filtros .search-wrap .clear-search:hover {
+        color: #4a5568;
     }
 
     .metodos-table {
@@ -177,6 +207,10 @@
     </div>
 
     <div class="filtros">
+        <div class="search-wrap">
+            <input type="text" id="filtro-search" placeholder="Buscar..." value="{{ request('search') }}">
+            <button class="clear-search" id="btn-clear-search" title="Limpiar búsqueda" style="{{ request('search') ? '' : 'display:none;' }}">✕</button>
+        </div>
         <select id="filtro-tema">
             <option value="">Todos los temas</option>
             @foreach($temas as $tema)
@@ -265,21 +299,42 @@ const apiSubtemasUrl = '{{ url("/api/subtemas") }}';
 
 function buildFilterParams() {
     const params = new URLSearchParams();
+    const search = document.getElementById('filtro-search').value.trim();
     const temaId = document.getElementById('filtro-tema').value;
     const subtemaId = document.getElementById('filtro-subtema').value;
     const institution = document.getElementById('filtro-institution').value;
+    if (search) params.set('search', search);
     if (temaId) params.set('tema_id', temaId);
     if (subtemaId) params.set('subtema_id', subtemaId);
     if (institution) params.set('institution', institution);
     return params;
 }
 
+const searchInput = document.getElementById('filtro-search');
+const clearSearchBtn = document.getElementById('btn-clear-search');
+
+searchInput.addEventListener('input', function() {
+    clearSearchBtn.style.display = this.value ? '' : 'none';
+});
+
+searchInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        const params = buildFilterParams();
+        window.location.href = baseUrl + (params.toString() ? '?' + params.toString() : '');
+    }
+});
+
+clearSearchBtn.addEventListener('click', function() {
+    searchInput.value = '';
+    this.style.display = 'none';
+    const params = buildFilterParams();
+    window.location.href = baseUrl + (params.toString() ? '?' + params.toString() : '');
+});
+
 document.getElementById('filtro-tema').addEventListener('change', function() {
-    const params = new URLSearchParams();
-    const temaId = this.value;
-    if (temaId) params.set('tema_id', temaId);
-    const institution = document.getElementById('filtro-institution').value;
-    if (institution) params.set('institution', institution);
+    const params = buildFilterParams();
+    // Al cambiar tema, resetear subtema
+    params.delete('subtema_id');
     window.location.href = baseUrl + (params.toString() ? '?' + params.toString() : '');
 });
 
