@@ -585,6 +585,48 @@ private static function getImSimple($filename)
             $emph = self::fromAtoB('\emph{', '}', $t);
         }
 
+        // \textbf{} → <strong>
+        $textbf = self::fromAtoB('\textbf{', '}', $t);
+        while ($textbf['inside'] != '') {
+            $t = $textbf['before'] . '<strong>' . $textbf['inside'] . '</strong>' . $textbf['after'];
+            $textbf = self::fromAtoB('\textbf{', '}', $t);
+        }
+
+        // \textit{} → <em>
+        $textit = self::fromAtoB('\textit{', '}', $t);
+        while ($textit['inside'] != '') {
+            $t = $textit['before'] . '<em>' . $textit['inside'] . '</em>' . $textit['after'];
+            $textit = self::fromAtoB('\textit{', '}', $t);
+        }
+
+        // \textrm{} → mantener contenido (roman = fuente normal)
+        $textrm = self::fromAtoB('\textrm{', '}', $t);
+        while ($textrm['inside'] != '') {
+            $t = $textrm['before'] . $textrm['inside'] . $textrm['after'];
+            $textrm = self::fromAtoB('\textrm{', '}', $t);
+        }
+
+        // \texttt{} → <code>
+        $texttt = self::fromAtoB('\texttt{', '}', $t);
+        while ($texttt['inside'] != '') {
+            $t = $texttt['before'] . '<code>' . $texttt['inside'] . '</code>' . $texttt['after'];
+            $texttt = self::fromAtoB('\texttt{', '}', $t);
+        }
+
+        // \textsf{} → mantener contenido (sin serif)
+        $textsf = self::fromAtoB('\textsf{', '}', $t);
+        while ($textsf['inside'] != '') {
+            $t = $textsf['before'] . $textsf['inside'] . $textsf['after'];
+            $textsf = self::fromAtoB('\textsf{', '}', $t);
+        }
+
+        // \underline{} → <u>
+        $underline = self::fromAtoB('\underline{', '}', $t);
+        while ($underline['inside'] != '') {
+            $t = $underline['before'] . '<u>' . $underline['inside'] . '</u>' . $underline['after'];
+            $underline = self::fromAtoB('\underline{', '}', $t);
+        }
+
         // Eliminar \textnormal{} pero mantener contenido
         $textnormal = self::fromAtoB('\textnormal{', '}', $t);
         while ($textnormal['inside'] != '') {
