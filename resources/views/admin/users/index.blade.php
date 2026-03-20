@@ -171,8 +171,45 @@
     </div>
 
     {{-- Paginación --}}
-    <div class="pagination-container">
-        {{ $users->withQueryString()->links() }}
+    @php $users->withQueryString(); @endphp
+    <div class="pagination-wrapper">
+        @if ($users->hasPages())
+            @php
+                $cur   = $users->currentPage();
+                $last  = $users->lastPage();
+                $start = max(1, $cur - 4);
+                $end   = min($last, $cur + 4);
+            @endphp
+            <div class="pagination">
+                <a href="{{ $cur > 1 ? $users->url(1) : '#' }}"
+                   class="page-item {{ $cur == 1 ? 'disabled' : '' }}" title="Primera">&laquo;&laquo;</a>
+                <a href="{{ !$users->onFirstPage() ? $users->previousPageUrl() : '#' }}"
+                   class="page-item {{ $users->onFirstPage() ? 'disabled' : '' }}">&laquo;</a>
+
+                @if ($start > 1)
+                    <a href="{{ $users->url(1) }}" class="page-item">1</a>
+                    @if ($start > 2)<span class="page-item disabled">...</span>@endif
+                @endif
+
+                @for ($p = $start; $p <= $end; $p++)
+                    @if ($p == $cur)
+                        <span class="page-item active">{{ $p }}</span>
+                    @else
+                        <a href="{{ $users->url($p) }}" class="page-item">{{ $p }}</a>
+                    @endif
+                @endfor
+
+                @if ($end < $last)
+                    @if ($end < $last - 1)<span class="page-item disabled">...</span>@endif
+                    <a href="{{ $users->url($last) }}" class="page-item">{{ $last }}</a>
+                @endif
+
+                <a href="{{ $users->hasMorePages() ? $users->nextPageUrl() : '#' }}"
+                   class="page-item {{ !$users->hasMorePages() ? 'disabled' : '' }}">&raquo;</a>
+                <a href="{{ $cur < $last ? $users->url($last) : '#' }}"
+                   class="page-item {{ $cur >= $last ? 'disabled' : '' }}" title="Última">&raquo;&raquo;</a>
+            </div>
+        @endif
     </div>
 </div>
 @endsection
@@ -370,13 +407,6 @@
 .rol-select:focus {
     outline: none;
     border-color: #007bff;
-}
-
-/* Paginación */
-.pagination-container {
-    margin-top: 1.5rem;
-    display: flex;
-    justify-content: center;
 }
 
 /* Responsive */
