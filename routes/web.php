@@ -107,6 +107,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Configuración general
     Route::get('/settings', [App\Http\Controllers\AdminSettingsController::class, 'index'])->name('settings');
     Route::post('/settings', [App\Http\Controllers\AdminSettingsController::class, 'update'])->name('settings.update');
+    Route::get('/export-db', [App\Http\Controllers\AdminSettingsController::class, 'exportDb'])->name('export-db');
 
     // Problemas pendientes de aprobación
     Route::get('/problemas-pendientes', [App\Http\Controllers\ProblemaController::class, 'pendientes'])->name('problemas.pendientes');

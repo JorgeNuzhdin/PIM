@@ -466,6 +466,7 @@ window.MathJax = {
                                 @endif
                             </a>
                             <a href="{{ route('admin.settings') }}">⚙️ Configuración</a>
+                            <a href="{{ route('admin.export-db') }}">💾 Exportar BD</a>
                         @endif
                         @if(Auth::user()->canEditProblemas())
                             <a href="{{ route('problemas.con-errores') }}">⚠️ Problemas con errores</a>
