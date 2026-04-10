@@ -346,7 +346,7 @@ class CarritoController extends Controller
                     $contenido .= "\\nivel{" . $problema->difficulty . "}\n";
                 }
                 if ($problema->school_year) {
-                    $contenido .= "\\year{" . SchoolYearHelper::getYearName($problema->school_year) . "}\n";
+                    $contenido .= "\\ayear{" . SchoolYearHelper::getYearName($problema->school_year) . "}\n";
                 }
                 $contenido .= "\\exercise{";
                 $contenido .= LatexDocumentService::sanitizeTexForMacroArg($problema->problem_tex);
@@ -470,8 +470,8 @@ LATEX;
 \newcommand{\solution}[1]{\ifshowsolutions\begin{proof}[Soluci\'on]#1\end{proof}\fi}
 \newcommand{\idtitulo}[1]{\noindent{\color{red}#1\\}}
 \newcommand{\pistas}[1]{\textbf{Pistas:} #1}
-\newcommand{\nivel}[1]{\noindent{\small\color{gray}\textbf{Dificultad:} #1}\par}
-\def\year#1{\noindent{\small\color{gray}\textbf{Curso:} #1}\par}
+\newcommand{\nivel}[1]{\ifshowsolutions\noindent{\small\color{gray}\textbf{Dificultad:} #1\\}\fi}
+\newcommand{\ayear}[1]{\ifshowsolutions\noindent{\small\color{gray}\textbf{Curso:} #1}\fi}
 
 LATEX;
 
