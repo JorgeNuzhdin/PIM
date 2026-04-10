@@ -181,8 +181,9 @@
                 $end   = min($last, $cur + 4);
             @endphp
             <div class="pagination">
-                <a href="{{ $cur > 1 ? $users->url(1) : '#' }}"
-                   class="page-item {{ $cur == 1 ? 'disabled' : '' }}" title="Primera">&laquo;&laquo;</a>
+                @php $j10b = max(1, $cur - 10); @endphp
+                <a href="{{ $cur > 1 ? $users->url($j10b) : '#' }}"
+                   class="page-item {{ $cur == 1 ? 'disabled' : '' }}" title="-10 páginas">&laquo;&laquo;</a>
                 <a href="{{ !$users->onFirstPage() ? $users->previousPageUrl() : '#' }}"
                    class="page-item {{ $users->onFirstPage() ? 'disabled' : '' }}">&laquo;</a>
 
@@ -206,8 +207,9 @@
 
                 <a href="{{ $users->hasMorePages() ? $users->nextPageUrl() : '#' }}"
                    class="page-item {{ !$users->hasMorePages() ? 'disabled' : '' }}">&raquo;</a>
-                <a href="{{ $cur < $last ? $users->url($last) : '#' }}"
-                   class="page-item {{ $cur >= $last ? 'disabled' : '' }}" title="Última">&raquo;&raquo;</a>
+                @php $j10f = min($last, $cur + 10); @endphp
+                <a href="{{ $cur < $last ? $users->url($j10f) : '#' }}"
+                   class="page-item {{ $cur >= $last ? 'disabled' : '' }}" title="+10 páginas">&raquo;&raquo;</a>
             </div>
         @endif
     </div>

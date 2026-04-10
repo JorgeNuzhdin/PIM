@@ -874,9 +874,10 @@
                 ▼
             </a>
 
-            {{-- Primera página --}}
+            {{-- -10 páginas --}}
+            @php $jump10back = max(1, $problemas->currentPage() - 10); @endphp
             @if ($problemas->currentPage() > 1)
-                <a href="{{ $problemas->url(1) }}" class="page-item" title="Primera página">&laquo;&laquo;</a>
+                <a href="{{ $problemas->url($jump10back) }}" class="page-item" title="-10 páginas">&laquo;&laquo;</a>
             @else
                 <span class="page-item disabled">&laquo;&laquo;</span>
             @endif
@@ -928,9 +929,10 @@
                 <span class="page-item disabled">&raquo;</span>
             @endif
 
-            {{-- Última página --}}
+            {{-- +10 páginas --}}
+            @php $jump10fwd = min($problemas->lastPage(), $problemas->currentPage() + 10); @endphp
             @if ($problemas->currentPage() < $problemas->lastPage())
-                <a href="{{ $problemas->url($problemas->lastPage()) }}" class="page-item" title="Última página">&raquo;&raquo;</a>
+                <a href="{{ $problemas->url($jump10fwd) }}" class="page-item" title="+10 páginas">&raquo;&raquo;</a>
             @else
                 <span class="page-item disabled">&raquo;&raquo;</span>
             @endif

@@ -359,9 +359,10 @@
                     ▼
                 </a>
 
-                {{-- Primera página --}}
+                {{-- -10 páginas --}}
+                @php $sj10b = max(1, $sheets->currentPage() - 10); @endphp
                 @if ($sheets->currentPage() > 1)
-                    <a href="{{ $sheets->appends(request()->query())->url(1) }}" class="page-item" title="Primera página">&laquo;&laquo;</a>
+                    <a href="{{ $sheets->appends(request()->query())->url($sj10b) }}" class="page-item" title="-10 páginas">&laquo;&laquo;</a>
                 @else
                     <span class="page-item disabled">&laquo;&laquo;</span>
                 @endif
@@ -413,9 +414,10 @@
                     <span class="page-item disabled">&raquo;</span>
                 @endif
 
-                {{-- Última página --}}
+                {{-- +10 páginas --}}
+                @php $sj10f = min($sheets->lastPage(), $sheets->currentPage() + 10); @endphp
                 @if ($sheets->currentPage() < $sheets->lastPage())
-                    <a href="{{ $sheets->appends(request()->query())->url($sheets->lastPage()) }}" class="page-item" title="Última página">&raquo;&raquo;</a>
+                    <a href="{{ $sheets->appends(request()->query())->url($sj10f) }}" class="page-item" title="+10 páginas">&raquo;&raquo;</a>
                 @else
                     <span class="page-item disabled">&raquo;&raquo;</span>
                 @endif

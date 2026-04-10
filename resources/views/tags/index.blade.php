@@ -339,8 +339,9 @@
     @if($tags->hasPages())
         <div class="pagination-wrapper">
             <div class="pagination">
+                @php $tj10b = max(1, $tags->currentPage() - 10); @endphp
                 @if ($tags->currentPage() > 1)
-                    <a href="{{ $tags->appends(request()->query())->url(1) }}" class="page-item" title="Primera página">&laquo;&laquo;</a>
+                    <a href="{{ $tags->appends(request()->query())->url($tj10b) }}" class="page-item" title="-10 páginas">&laquo;&laquo;</a>
                 @else
                     <span class="page-item disabled">&laquo;&laquo;</span>
                 @endif
@@ -386,8 +387,9 @@
                     <span class="page-item disabled">&raquo;</span>
                 @endif
 
+                @php $tj10f = min($tags->lastPage(), $tags->currentPage() + 10); @endphp
                 @if ($tags->currentPage() < $tags->lastPage())
-                    <a href="{{ $tags->appends(request()->query())->url($tags->lastPage()) }}" class="page-item" title="Última página">&raquo;&raquo;</a>
+                    <a href="{{ $tags->appends(request()->query())->url($tj10f) }}" class="page-item" title="+10 páginas">&raquo;&raquo;</a>
                 @else
                     <span class="page-item disabled">&raquo;&raquo;</span>
                 @endif
