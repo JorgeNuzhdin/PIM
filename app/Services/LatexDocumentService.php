@@ -83,6 +83,59 @@ LATEX;
 \pagestyle{empty}
 \raggedbottom
 
+% ---------- Conjuntos numéricos ----------
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Na}{\mathbb{N}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\K}{\mathbb{K}}
+\newcommand{\F}{\mathbb{F}}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\HH}{\mathcal{H}}
+\newcommand{\CC}{\mathbb{C}}
+
+% ---------- Operadores matemáticos ----------
+\DeclareMathOperator{\Isom}{Isom}
+\DeclareMathOperator{\Id}{Id}
+\DeclareMathOperator{\SL}{SL}
+\DeclareMathOperator{\GL}{GL}
+\DeclareMathOperator{\Cent}{Cent}
+\DeclareMathOperator{\kernel}{ker}
+\DeclareMathOperator{\im}{Im}
+\DeclareMathOperator{\rst}{res}
+\DeclareMathOperator{\signo}{signo}
+\DeclareMathOperator{\mor}{mor}
+\DeclareMathOperator{\Hom}{Hom}
+\DeclareMathOperator{\SurHom}{SurHom}
+\DeclareMathOperator{\gr}{gr}
+\DeclareMathOperator{\cd}{cd}
+\DeclareMathOperator{\rk}{rk}
+\DeclareMathOperator{\Aut}{Aut}
+\DeclareMathOperator{\Ann}{Ann}
+\DeclareMathOperator{\End}{End}
+\DeclareMathOperator{\Sym}{Sym}
+\DeclareMathOperator{\iid}{id}
+\DeclareMathOperator{\Stab}{Stab}
+\DeclareMathOperator{\Der}{Der}
+\DeclareMathOperator{\Out}{Out}
+\DeclareMathOperator{\Inn}{Inn}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\Irred}{Irred}
+\DeclareMathOperator{\Mat}{Mat}
+\DeclareMathOperator{\ab}{ab}
+\DeclareMathOperator{\Gal}{Gal}
+\DeclareMathOperator{\iso}{iso}
+\DeclareMathOperator{\obj}{obj}
+\DeclareMathOperator{\supp}{supp}
+\DeclareMathOperator{\Sp}{Spec}
+\DeclareMathOperator{\Tr}{Tr}
+\DeclareMathOperator{\lcm}{lcm}
+\DeclareMathOperator{\Gr}{Gr}
+\newcommand{\D}{\mathcal{D}}
+
 % ---------- Comandos matemáticos ----------
 \DeclareMathOperator{\mcd}{mcd}
 \DeclareMathOperator{\cm}{cm}
@@ -106,8 +159,8 @@ LATEX;
 \newcommand{\solution}[1]{\ifshowsolutions\begin{proof}[Soluci\'on]#1\end{proof}\fi}
 \newcommand{\idtitulo}[1]{\noindent{\color{red}#1\\}}
 \newcommand{\pistas}[1]{\textbf{Pistas:} #1}
-\newcommand{\nivel}[1]{\noindent{\small\color{gray}\textbf{Dificultad:} #1}\par}
-\def\year#1{\noindent{\small\color{gray}\textbf{Curso:} #1}\par}
+\newcommand{\nivel}[1]{\ifshowsolutions\noindent{\small\color{gray}\textbf{Dificultad:} #1\\}\fi}
+\newcommand{\ayear}[1]{\ifshowsolutions\noindent{\small\color{gray}\textbf{Curso:} #1}\fi}
 
 LATEX;
 
