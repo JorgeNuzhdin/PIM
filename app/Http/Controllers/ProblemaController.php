@@ -835,7 +835,7 @@ class ProblemaController extends Controller
     private static function decodeUnicodeEscapes(?string $text): ?string
     {
         if ($text === null) return null;
-        return preg_replace_callback('/u([0-9a-fA-F]{4})/', fn($m) => mb_chr(hexdec($m[1]), 'UTF-8'), $text);
+        return preg_replace_callback('/(?<![a-zA-Z])u([0-9a-fA-F]{4})/', fn($m) => mb_chr(hexdec($m[1]), 'UTF-8'), $text);
     }
 
     public function previewPdf(Request $request, $id)
