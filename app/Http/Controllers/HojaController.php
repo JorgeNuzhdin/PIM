@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class HojaController extends Controller
 {
@@ -87,24 +88,33 @@ class HojaController extends Controller
             'problemas.*' => 'integer|exists:pim_problems,id',
         ]);
 
-        $hoja = Hoja::create([
-            'user_id' => Auth::id(),
-            'nombre_hoja' => $request->nombre_hoja,
-            'nombre_grupo' => $request->nombre_grupo,
-            'tema' => $request->tema,
-            'year' => $request->year,
-        ]);
+        try {
+            DB::beginTransaction();
 
-        // Guardar problemas con orden
-        foreach ($request->problemas as $orden => $problemId) {
-            $hoja->problems()->attach($problemId, ['orden' => $orden]);
+            $hoja = Hoja::create([
+                'user_id' => Auth::id(),
+                'nombre_hoja' => $request->nombre_hoja,
+                'nombre_grupo' => $request->nombre_grupo,
+                'tema' => $request->tema,
+                'year' => $request->year,
+            ]);
+
+            foreach ($request->problemas as $orden => $problemId) {
+                $hoja->problems()->attach($problemId, ['orden' => $orden]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Hoja guardada correctamente.',
+                'hoja' => $hoja
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('HojaController::store failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['error' => $e->getMessage()], 500);
         }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Hoja guardada correctamente.',
-            'hoja' => $hoja
-        ]);
     }
 
     /**
