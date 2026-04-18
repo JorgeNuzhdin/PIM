@@ -62,7 +62,7 @@
                     @if(Auth::user()->rol === 'admin')
                         <th>Profesor</th>
                     @endif
-                    <th>Problemas</th>
+                    <th>Items</th>
                     <th>Creada</th>
                     <th>Acciones</th>
                 </tr>
@@ -77,7 +77,7 @@
                         @if(Auth::user()->rol === 'admin')
                             <td>{{ $hoja->user->name }}</td>
                         @endif
-                        <td>{{ $hoja->problems->count() }}</td>
+                        <td>{{ $hoja->problems->count() + $hoja->metodos->count() }}</td>
                         <td>{{ $hoja->created_at->format('d/m/Y') }}</td>
                         <td class="actions-cell">
                             <button class="btn btn-sm btn-primary" onclick="cargarHoja({{ $hoja->id }})">
@@ -324,18 +324,12 @@ function cargarHoja(hojaId) {
         .then(data => {
             if (data.success) {
                 if (accion === 'reemplazar') {
-                    // Primero vaciar el carrito
                     fetch('{{ route("carrito.limpiar") }}', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        }
-                    }).then(() => {
-                        añadirProblemasAlCarrito(data.problema_ids, data.nombre_hoja);
-                    });
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                    }).then(() => cargarItemsAlCarrito(data.problema_ids, data.metodo_ids, data.nombre_hoja));
                 } else {
-                    añadirProblemasAlCarrito(data.problema_ids, data.nombre_hoja);
+                    cargarItemsAlCarrito(data.problema_ids, data.metodo_ids, data.nombre_hoja);
                 }
             }
         })
@@ -345,24 +339,24 @@ function cargarHoja(hojaId) {
         });
 }
 
-function añadirProblemasAlCarrito(problemaIds, nombreHoja) {
-    // Añadir cada problema al carrito (toggle solo añade si no existe)
-    const promises = problemaIds.map(problemaId => 
-        fetch('{{ route("carrito.toggle") }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({ problema_id: problemaId, accion: 'añadir' })
-        })
-    );
-    
-    Promise.all(promises)
-        .then(() => {
-            alert('Hoja "' + nombreHoja + '" cargada correctamente');
-            window.location.href = '{{ route("carrito.index") }}';
-        });
+function cargarItemsAlCarrito(problemaIds, metodoIds, nombreHoja) {
+    const toggle = '{{ route("carrito.toggle") }}';
+    const csrf   = '{{ csrf_token() }}';
+    const headers = { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf };
+
+    const promises = [
+        ...(problemaIds || []).map(id =>
+            fetch(toggle, { method: 'POST', headers, body: JSON.stringify({ problema_id: id, accion: 'añadir' }) })
+        ),
+        ...(metodoIds || []).map(id =>
+            fetch(toggle, { method: 'POST', headers, body: JSON.stringify({ metodo_id: id, accion: 'añadir' }) })
+        ),
+    ];
+
+    Promise.all(promises).then(() => {
+        alert('Hoja "' + nombreHoja + '" cargada correctamente');
+        window.location.href = '{{ route("carrito.index") }}';
+    });
 }
 </script>
 @endsection

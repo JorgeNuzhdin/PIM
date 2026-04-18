@@ -159,8 +159,13 @@
 <div class="carrito-container">
     <h1 style="margin-bottom: 2rem; color: #2d3748;">🛒 Mi Carrito</h1>
 
+    @auth
+        @if(in_array(Auth::user()->rol, ['admin', 'editor', 'profesor']))
+            @include('hojas._carrito_guardar')
+        @endif
+    @endauth
+
     @if($items->count() > 0)
-        @include('hojas._carrito_guardar')
         <div class="carrito-buttons">
             @auth
                 @if(in_array(Auth::user()->rol, ['admin', 'editor', 'profesor']))
@@ -265,6 +270,12 @@
                 <a href="{{ route('problemas.index') }}" style="color: #4299e1; text-decoration: underline;">Ver problemas</a>
                 &nbsp;|&nbsp;
                 <a href="{{ route('metodos.index') }}" style="color: #4299e1; text-decoration: underline;">Ver métodos</a>
+                @auth
+                    @if(in_array(Auth::user()->rol, ['admin', 'editor', 'profesor']))
+                        &nbsp;|&nbsp;
+                        <a href="{{ route('hojas.index') }}" style="color: #4299e1; text-decoration: underline;">📂 Mis hojas</a>
+                    @endif
+                @endauth
             </p>
         </div>
     @endif

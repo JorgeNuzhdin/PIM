@@ -183,15 +183,18 @@ function cerrarModalHoja() {
 }
 
 function guardarHoja() {
-    // Obtener solo los problema_id (filtrar métodos)
     const items = document.querySelectorAll('.carrito-item');
     const problemas = Array.from(items)
         .filter(item => item.dataset.tipo === 'problema')
         .map(item => parseInt(item.dataset.problemaId))
         .filter(id => id && !isNaN(id));
+    const metodos = Array.from(items)
+        .filter(item => item.dataset.tipo === 'metodo')
+        .map(item => parseInt(item.dataset.metodoId))
+        .filter(id => id && !isNaN(id));
 
-    if (problemas.length === 0) {
-        alert('No hay problemas en el carrito para guardar como hoja (los métodos no se incluyen en las hojas).');
+    if (problemas.length === 0 && metodos.length === 0) {
+        alert('El carrito está vacío.');
         return;
     }
 
@@ -207,7 +210,8 @@ function guardarHoja() {
         tema: document.getElementById('modal-tema').value,
         year: document.getElementById('modal-year').value || null,
         institucion: document.getElementById('modal-institucion').value,
-        problemas: problemas
+        problemas: problemas,
+        metodos: metodos
     };
 
     fetch('{{ route("hojas.store") }}', {

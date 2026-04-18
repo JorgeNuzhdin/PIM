@@ -28,7 +28,7 @@ class HojaController extends Controller
             abort(403, 'No tienes permiso para acceder a las hojas.');
         }
 
-        $query = Hoja::with('user');
+        $query = Hoja::with(['user', 'problems', 'metodos']);
 
         // Si no es admin, solo ve sus propias hojas
         if (Auth::user()->rol !== 'admin') {
@@ -84,9 +84,15 @@ class HojaController extends Controller
             'nombre_grupo' => 'nullable|string|max:255',
             'tema' => 'nullable|string|max:255',
             'year' => 'nullable|integer|min:2000|max:2100',
-            'problemas' => 'required|array',
+            'problemas' => 'nullable|array',
             'problemas.*' => 'integer|exists:pim_problems,id',
+            'metodos' => 'nullable|array',
+            'metodos.*' => 'integer|exists:metodos,id',
         ]);
+
+        if (empty($request->problemas) && empty($request->metodos)) {
+            return response()->json(['error' => 'La hoja debe tener al menos un problema o método.'], 422);
+        }
 
         try {
             DB::beginTransaction();
@@ -99,8 +105,12 @@ class HojaController extends Controller
                 'year' => $request->year,
             ]);
 
-            foreach ($request->problemas as $orden => $problemId) {
+            foreach ($request->problemas ?? [] as $orden => $problemId) {
                 $hoja->problems()->attach($problemId, ['orden' => $orden]);
+            }
+
+            foreach ($request->metodos ?? [] as $orden => $metodoId) {
+                $hoja->metodos()->attach($metodoId, ['orden' => $orden]);
             }
 
             DB::commit();
@@ -131,14 +141,15 @@ class HojaController extends Controller
             abort(403, 'No tienes permiso para cargar esta hoja.');
         }
 
-        // Solo devolver los IDs para evitar problemas de encoding
         $problemIds = $hoja->problems()->pluck('pim_problems.id')->toArray();
+        $metodoIds  = $hoja->metodos()->pluck('metodos.id')->toArray();
 
         return response()->json([
             'success' => true,
             'hoja_id' => $hoja->id,
             'nombre_hoja' => $hoja->nombre_hoja,
-            'problema_ids' => $problemIds
+            'problema_ids' => $problemIds,
+            'metodo_ids'   => $metodoIds,
         ]);
     }
 
