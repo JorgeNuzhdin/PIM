@@ -27,6 +27,7 @@ class Hoja extends Model
     {
         return $this->belongsToMany(Problema::class, 'hoja_problem', 'hoja_id', 'problem_id')
                     ->withPivot('orden')
-                    ->orderBy('hoja_problem.orden');
+                    ->withTimestamps()
+                    ->orderByPivot('orden');
     }
 }
