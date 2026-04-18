@@ -128,15 +128,28 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         }
     })->name('admin.run-migration.solved-error-reports');
 
-    // Limpiar caché de vistas compiladas
-    Route::get('/clear-views', function () {
-        $path = storage_path('framework/views');
-        $count = 0;
-        foreach (glob($path . '/*.php') as $file) {
+    // Limpiar caché de vistas compiladas + rutas + config
+    Route::get('/clear-cache', function () {
+        // Views
+        $viewPath = storage_path('framework/views');
+        $viewCount = 0;
+        foreach (glob($viewPath . '/*.php') as $file) {
             @unlink($file);
-            $count++;
+            $viewCount++;
         }
-        return "✅ {$count} vistas compiladas eliminadas. Las vistas se recompilarán al acceder.";
+        // Routes
+        $routeCache = app()->getCachedRoutesPath();
+        $routeCleared = file_exists($routeCache) && @unlink($routeCache);
+        // Config
+        $configCache = app()->getCachedConfigPath();
+        $configCleared = file_exists($configCache) && @unlink($configCache);
+
+        return "✅ {$viewCount} vistas eliminadas. Rutas: " . ($routeCleared ? 'limpiadas' : 'no había caché') . ". Config: " . ($configCleared ? 'limpiada' : 'no había caché') . ". Todo se recompilará al acceder.";
+    })->name('admin.clear-cache');
+
+    // Alias antiguo
+    Route::get('/clear-views', function () {
+        return redirect()->route('admin.clear-cache');
     })->name('admin.clear-views');
 
     // Rellenar tema_id en pim_problems a partir de tags → topic_tema
