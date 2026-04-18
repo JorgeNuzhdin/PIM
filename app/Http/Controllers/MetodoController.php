@@ -138,9 +138,8 @@ class MetodoController extends Controller
     {
         $metodo = Metodo::findOrFail($id);
 
-        // Solo el proponente (editor) o un admin pueden editar
         $user = Auth::user();
-        if (!($user->isAdmin() || ($user->canEditProblemas() && $metodo->user_id === $user->id))) {
+        if (!in_array($user->rol, ['admin', 'editor', 'profesor_seguro'])) {
             abort(403);
         }
 
@@ -165,7 +164,7 @@ class MetodoController extends Controller
         $metodo = Metodo::findOrFail($id);
 
         $user = Auth::user();
-        if (!($user->isAdmin() || ($user->canEditProblemas() && $metodo->user_id === $user->id))) {
+        if (!in_array($user->rol, ['admin', 'editor', 'profesor_seguro'])) {
             abort(403);
         }
 

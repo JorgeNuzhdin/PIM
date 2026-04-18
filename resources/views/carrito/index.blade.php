@@ -160,22 +160,18 @@
     <h1 style="margin-bottom: 2rem; color: #2d3748;">🛒 Mi Carrito</h1>
 
     @auth
-        @if(in_array(Auth::user()->rol, ['admin', 'editor', 'profesor']))
-            @include('hojas._carrito_guardar')
-        @endif
+        @include('hojas._carrito_guardar')
     @endauth
 
     @if($items->count() > 0)
         <div class="carrito-buttons">
             @auth
-                @if(in_array(Auth::user()->rol, ['admin', 'editor', 'profesor']))
-                    <button type="button" class="btn-carrito btn-guardar" onclick="abrirModalGuardar()">
-                        💾 Guardar hoja
-                    </button>
-                    <a href="{{ route('hojas.index') }}" class="btn-carrito btn-hojas">
-                        📂 Mis hojas
-                    </a>
-                @endif
+                <button type="button" class="btn-carrito btn-guardar" onclick="abrirModalGuardar()">
+                    💾 Guardar hoja
+                </button>
+                <a href="{{ route('hojas.index') }}" class="btn-carrito btn-hojas">
+                    📂 Mis hojas
+                </a>
             @endauth
             @if(!\App\Helpers\AccessHelper::isRestricted())
             <a href="{{ route('carrito.descargar.tex') }}" class="btn-carrito btn-tex">
@@ -271,10 +267,8 @@
                 &nbsp;|&nbsp;
                 <a href="{{ route('metodos.index') }}" style="color: #4299e1; text-decoration: underline;">Ver métodos</a>
                 @auth
-                    @if(in_array(Auth::user()->rol, ['admin', 'editor', 'profesor']))
-                        &nbsp;|&nbsp;
-                        <a href="{{ route('hojas.index') }}" style="color: #4299e1; text-decoration: underline;">📂 Mis hojas</a>
-                    @endif
+                    &nbsp;|&nbsp;
+                    <a href="{{ route('hojas.index') }}" style="color: #4299e1; text-decoration: underline;">📂 Mis hojas</a>
                 @endauth
             </p>
         </div>

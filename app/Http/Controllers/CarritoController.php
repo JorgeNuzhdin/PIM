@@ -316,11 +316,12 @@ class CarritoController extends Controller
         $packages = [];
         $imagenes = [];
         $contenido = '';
+        $problemasStarted = false;
 
         foreach ($items as $item) {
             if ($item->isMetodo()) {
                 $metodo = $item->metodo;
-                $contenido .= "\n% --- Método: " . $metodo->title . " ---\n";
+                $contenido .= "\n\\section*{" . $metodo->title . "}\n";
                 $contenido .= $metodo->method_tex . "\n";
 
                 // Recopilar imágenes del método
@@ -340,6 +341,10 @@ class CarritoController extends Controller
                     }
                 }
 
+                if (!$problemasStarted) {
+                    $contenido .= "\n\\section*{Problemas}\n";
+                    $problemasStarted = true;
+                }
                 $titulo = $problema->title ?? 'sin-titulo';
                 $contenido .= "\n\\idtitulo{\\#" . $problema->id . ": " . $titulo . "}\n";
                 if ($problema->difficulty) {

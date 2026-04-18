@@ -16,7 +16,7 @@ class HojaController extends Controller
      */
     private function canManageHojas(): bool
     {
-        return in_array(Auth::user()->rol, ['admin', 'editor', 'profesor']);
+        return Auth::check();
     }
 
     /**
