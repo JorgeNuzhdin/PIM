@@ -33,7 +33,7 @@ class AdminUserController extends Controller
         }
 
         // Ordenación
-        $sortable = ['name', 'email', 'created_at', 'rol', 'profession', 'problemas', 'reportes'];
+        $sortable = ['name', 'email', 'created_at', 'last_login_at', 'rol', 'profession', 'problemas', 'reportes'];
         $sort = in_array($request->get('sort'), $sortable) ? $request->get('sort') : 'created_at';
         $dir  = $request->get('dir') === 'asc' ? 'asc' : 'desc';
         $dirSafe = $dir === 'asc' ? 'ASC' : 'DESC';

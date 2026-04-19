@@ -93,6 +93,7 @@
                     <th><a href="{{ $sortUrl('name') }}" class="sort-link">Nombre{!! $sortArrow('name') !!}</a></th>
                     <th class="col-email" style="display:none;"><a href="{{ $sortUrl('email') }}" class="sort-link">Email{!! $sortArrow('email') !!}</a></th>
                     <th><a href="{{ $sortUrl('created_at') }}" class="sort-link">Fecha registro{!! $sortArrow('created_at') !!}</a></th>
+                    <th><a href="{{ $sortUrl('last_login_at') }}" class="sort-link">Última conexión{!! $sortArrow('last_login_at') !!}</a></th>
                     <th><a href="{{ $sortUrl('profession') }}" class="sort-link">Profesión{!! $sortArrow('profession') !!}</a></th>
                     <th class="col-motivo" style="display:none;">Motivo</th>
                     <th><a href="{{ $sortUrl('rol') }}" class="sort-link">Rol{!! $sortArrow('rol') !!}</a></th>
@@ -117,7 +118,8 @@
                     <tr>
                         <td>{{ $user->name }} @if(isset($usuariosConMedalla[$user->id])) 🏅 @endif</td>
                         <td class="col-email" style="display:none;">{{ $user->email }}</td>
-                        <td>{{ $user->created_at?->format('d/m/Y H:i') ?? '-' }}</td>
+                        <td>{{ $user->created_at?->format('d/m/Y') ?? '-' }}</td>
+                        <td>{{ $user->last_login_at?->format('d/m/Y H:i') ?? 'Nunca' }}</td>
                         <td title="{{ $profLabel }}">{{ Str::limit($profLabel, 22, '…') }}</td>
                         <td class="col-motivo" style="display:none;" title="{{ $reasLabel }}">{{ Str::limit($reasLabel, 22, '…') }}</td>
                         <td>

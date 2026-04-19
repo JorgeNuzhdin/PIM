@@ -321,7 +321,7 @@ class CarritoController extends Controller
         foreach ($items as $item) {
             if ($item->isMetodo()) {
                 $metodo = $item->metodo;
-                $contenido .= "\n\\section*{" . $metodo->title . "}\n";
+                $contenido .= "\n\\subsection*{" . $metodo->title . "}\n";
                 $contenido .= $metodo->method_tex . "\n";
 
                 // Recopilar imágenes del método

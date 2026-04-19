@@ -469,8 +469,26 @@ window.MathJax = {
                             <a href="{{ route('admin.export-db') }}">💾 Exportar BD</a>
                         @endif
                         @if(Auth::user()->canEditProblemas())
-                            <a href="{{ route('problemas.con-errores') }}">⚠️ Problemas con errores</a>
-                            <a href="{{ route('metodos.con-errores') }}">⚠️ Métodos con errores</a>
+                            @php
+                                $nErrProb = \App\Models\ErrorReport::where('solved', false)->count();
+                                $nErrMet  = \App\Models\MetodoErrorReport::where('solved', false)->count();
+                            @endphp
+                            @if($nErrProb > 0)
+                                <a href="{{ route('problemas.con-errores') }}" style="display:flex; align-items:center; justify-content:space-between;">
+                                    <span>⚠️ Problemas con errores</span>
+                                    <span style="background:#e53e3e; color:white; border-radius:10px; padding:1px 7px; font-size:0.75rem; font-weight:700; margin-left:0.5rem;">{{ $nErrProb }}</span>
+                                </a>
+                            @else
+                                <a href="{{ route('problemas.con-errores') }}">Problemas con errores</a>
+                            @endif
+                            @if($nErrMet > 0)
+                                <a href="{{ route('metodos.con-errores') }}" style="display:flex; align-items:center; justify-content:space-between;">
+                                    <span>⚠️ Métodos con errores</span>
+                                    <span style="background:#e53e3e; color:white; border-radius:10px; padding:1px 7px; font-size:0.75rem; font-weight:700; margin-left:0.5rem;">{{ $nErrMet }}</span>
+                                </a>
+                            @else
+                                <a href="{{ route('metodos.con-errores') }}">Métodos con errores</a>
+                            @endif
                         @endif
                         <a href="{{ route('profile.edit') }}">Editar perfil</a>
                         <a href="{{ route('logout') }}"
