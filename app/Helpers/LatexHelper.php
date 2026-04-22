@@ -1178,9 +1178,9 @@ $t = str_replace( 'PCTG','\%', $t);
 // \degree fuera de math → símbolo °
 $t = str_replace('\degree', '°', $t);
 
-// Restaurar bloques math (que fueron protegidos al inicio)
+// Restaurar bloques math escapando < y > para HTML (MathJax los entiende como &lt;/&gt;)
 foreach (self::$mathBlocks as $placeholder => $mathContent) {
-    $t = str_replace($placeholder, $mathContent, $t);
+    $t = str_replace($placeholder, str_replace(['<', '>'], ['&lt;', '&gt;'], $mathContent), $t);
 }
 
 // Restaurar bloques TikZ (que fueron protegidos al inicio)
