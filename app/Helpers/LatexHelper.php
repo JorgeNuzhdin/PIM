@@ -660,14 +660,14 @@ $t = preg_replace_callback(
     $t
 );
 
-//align
-$t=str_replace('\begin{center}', '<div style="display:flex; justify-content:center">', $t);
-$t=str_replace('\end{center}', '</div>', $t);
-       
-
-        // Align
-        $t = str_replace('\begin{center}', '<div style="display:flex; justify-content:center">', $t);
-        $t = str_replace('\end{center}', '</div>', $t);
+        // center environment — use regex to only wrap matched pairs, avoiding unclosed divs
+        $t = preg_replace(
+            '/\\\\begin\{center\}(.*?)\\\\end\{center\}/s',
+            '<div style="display:flex; justify-content:center">$1</div>',
+            $t
+        );
+        // Remove any unmatched \begin{center} or \end{center} that remain
+        $t = str_replace(['\begin{center}', '\end{center}'], '', $t);
 
         // (TikZ ya fue procesado al inicio con placeholders)
 
