@@ -460,6 +460,12 @@ private static function getImSimple($filename)
             return $placeholder;
         }, $t);
 
+        // \qedhere inside math blocks causes MathJax errors — strip it there; text-mode \qedhere handled later
+        foreach (self::$mathBlocks as &$mathContent) {
+            $mathContent = str_replace('\qedhere', '', $mathContent);
+        }
+        unset($mathContent);
+
           $t = str_replace(['u000au000au000au000a', 'u000au000au000a', 'u000au000a', 'u000a', 'u000d', 'u0009'], ["\n\n", "\n\n", "\n\n", "\n", "\r", "\t"], $t);
     $t = str_replace(['\u000a\u000a\u000a\u000a', '\u000a\u000a\u000a', '\u000a\u000a', '\u000a', '\u000d', '\u0009'], ["\n\n", "\n\n", "\n\n", "\n", "\r", "\t"], $t);
     
@@ -801,6 +807,8 @@ $t = preg_replace('/\\\\definecolor\{[^}]+\}\{[^}]+\}\{[^}]+\}/', '', $t);
         // Proof
         $t = str_replace('\begin{proof}[Solución]', '<br><i>Solución</i>: ', $t);
         $t = str_replace('\begin{proof}[Demostración]', '<br><i>Demostración</i>: ', $t);
+        $t = str_replace('\begin{proof}[Proof]', '<br><i>Proof</i>: ', $t);
+        $t = str_replace('\begin{proof}', '<br><i>Demostración</i>: ', $t);
         $t = str_replace('\end{proof}', ' &#9634; <br>', $t);
 
         // Estilos para Retos
