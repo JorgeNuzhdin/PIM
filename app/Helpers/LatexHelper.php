@@ -1146,23 +1146,63 @@ $t = str_replace('\end{verbatim}', '</code></pre>', $t);
 
         // Tablas
         do {
-            $res = self::fromAtoB('\begin{tabular}', '\end{tabular}', $t);
-            $table1 = $res['inside'];
-            if ($table1 != '') {
-                $table2 = self::fromAtoB('{', '}', $table1);
-                $table = $table2['after'];
-                $table = str_replace('\hline', '', $table);
-                $table = str_replace('&', "</td><td style='$style'>", $table);
-                $lastslash = strrpos($table, '\\');
-                $afterSlash = trim(substr($table, $lastslash + 1));
-                if ($afterSlash == '') {
-                    $table = substr($table, 0, $lastslash - 1);
+            $res        = self::fromAtoB('\begin{tabular}', '\end{tabular}', $t);
+            $tableInside = $res['inside'];
+            if ($tableInside !== '') {
+                $specRes = self::fromAtoB('{', '}', $tableInside);
+                $colSpec = $specRes['inside'];
+                $body    = $specRes['after'];
+
+                // Parse column alignments from spec (ignore | separators)
+                $aligns = [];
+                foreach (str_split($colSpec) as $ch) {
+                    if ($ch === 'l') $aligns[] = 'left';
+                    elseif ($ch === 'r') $aligns[] = 'right';
+                    elseif ($ch === 'c') $aligns[] = 'center';
                 }
-                $table = str_replace('\\\\', "</tr><tr><td style='$style'>", $table);
-                $table = '<table class="centered" style="width:30%;"><tr><td style="' . $style . '">' . $table . '</td></tr></table>';
-                $t = $res['before'] . $table . $res['after'];
+
+                $segments = preg_split('/\\\\\\\\/', $body);
+                $dataRows = [];
+                $bottomBorderOnLast = false;
+
+                foreach ($segments as $seg) {
+                    $hlineCount = substr_count($seg, '\hline');
+                    $content    = trim(str_replace('\hline', '', $seg));
+
+                    if ($content === '') {
+                        if ($hlineCount > 0 && !empty($dataRows)) {
+                            $bottomBorderOnLast = true;
+                        }
+                        continue;
+                    }
+
+                    // \hline in the same segment means top border for this row
+                    $borderTop = $hlineCount > 0 ? 'border-top:2px solid #888;' : '';
+                    $bottomBorderOnLast = false;
+
+                    $cells     = explode('&', $content);
+                    $htmlCells = '';
+                    foreach ($cells as $i => $cell) {
+                        $align      = $aligns[$i] ?? 'left';
+                        $htmlCells .= '<td style="padding:3px 10px; text-align:' . $align . ';">' . trim($cell) . '</td>';
+                    }
+                    $dataRows[] = ['html' => $htmlCells, 'top' => $borderTop, 'bottom' => ''];
+                }
+
+                if ($bottomBorderOnLast && !empty($dataRows)) {
+                    $dataRows[count($dataRows) - 1]['bottom'] = 'border-bottom:2px solid #888;';
+                }
+
+                $rowsHtml = '';
+                foreach ($dataRows as $row) {
+                    $style = $row['top'] . $row['bottom'];
+                    $rowsHtml .= '<tr' . ($style ? ' style="' . $style . '"' : '') . '>' . $row['html'] . '</tr>';
+                }
+
+                $tableHtml = '<table style="border-collapse:collapse; margin:0.5em auto;">' . $rowsHtml . '</table>';
+                $t = $res['before'] . $tableHtml . $res['after'];
             }
-        } while ($table1 != '');
+        } while ($tableInside !== '');
 
 
         
