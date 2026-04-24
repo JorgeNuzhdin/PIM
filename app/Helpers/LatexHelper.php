@@ -1231,9 +1231,9 @@ $t = str_replace('\end{verbatim}', '</code></pre>', $t);
 
         
 
-  // Convertir saltos de línea dobles en párrafos y simples en <br>
+  // Líneas vacías → nuevo párrafo; saltos de línea simples → espacio (comportamiento estándar LaTeX)
     $t = preg_replace("/\n\n+/", "</p><p>", $t);
-    $t = str_replace("\n", "<br>\n", $t);
+    $t = str_replace("\n", " ", $t);
     
     // Envolver en párrafo si no está vacío
     if (trim($t) !== '') {
