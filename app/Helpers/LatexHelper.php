@@ -543,9 +543,30 @@ private static function getImSimple($filename)
         $t = preg_replace('/\\\\newline\s*/', '<br>', $t);
         $t = preg_replace('/\\\\linebreak\s*/', '<br>', $t);
 
-        // Convertir \\ (doble backslash) a nuevo párrafo (fuera de tablas/matrices)
-        // Nota: Las tablas lo manejan aparte en su propio procesamiento
+        // Protect \\ inside tabular/array/align environments before converting free-standing \\
+        // Replace \begin{ENV}...\end{ENV} content with placeholders so \\ inside is not touched
+        // (tabular is handled separately; other environments like align are already math-protected)
+        // We only need to protect \begin{tabular}...\end{tabular} since align/array are in math blocks
+        $tabularPlaceholders = [];
+        $tabularIdx = 0;
+        $t = preg_replace_callback(
+            '/\\\\begin\{tabular\}[\s\S]*?\\\\end\{tabular\}/s',
+            function($m) use (&$tabularPlaceholders, &$tabularIdx) {
+                $key = "###TABULAR_{$tabularIdx}###";
+                $tabularPlaceholders[$key] = $m[0];
+                $tabularIdx++;
+                return $key;
+            },
+            $t
+        );
+
+        // Convertir \\ (doble backslash) a salto de línea fuera de tablas/matrices
         $t = preg_replace('/\\\\\\\\\s*/', '<br><br>', $t);
+
+        // Restore tabular blocks
+        foreach ($tabularPlaceholders as $key => $original) {
+            $t = str_replace($key, $original, $t);
+        }
 
         // Eliminar \label{...} y \ref{...} que no funcionan en HTML
         $t = preg_replace('/\\\\label\{[^}]*\}/', '', $t);
