@@ -1161,13 +1161,16 @@ $t = str_replace('\end{verbatim}', '</code></pre>', $t);
                     elseif ($ch === 'c') $aligns[] = 'center';
                 }
 
-                $segments = preg_split('/\\\\\\\\/', $body);
+                // Split on LaTeX row separator \\ using chr(92) to avoid regex escaping ambiguity
+                $bs = chr(92); // one backslash
+                $segments = explode($bs . $bs, $body);
                 $dataRows = [];
                 $bottomBorderOnLast = false;
 
+                $hlineToken = $bs . 'hline';
                 foreach ($segments as $seg) {
-                    $hlineCount = substr_count($seg, '\hline');
-                    $content    = trim(str_replace('\hline', '', $seg));
+                    $hlineCount = substr_count($seg, $hlineToken);
+                    $content    = trim(str_replace($hlineToken, '', $seg));
 
                     if ($content === '') {
                         if ($hlineCount > 0 && !empty($dataRows)) {
