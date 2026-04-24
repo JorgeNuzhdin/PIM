@@ -91,7 +91,11 @@ window.MathJax = {
 
 <!-- TikzJax para dibujos -->
 <link rel="stylesheet" type="text/css" href="https://tikzjax.com/v1/fonts.css">
-<script src="https://tikzjax.com/v1/tikzjax.js"></script>  
+<script>
+// TikZJax uses btoa internally; this polyfill makes it Unicode-safe (handles accented characters)
+(function(){var b=window.btoa.bind(window);window.btoa=function(s){try{return b(s);}catch(e){return b(unescape(encodeURIComponent(s)));}};}());
+</script>
+<script src="https://tikzjax.com/v1/tikzjax.js"></script>
     <style>
         body {
             font-family: 'Nunito', sans-serif;
