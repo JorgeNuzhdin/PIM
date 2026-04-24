@@ -561,7 +561,13 @@ private static function getImSimple($filename)
         );
 
         // Convertir \\ (doble backslash) a salto de línea fuera de tablas/matrices
-        $t = preg_replace('/\\\\\\\\\s*/', '<br><br>', $t);
+        // \\[4pt] etc. → <br> with vertical margin; plain \\ → <br>
+        $t = preg_replace_callback(
+            '/\\\\\\\\\[([0-9]+(?:\.[0-9]+)?(?:pt|em|ex|mm|cm|in|px))\]\s*/',
+            function ($m) { return '<br style="margin-bottom:' . $m[1] . '">'; },
+            $t
+        );
+        $t = preg_replace('/\\\\\\\\\s*/', '<br>', $t);
 
         // Restore tabular blocks
         foreach ($tabularPlaceholders as $key => $original) {
@@ -1192,6 +1198,8 @@ $t = str_replace('\end{verbatim}', '</code></pre>', $t);
                 foreach ($segments as $seg) {
                     $hlineCount = substr_count($seg, $hlineToken);
                     $content    = trim(str_replace($hlineToken, '', $seg));
+                    // Strip optional spacing argument e.g. [4pt] at start of segment (after \\)
+                    $content    = trim(preg_replace('/^\[[^\]]*\]/', '', $content));
 
                     if ($content === '') {
                         if ($hlineCount > 0 && !empty($dataRows)) {
