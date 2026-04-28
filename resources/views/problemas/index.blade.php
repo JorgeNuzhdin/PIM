@@ -654,10 +654,10 @@
 
             <div class="form-group">
                 <label for="buscar">Buscar texto</label>
-                <input type="text" 
-                       name="buscar" 
-                       id="buscar" 
-                       placeholder="Buscar en problema o solución..."
+                <input type="text"
+                       name="buscar"
+                       id="buscar"
+                       placeholder="Buscar en problema, solución o fuente..."
                        value="{{ request('buscar') }}">
             </div>
             
@@ -762,7 +762,7 @@
                         <optgroup label="Otras fuentes">
                             @foreach($sourceData['ungrouped'] as $source => $count)
                                 <option value="{{ $source }}" {{ request('source') == $source ? 'selected' : '' }}>
-                                    {{ $source }} ({{ $count }})
+                                    {{ \App\Helpers\LatexHelper::cleanLatexForDisplay($source) }} ({{ $count }})
                                 </option>
                             @endforeach
                         </optgroup>

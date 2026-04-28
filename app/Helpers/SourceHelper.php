@@ -3,6 +3,7 @@
 namespace App\Helpers;
 
 use Illuminate\Support\Facades\DB;
+use App\Helpers\LatexHelper;
 
 class SourceHelper
 {
@@ -70,6 +71,7 @@ class SourceHelper
         // Libros
         'Problem Solving Strategies' => ['Problem\s*Solving\s*Strategies', 'Engel.*Strategies'],
         'Excalibur' => ['Excalibur'],
+        'Mathematics via Problems' => ['Mathematics.*via.*Problems', 'Mathematics_via_Problems'],
 
         // Otras competiciones
         'Putnam' => ['Putnam'],
@@ -240,12 +242,13 @@ class SourceHelper
         foreach ($rawSources as $source) {
             $count = $sourceCounts[$source] ?? 1;
 
-            // Si contiene coma, separar en partes
-            if (strpos($source, ',') !== false) {
-                $parts = array_map('trim', explode(',', $source));
+            // Separar por comas que NO estén precedidas por '\' (para no romper LaTeX como \,)
+            $parts = preg_split('/(?<!\\\\),/', $source);
+
+            if ($parts !== false && count($parts) > 1) {
+                $parts = array_map('trim', $parts);
                 foreach ($parts as $part) {
                     if (!empty($part)) {
-                        // Sumar el conteo si ya existe
                         if (isset($expanded[$part])) {
                             $expanded[$part] += $count;
                         } else {
@@ -262,8 +265,11 @@ class SourceHelper
             }
         }
 
-        // Ordenar alfabéticamente por clave
-        ksort($expanded, SORT_STRING | SORT_FLAG_CASE);
+        // Ordenar alfabéticamente por clave (usando la versión limpia para evitar
+        // que "\textit{...}" se ordene al principio por el carácter '\')
+        uksort($expanded, function ($a, $b) {
+            return strcasecmp(LatexHelper::cleanLatexForDisplay($a), LatexHelper::cleanLatexForDisplay($b));
+        });
 
         return $expanded;
     }

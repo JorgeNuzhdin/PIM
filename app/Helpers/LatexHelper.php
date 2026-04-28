@@ -23,6 +23,34 @@ class LatexHelper
         self::$debugMessages[] = $debugInfo;
     }
 
+    /**
+     * Limpia comandos LaTeX de una cadena corta (p. ej. el campo "fuente") para mostrarla como texto plano.
+     * - Elimina envoltorios como \textit{X}, \textbf{X}, \emph{X}, \mathrm{X}... manteniendo el contenido
+     * - Convierte espacios LaTeX (\,, \;, \:, \!, \ , \\, ~) en un espacio normal
+     * - Interpreta el patrón "Letra mayúscula + . + \" como inicial (ej. "A.\ Skopenkov" -> "A. Skopenkov")
+     * - Elimina llaves sueltas y colapsa espacios múltiples
+     */
+    public static function cleanLatexForDisplay(string $source): string
+    {
+        $clean = $source;
+
+        $clean = preg_replace('/\\\\(?:textit|textbf|textsl|textsc|emph|mathrm|mathit|mathbf|texttt|textsf)\s*\{([^{}]*)\}/u', '$1', $clean);
+
+        $clean = preg_replace('/\\\\\\\\/', ' ', $clean);
+
+        $clean = preg_replace('/\\\\[,;:! ]/', ' ', $clean);
+
+        $clean = preg_replace('/([A-ZÁÉÍÓÚÑ])\.\\\\\s*/u', '$1. ', $clean);
+
+        $clean = str_replace('~', ' ', $clean);
+
+        $clean = str_replace(['{', '}'], '', $clean);
+
+        $clean = preg_replace('/\s+/', ' ', $clean);
+
+        return trim($clean);
+    }
+
     public static function getDebugScript()
     {
         if (empty(self::$debugMessages)) {
