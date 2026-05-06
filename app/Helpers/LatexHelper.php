@@ -653,6 +653,17 @@ private static function getImSimple($filename)
             $textbf = self::fromAtoB('\textbf{', '}', $t);
         }
 
+        // \boxed{} en modo texto → recuadro (en math, MathJax lo maneja nativamente)
+        $boxed = self::fromAtoB('\boxed{', '}', $t);
+        while ($boxed['inside'] != '') {
+            $t = $boxed['before']
+               . '<span style="display:inline-block; border:1px solid #333; padding:1px 6px; border-radius:3px;">'
+               . $boxed['inside']
+               . '</span>'
+               . $boxed['after'];
+            $boxed = self::fromAtoB('\boxed{', '}', $t);
+        }
+
         // \textit{} → <em>
         $textit = self::fromAtoB('\textit{', '}', $t);
         while ($textit['inside'] != '') {
@@ -1267,17 +1278,17 @@ $t = str_replace('\end{verbatim}', '</code></pre>', $t);
 
         
 
-  // Líneas vacías → nuevo párrafo; saltos de línea simples → espacio (comportamiento estándar LaTeX)
-    $t = preg_replace("/\n\n+/", "</p><p>", $t);
+  // Líneas vacías → salto de párrafo visible; saltos de línea simples → espacio (comportamiento estándar LaTeX)
+    $t = preg_replace("/\n\n+/", '</p><p style="margin-top:0.8em;">', $t);
     $t = str_replace("\n", " ", $t);
-    
+
     // Envolver en párrafo si no está vacío
     if (trim($t) !== '') {
         $t = '<p>' . $t . '</p>';
     }
-    
+
     // Limpiar párrafos vacíos que puedan haberse creado
-    $t = preg_replace('/<p>\s*<\/p>/', '', $t);
+    $t = preg_replace('/<p[^>]*>\s*<\/p>/', '', $t);
 
 $t = str_replace('&&&LT&&&', '&lt;', $t);
     $t = str_replace('&&&GT&&&', '&gt;', $t);
