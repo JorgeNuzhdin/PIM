@@ -500,12 +500,16 @@ private static function getImSimple($filename)
     // Normalizar finales de línea: \r\n y \r (Mac/Windows) → \n
     $t = str_replace(["\r\n", "\r"], "\n", $t);
 
+    // Una línea "vacía" (solo whitespace) debe contar como salto de párrafo:
+    // colapsar líneas-de-solo-whitespace a una línea vacía pura
+    $t = preg_replace("/\n[ \t]+\n/", "\n\n", $t);
+
     // Eliminar múltiples saltos de línea consecutivos
     $t = preg_replace("/\n{3,}/", "\n\n", $t);
 
-    // Marcar los saltos de párrafo (línea vacía, posiblemente con espacios/tabs invisibles)
-    // con un placeholder PRONTO para que ningún preg_replace posterior con \s* los devore
-    $t = preg_replace("/\n[ \t]*(?:\n[ \t]*)+/", '###PARABREAK###', $t);
+    // Marcar los saltos de párrafo con un placeholder PRONTO
+    // para que ningún preg_replace posterior con \s* los devore
+    $t = str_replace("\n\n", '###PARABREAK###', $t);
 
      $t = str_replace('\%', 'PCTG', $t);
 
