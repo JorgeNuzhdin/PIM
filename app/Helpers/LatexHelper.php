@@ -500,9 +500,9 @@ private static function getImSimple($filename)
     // Eliminar múltiples saltos de línea consecutivos
     $t = preg_replace("/\n{3,}/", "\n\n", $t);
 
-    // Marcar los saltos de párrafo (línea vacía) con un placeholder PRONTO
-    // para que ningún preg_replace posterior con \s* los devore
-    $t = preg_replace("/\n\n+/", '###PARABREAK###', $t);
+    // Marcar los saltos de párrafo (línea vacía, posiblemente con espacios/tabs invisibles)
+    // con un placeholder PRONTO para que ningún preg_replace posterior con \s* los devore
+    $t = preg_replace("/\n[ \t]*(?:\n[ \t]*)+/", '###PARABREAK###', $t);
 
      $t = str_replace('\%', 'PCTG', $t);
 
@@ -666,6 +666,13 @@ private static function getImSimple($filename)
                . '</span>'
                . $boxed['after'];
             $boxed = self::extractBracedContent('\boxed', $t);
+        }
+
+        // \text{} en modo texto (típico dentro de \boxed) → desenvolver, conservar contenido
+        $text = self::fromAtoB('\text{', '}', $t);
+        while ($text['inside'] != '') {
+            $t = $text['before'] . $text['inside'] . $text['after'];
+            $text = self::fromAtoB('\text{', '}', $t);
         }
 
         // \textit{} → <em>
