@@ -1278,8 +1278,8 @@ $t = str_replace('\end{verbatim}', '</code></pre>', $t);
 
         
 
-  // Líneas vacías → salto de párrafo visible; saltos de línea simples → espacio (comportamiento estándar LaTeX)
-    $t = preg_replace("/\n\n+/", '</p><p style="margin-top:0.8em;">', $t);
+  // Líneas vacías → salto de párrafo visible (<br><br>); saltos de línea simples → espacio
+    $t = preg_replace("/\n\n+/", '<br><br>', $t);
     $t = str_replace("\n", " ", $t);
 
     // Envolver en párrafo si no está vacío
