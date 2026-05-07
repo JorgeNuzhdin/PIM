@@ -500,6 +500,10 @@ private static function getImSimple($filename)
     // Eliminar múltiples saltos de línea consecutivos
     $t = preg_replace("/\n{3,}/", "\n\n", $t);
 
+    // Marcar los saltos de párrafo (línea vacía) con un placeholder PRONTO
+    // para que ningún preg_replace posterior con \s* los devore
+    $t = preg_replace("/\n\n+/", '###PARABREAK###', $t);
+
      $t = str_replace('\%', 'PCTG', $t);
 
         // Proteger < y > del contenido original ANTES de generar HTML
@@ -653,15 +657,15 @@ private static function getImSimple($filename)
             $textbf = self::fromAtoB('\textbf{', '}', $t);
         }
 
-        // \boxed{} en modo texto → recuadro (en math, MathJax lo maneja nativamente)
-        $boxed = self::fromAtoB('\boxed{', '}', $t);
-        while ($boxed['inside'] != '') {
+        // \boxed{} en modo texto → recuadro (cuenta llaves anidadas; en math, MathJax lo maneja)
+        $boxed = self::extractBracedContent('\boxed', $t);
+        while ($boxed['inside'] !== '') {
             $t = $boxed['before']
                . '<span style="display:inline-block; border:1px solid #333; padding:1px 6px; border-radius:3px;">'
                . $boxed['inside']
                . '</span>'
                . $boxed['after'];
-            $boxed = self::fromAtoB('\boxed{', '}', $t);
+            $boxed = self::extractBracedContent('\boxed', $t);
         }
 
         // \textit{} → <em>
@@ -1278,9 +1282,10 @@ $t = str_replace('\end{verbatim}', '</code></pre>', $t);
 
         
 
-  // Líneas vacías → salto de párrafo visible (<br><br>); saltos de línea simples → espacio
-    $t = preg_replace("/\n\n+/", '<br><br>', $t);
+  // Saltos de línea simples → espacio (comportamiento estándar LaTeX)
     $t = str_replace("\n", " ", $t);
+    // Restaurar los saltos de párrafo marcados al inicio
+    $t = str_replace('###PARABREAK###', '<br><br>', $t);
 
     // Envolver en párrafo si no está vacío
     if (trim($t) !== '') {
