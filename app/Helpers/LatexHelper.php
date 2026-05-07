@@ -497,6 +497,9 @@ private static function getImSimple($filename)
           $t = str_replace(['u000au000au000au000a', 'u000au000au000a', 'u000au000a', 'u000a', 'u000d', 'u0009'], ["\n\n", "\n\n", "\n\n", "\n", "\r", "\t"], $t);
     $t = str_replace(['\u000a\u000a\u000a\u000a', '\u000a\u000a\u000a', '\u000a\u000a', '\u000a', '\u000d', '\u0009'], ["\n\n", "\n\n", "\n\n", "\n", "\r", "\t"], $t);
     
+    // Normalizar finales de línea: \r\n y \r (Mac/Windows) → \n
+    $t = str_replace(["\r\n", "\r"], "\n", $t);
+
     // Eliminar múltiples saltos de línea consecutivos
     $t = preg_replace("/\n{3,}/", "\n\n", $t);
 
