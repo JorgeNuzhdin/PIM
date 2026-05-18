@@ -7,13 +7,17 @@ use Illuminate\Support\Facades\DB;
 class TagHelper
 {
     /**
-     * Umbral máximo de distancia Levenshtein para considerar tags similares.
+     * Umbral máximo de distancia Levenshtein según longitud del tag.
+     * Tags cortos (<8) son demasiado frágiles para distancia 2 (e.g. "curvas"→"cartas").
      */
-    private static $maxDistance = 2;
+    private static function maxDistanceFor(string $tag): int
+    {
+        return mb_strlen($tag) < 8 ? 1 : 2;
+    }
 
     /**
      * Normaliza un tag buscando uno similar existente.
-     * Si encuentra un tag con distancia Levenshtein <= 2, lo sustituye.
+     * Si encuentra un tag con distancia Levenshtein dentro del umbral, lo sustituye.
      *
      * @param string $tag El tag a normalizar
      * @return string El tag normalizado (existente o el original si no hay similar)
@@ -36,9 +40,10 @@ class TagHelper
             }
         }
 
-        // Buscar tag similar con Levenshtein
+        // Buscar tag similar con Levenshtein. El umbral se calcula con la longitud
+        // del más corto de los dos para evitar "curvas"→"cartas" (ambos 6 chars, dist=2).
         $bestMatch = null;
-        $bestDistance = self::$maxDistance + 1;
+        $bestDistance = PHP_INT_MAX;
 
         foreach ($existingTags as $existingTag) {
             $distance = levenshtein(
@@ -46,7 +51,12 @@ class TagHelper
                 mb_strtolower($existingTag)
             );
 
-            if ($distance <= self::$maxDistance && $distance < $bestDistance) {
+            $maxAllowed = min(
+                self::maxDistanceFor($tag),
+                self::maxDistanceFor($existingTag)
+            );
+
+            if ($distance <= $maxAllowed && $distance < $bestDistance) {
                 $bestDistance = $distance;
                 $bestMatch = $existingTag;
             }
