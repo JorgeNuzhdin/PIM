@@ -225,7 +225,24 @@ LATEX;
         preg_match_all('/\\\\includegraphics(?:\[.*?\])?\{([^}]+)\}/', $texContent, $matches);
         foreach ($matches[1] as $imgName) {
             $imgNameClean = preg_replace('/\.(png|jpg|jpeg|gif|pdf)$/i', '', $imgName);
+
+            // pim_figures (problemas)
             $figure = Figure::where('title', $imgName)->orWhere('title', $imgNameClean)->first();
+
+            // Fallback: metodo_figures (métodos)
+            if (!$figure || !$figure->figure) {
+                $figure = \App\Models\MetodoFigure::where('title', $imgName)
+                                ->orWhere('title', $imgNameClean)
+                                ->first();
+            }
+
+            // Fallback: pim_figures_in_intros (preámbulos de hojas)
+            if (!$figure || !$figure->figure) {
+                $figure = \App\Models\FigureInIntro::where('title', $imgName)
+                                ->orWhere('title', $imgNameClean)
+                                ->first();
+            }
+
             if ($figure && $figure->figure) {
                 $imageData[$imgName] = $figure->figure;
             }

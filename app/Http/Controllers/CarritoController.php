@@ -664,9 +664,25 @@ private function crearZip($texContent, $imagenesNombres)
 
         foreach (array_keys($imagenes) as $imgName) {
             $imgNameClean = preg_replace('/\.(png|jpg|jpeg|gif|pdf)$/i', '', $imgName);
+
+            // Buscar primero en pim_figures (imágenes de problemas)
             $figure = Figure::where('title', $imgName)
                             ->orWhere('title', $imgNameClean)
                             ->first();
+
+            // Fallback a metodo_figures (imágenes de métodos)
+            if (!$figure || !$figure->figure) {
+                $figure = \App\Models\MetodoFigure::where('title', $imgName)
+                                ->orWhere('title', $imgNameClean)
+                                ->first();
+            }
+
+            // Fallback a pim_figures_in_intros (imágenes de preámbulos de hojas)
+            if (!$figure || !$figure->figure) {
+                $figure = \App\Models\FigureInIntro::where('title', $imgName)
+                                ->orWhere('title', $imgNameClean)
+                                ->first();
+            }
 
             if ($figure && $figure->figure) {
                 $imageData[$imgName] = $figure->figure;

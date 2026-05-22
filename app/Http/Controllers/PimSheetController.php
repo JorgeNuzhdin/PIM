@@ -551,6 +551,15 @@ class PimSheetController extends Controller
                 }
             }
 
+            // Fallback: metodo_figures (imágenes de métodos)
+            if (!$figura) {
+                $figura = \App\Models\MetodoFigure::where('title', $imageName)->first();
+                if (!$figura) {
+                    $sinExt = preg_replace('/\.(png|jpg|jpeg|gif|pdf)$/i', '', $imageName);
+                    $figura = \App\Models\MetodoFigure::where('title', $sinExt)->first();
+                }
+            }
+
             if ($figura && $figura->figure) {
                 $images[$imageName] = $figura->figure;
             } else {
