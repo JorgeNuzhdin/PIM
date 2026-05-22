@@ -186,9 +186,22 @@ private static function getIm($image)
         if (!$figure && !str_ends_with($filename, '.pdf')) {
             $figure = \App\Models\FigureInIntro::where('title', $imName . '.pdf')->first();
         }
-        
+
+        // Si no se encuentra, buscar en metodo_figures (imágenes de métodos)
+        if (!$figure) {
+            $figure = \App\Models\MetodoFigure::where('title', $filename)->first();
+        }
+
+        if (!$figure) {
+            $figure = \App\Models\MetodoFigure::where('title', $imName)->first();
+        }
+
+        if (!$figure && !str_ends_with($filename, '.pdf')) {
+            $figure = \App\Models\MetodoFigure::where('title', $imName . '.pdf')->first();
+        }
+
           if ($figure && $figure->figure) {
-    
+
     try {
         // Detectar el tipo MIME real de la imagen
         $imageData = $figure->figure;
@@ -260,6 +273,19 @@ private static function getImSimple($filename)
 
     if (!$figure && !str_ends_with($filename, '.pdf')) {
         $figure = \App\Models\FigureInIntro::where('title', $imName . '.pdf')->first();
+    }
+
+    // Si no se encuentra, buscar en metodo_figures (imágenes de métodos)
+    if (!$figure) {
+        $figure = \App\Models\MetodoFigure::where('title', $filename)->first();
+    }
+
+    if (!$figure) {
+        $figure = \App\Models\MetodoFigure::where('title', $imName)->first();
+    }
+
+    if (!$figure && !str_ends_with($filename, '.pdf')) {
+        $figure = \App\Models\MetodoFigure::where('title', $imName . '.pdf')->first();
     }
 
     if ($figure && $figure->figure) {
