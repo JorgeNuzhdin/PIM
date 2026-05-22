@@ -674,6 +674,64 @@ private static function getImSimple($filename)
             $textbf = self::fromAtoB('\textbf{', '}', $t);
         }
 
+        // \textcolor{color}{texto} → <span style="color:..."> (cuenta llaves anidadas en texto)
+        // Soporta también la variante \textcolor[modelo]{spec}{texto} (e.g. [HTML]{FF0000}).
+        while (true) {
+            $pos = strpos($t, '\textcolor');
+            if ($pos === false) break;
+            $cursor = $pos + strlen('\textcolor');
+
+            // Saltar [modelo] opcional
+            if (substr($t, $cursor, 1) === '[') {
+                $closeBracket = strpos($t, ']', $cursor);
+                if ($closeBracket === false) break;
+                $cursor = $closeBracket + 1;
+            }
+
+            // Primer argumento (color o spec)
+            if (substr($t, $cursor, 1) !== '{') break;
+            $cursor++;
+            $colorEnd = strpos($t, '}', $cursor);
+            if ($colorEnd === false) break;
+            $color = trim(substr($t, $cursor, $colorEnd - $cursor));
+            $cursor = $colorEnd + 1;
+
+            // Segundo argumento (texto, con llaves anidadas)
+            if (substr($t, $cursor, 1) !== '{') break;
+            $cursor++;
+            $braceCount = 1;
+            $textStart = $cursor;
+            $len = strlen($t);
+            while ($cursor < $len && $braceCount > 0) {
+                $ch = $t[$cursor];
+                // Saltar caracteres precedidos por backslash
+                if ($cursor > $textStart && $t[$cursor - 1] === '\\') {
+                    $cursor++;
+                    continue;
+                }
+                if ($ch === '{')      $braceCount++;
+                elseif ($ch === '}')  $braceCount--;
+                if ($braceCount > 0)  $cursor++;
+            }
+            if ($braceCount !== 0) break; // sin cerrar
+            $text = substr($t, $textStart, $cursor - $textStart);
+            $after = substr($t, $cursor + 1);
+
+            // Sanitizar color: solo caracteres seguros para CSS
+            $cssColor = preg_replace('/[^a-zA-Z0-9#,.% ]/', '', $color);
+            if ($cssColor === '') {
+                // Si no es válido, dejar el texto sin color
+                $t = substr($t, 0, $pos) . $text . $after;
+                continue;
+            }
+
+            $t = substr($t, 0, $pos)
+               . '<span style="color:' . $cssColor . ';">'
+               . $text
+               . '</span>'
+               . $after;
+        }
+
         // \boxed{} en modo texto → recuadro (cuenta llaves anidadas; en math, MathJax lo maneja)
         $boxed = self::extractBracedContent('\boxed', $t);
         while ($boxed['inside'] !== '') {
