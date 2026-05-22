@@ -1305,12 +1305,28 @@ $t = str_replace('\end{verbatim}', '</code></pre>', $t);
                 $colSpec = $specRes['inside'];
                 $body    = $specRes['after'];
 
-                // Parse column alignments from spec (ignore | separators)
+                // Parse column alignments and vertical bars from spec
+                // e.g. "c|cccc" → 5 columnas centradas, columna 2 con border-left
                 $aligns = [];
+                $leftBorders = [];   // por columna: true si tiene | antes
+                $pendingBar = false;
+                $rightBorder = false; // | al final del spec → border-right de última columna
                 foreach (str_split($colSpec) as $ch) {
-                    if ($ch === 'l') $aligns[] = 'left';
-                    elseif ($ch === 'r') $aligns[] = 'right';
-                    elseif ($ch === 'c') $aligns[] = 'center';
+                    if ($ch === '|') {
+                        if (count($aligns) === 0) {
+                            // | al inicio: la primera columna lleva border-left
+                            $pendingBar = true;
+                        } else {
+                            $pendingBar = true;
+                        }
+                    } elseif ($ch === 'l' || $ch === 'r' || $ch === 'c') {
+                        $aligns[] = $ch === 'l' ? 'left' : ($ch === 'r' ? 'right' : 'center');
+                        $leftBorders[] = $pendingBar;
+                        $pendingBar = false;
+                    }
+                }
+                if ($pendingBar) {
+                    $rightBorder = true; // | tras la última letra
                 }
 
                 // Split on LaTeX row separator \\ using chr(92) to avoid regex escaping ambiguity
@@ -1339,9 +1355,12 @@ $t = str_replace('\end{verbatim}', '</code></pre>', $t);
 
                     $cells     = explode('&', $content);
                     $htmlCells = '';
+                    $cellCount = count($cells);
                     foreach ($cells as $i => $cell) {
-                        $align      = $aligns[$i] ?? 'left';
-                        $htmlCells .= '<td style="padding:3px 10px; text-align:' . $align . ';">' . trim($cell) . '</td>';
+                        $align       = $aligns[$i] ?? 'left';
+                        $borderLeft  = !empty($leftBorders[$i]) ? ' border-left:1px solid #888;' : '';
+                        $borderRight = ($rightBorder && $i === $cellCount - 1) ? ' border-right:1px solid #888;' : '';
+                        $htmlCells .= '<td style="padding:3px 10px; text-align:' . $align . ';' . $borderLeft . $borderRight . '">' . trim($cell) . '</td>';
                     }
                     $dataRows[] = ['html' => $htmlCells, 'top' => $borderTop, 'bottom' => ''];
                 }
