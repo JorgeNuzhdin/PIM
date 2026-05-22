@@ -480,7 +480,11 @@ private static function getImSimple($filename)
             return $placeholder;
         }, $t);
         // Luego $$...$$ (antes de $...$)
+        // Si contiene \begin{tabular}, NO es math: dejar el contenido para el handler de tabular.
         $t = preg_replace_callback('/\$\$[\s\S]*?\$\$/s', function ($m) use (&$mathIndex) {
+            if (strpos($m[0], '\begin{tabular}') !== false) {
+                return substr($m[0], 2, -2);
+            }
             $placeholder = "###MATH_{$mathIndex}###";
             self::$mathBlocks[$placeholder] = $m[0];
             $mathIndex++;
