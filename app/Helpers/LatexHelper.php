@@ -679,6 +679,27 @@ private static function getImSimple($filename)
         $t = str_replace('``', '"', $t);      // Comillas de apertura
         $t = str_replace("''", '"', $t);      // Comillas de cierre
 
+        // \nivel{N} y \ayear{...} → tag estilo problema (gradiente azul-violeta)
+        $tagStyle = 'display:inline-block; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);'
+                  . 'color:white; padding:0.15rem 0.6rem; border-radius:12px; font-size:0.85rem;'
+                  . 'font-weight:500; box-shadow:0 2px 4px rgba(0,0,0,0.1); margin:0 0.25rem 0.25rem 0;';
+
+        $nivel = self::fromAtoB('\nivel{', '}', $t);
+        while ($nivel['inside'] != '') {
+            $t = $nivel['before']
+               . '<span style="' . $tagStyle . '">Nivel ' . trim($nivel['inside']) . '</span>'
+               . $nivel['after'];
+            $nivel = self::fromAtoB('\nivel{', '}', $t);
+        }
+
+        $ayear = self::fromAtoB('\ayear{', '}', $t);
+        while ($ayear['inside'] != '') {
+            $t = $ayear['before']
+               . '<span style="' . $tagStyle . '">' . trim($ayear['inside']) . '</span>'
+               . $ayear['after'];
+            $ayear = self::fromAtoB('\ayear{', '}', $t);
+        }
+
         // Eliminar \mbox{} pero mantener contenido
         $mbox = self::fromAtoB('\mbox{', '}', $t);
         while ($mbox['inside'] != '') {
