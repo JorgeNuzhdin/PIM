@@ -994,6 +994,12 @@ function loadAllTags() {
         .catch(error => console.error('Error cargando tags:', error));
 }
 
+// Umbral de Levenshtein según longitud (igual que TagHelper.php en backend)
+// Tags cortos (<8) son frágiles: distancia 2 colapsa pares legítimos como curvas/cartas.
+function maxLevenshteinFor(tag) {
+    return tag.length < 8 ? 1 : 2;
+}
+
 // Buscar tag similar usando Levenshtein
 function findSimilarTag(inputTag) {
     if (!inputTag || allTagsCache.length === 0) return null;
@@ -1009,8 +1015,13 @@ function findSimilarTag(inputTag) {
         // Calcular distancia
         const distance = levenshteinDistance(inputTag, existingTag);
 
-        // Si la distancia es pequeña (1-2), sugerir el tag existente
-        if (distance > 0 && distance <= 2) {
+        // Umbral según el más corto de los dos tags
+        const maxAllowed = Math.min(
+            maxLevenshteinFor(inputTag),
+            maxLevenshteinFor(existingTag)
+        );
+
+        if (distance > 0 && distance <= maxAllowed) {
             return existingTag;
         }
     }

@@ -474,8 +474,10 @@ window.MathJax = {
                         @endif
                         @if(Auth::user()->canEditProblemas())
                             @php
-                                $nErrProb = \App\Models\ErrorReport::where('solved', false)->count();
-                                $nErrMet  = \App\Models\MetodoErrorReport::where('solved', false)->count();
+                                // Contar problemas distintos con reportes sin resolver, no los reportes
+                                // (la página listada muestra problemas, no reportes individuales)
+                                $nErrProb = \App\Models\Problema::whereHas('errorReports', fn($q) => $q->where('solved', false))->count();
+                                $nErrMet  = \App\Models\Metodo::whereHas('errorReports', fn($q) => $q->where('solved', false))->count();
                             @endphp
                             @if($nErrProb > 0)
                                 <a href="{{ route('problemas.con-errores') }}" style="display:flex; align-items:center; justify-content:space-between;">

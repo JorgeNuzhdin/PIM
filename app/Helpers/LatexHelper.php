@@ -461,7 +461,13 @@ private static function getImSimple($filename)
         self::$mathBlocks = [];
         $mathIndex = 0;
         // Primero \[...\] y \(...\)
+        // Si contiene \begin{tabular}, NO es math: tabular no es válido dentro de \[\];
+        // dejarlo intacto para que el handler de tabular lo procese normalmente.
         $t = preg_replace_callback('/\\\\\[[\s\S]*?\\\\\]/s', function ($m) use (&$mathIndex) {
+            if (strpos($m[0], '\begin{tabular}') !== false) {
+                // Eliminar los delimitadores \[ \] y dejar el contenido como texto
+                return substr($m[0], 2, -2);
+            }
             $placeholder = "###MATH_{$mathIndex}###";
             self::$mathBlocks[$placeholder] = $m[0];
             $mathIndex++;
