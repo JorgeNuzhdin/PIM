@@ -861,9 +861,15 @@ class ProblemaController extends Controller
         $result   = $compiler->compile($texContent, $imageData);
 
         if (!$result['pdf']) {
-            $compiler->cleanup($result['tempDir']);
             $summary = $result['errorSummary'] ?: 'Error desconocido de compilación';
-            return response()->json(['error' => $summary], 422);
+            // No limpiar el tempDir cuando falla, para poder depurar el .log
+            \Log::error("previewPdf failed for problema {$id}. Temp dir: {$result['tempDir']}. errorSummary: {$summary}");
+            // Si el resumen está vacío, añadir las últimas líneas del log para que el alert tenga contexto
+            if (empty($result['errorSummary']) && !empty($result['log'])) {
+                $logTail = implode("\n", array_slice(explode("\n", $result['log']), -15));
+                $summary .= "\n\nÚltimas líneas del log:\n" . $logTail;
+            }
+            return response()->json(['error' => $summary, 'tempDir' => $result['tempDir']], 422);
         }
 
         $pdfContent = file_get_contents($result['pdf']);
