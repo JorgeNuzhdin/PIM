@@ -100,9 +100,13 @@ class LatexCompilerService
 
         $cmd = "cd {$escapedDir} && {$texmfEnv}{$pdflatex} -interaction=nonstopmode document.tex 2>&1";
 
+        // Guardar el comando exacto para depurar problemas de exec
+        file_put_contents($tempDir . '/_cmd.sh', "#!/bin/sh\n" . $cmd . "\n");
+        Log::info("pdflatex cmd: {$cmd}");
+
         // Primera pasada
         exec($cmd, $output1, $returnCode1);
-        Log::info("pdflatex pass 1: exit code {$returnCode1}");
+        Log::info("pdflatex pass 1: exit code {$returnCode1}, output: " . implode(" | ", array_slice($output1, 0, 5)));
 
         // Segunda pasada (para referencias, numeración, etc.)
         $output2 = [];
