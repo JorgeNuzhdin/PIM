@@ -538,13 +538,17 @@ class PimSheetController extends Controller
                 }
             }
 
+            // Candidatos para esta imagen: tal cual, sin extensión, con .pdf añadido
+            $sinExt = preg_replace('/\.(png|jpg|jpeg|gif|pdf)$/i', '', $imageName);
+            $candidates = array_unique(array_filter([
+                $imageName,
+                $sinExt,
+                str_ends_with($imageName, '.pdf') ? null : $sinExt . '.pdf',
+            ]));
+
             // Buscar en pim_figures (imágenes de problemas)
             if (!$figura) {
-                $figura = Figure::where('title', $imageName)->first();
-                if (!$figura) {
-                    $sinExt = preg_replace('/\.(png|jpg|jpeg|gif|pdf)$/i', '', $imageName);
-                    $figura = Figure::where('title', $sinExt)->first();
-                }
+                $figura = Figure::whereIn('title', $candidates)->first();
                 if (!$figura) {
                     $sinGuiones = str_replace('_', '', $imageName);
                     $figura = Figure::where('title', $sinGuiones)->first();
@@ -553,11 +557,7 @@ class PimSheetController extends Controller
 
             // Fallback: metodo_figures (imágenes de métodos)
             if (!$figura) {
-                $figura = \App\Models\MetodoFigure::where('title', $imageName)->first();
-                if (!$figura) {
-                    $sinExt = preg_replace('/\.(png|jpg|jpeg|gif|pdf)$/i', '', $imageName);
-                    $figura = \App\Models\MetodoFigure::where('title', $sinExt)->first();
-                }
+                $figura = \App\Models\MetodoFigure::whereIn('title', $candidates)->first();
             }
 
             if ($figura && $figura->figure) {

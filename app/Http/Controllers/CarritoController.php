@@ -664,24 +664,24 @@ private function crearZip($texContent, $imagenesNombres)
 
         foreach (array_keys($imagenes) as $imgName) {
             $imgNameClean = preg_replace('/\.(png|jpg|jpeg|gif|pdf)$/i', '', $imgName);
+            // Candidatos a probar: tal cual, sin extensión, con .pdf añadido
+            $candidates = array_unique(array_filter([
+                $imgName,
+                $imgNameClean,
+                str_ends_with($imgName, '.pdf') ? null : $imgNameClean . '.pdf',
+            ]));
 
             // Buscar primero en pim_figures (imágenes de problemas)
-            $figure = Figure::where('title', $imgName)
-                            ->orWhere('title', $imgNameClean)
-                            ->first();
+            $figure = Figure::whereIn('title', $candidates)->first();
 
             // Fallback a metodo_figures (imágenes de métodos)
             if (!$figure || !$figure->figure) {
-                $figure = \App\Models\MetodoFigure::where('title', $imgName)
-                                ->orWhere('title', $imgNameClean)
-                                ->first();
+                $figure = \App\Models\MetodoFigure::whereIn('title', $candidates)->first();
             }
 
             // Fallback a pim_figures_in_intros (imágenes de preámbulos de hojas)
             if (!$figure || !$figure->figure) {
-                $figure = \App\Models\FigureInIntro::where('title', $imgName)
-                                ->orWhere('title', $imgNameClean)
-                                ->first();
+                $figure = \App\Models\FigureInIntro::whereIn('title', $candidates)->first();
             }
 
             if ($figure && $figure->figure) {
