@@ -580,12 +580,25 @@ private function crearZip($texContent, $imagenesNombres)
             foreach ($imagenesNombres as $imgName) {
                 // Buscar imagen en la base de datos
                 $imgNameClean = preg_replace('/\.(png|jpg|jpeg|gif|pdf)$/i', '', $imgName);
-                
-                $figure = \App\Models\Figure::where('title', $imgName)
-                                           ->orWhere('title', $imgNameClean)
-                                           ->orWhere('title', $imgNameClean . '.pdf')
-                                           ->first();
-                
+                $candidates = array_unique(array_filter([
+                    $imgName,
+                    $imgNameClean,
+                    str_ends_with($imgName, '.pdf') ? null : $imgNameClean . '.pdf',
+                ]));
+
+                // pim_figures (problemas)
+                $figure = \App\Models\Figure::whereIn('title', $candidates)->first();
+
+                // Fallback: metodo_figures (métodos)
+                if (!$figure || !$figure->figure) {
+                    $figure = \App\Models\MetodoFigure::whereIn('title', $candidates)->first();
+                }
+
+                // Fallback: pim_figures_in_intros (preámbulos de hojas)
+                if (!$figure || !$figure->figure) {
+                    $figure = \App\Models\FigureInIntro::whereIn('title', $candidates)->first();
+                }
+
                 if ($figure && $figure->figure) {
                     // Determinar extensión
                     $header = substr($figure->figure, 0, 4);
