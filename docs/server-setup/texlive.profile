@@ -1,0 +1,15 @@
+selected_scheme scheme-basic
+TEXDIR /home/www/texlive/2025
+TEXMFLOCAL /home/www/texlive/texmf-local
+TEXMFSYSCONFIG /home/www/texlive/2025/texmf-config
+TEXMFSYSVAR /home/www/texlive/2025/texmf-var
+TEXMFHOME /home/www/texmf
+TEXMFCONFIG /home/www/.texlive2025/texmf-config
+TEXMFVAR /home/www/.texlive2025/texmf-var
+binary_x86_64-linux 1
+instopt_adjustpath 0
+instopt_adjustrepo 1
+instopt_letter 0
+tlpdbopt_autobackup 0
+tlpdbopt_install_docfiles 0
+tlpdbopt_install_srcfiles 0
