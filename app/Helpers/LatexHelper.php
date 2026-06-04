@@ -581,6 +581,10 @@ private static function getImSimple($filename)
         $t = preg_replace('/\\\\qed\b/', '■', $t);           // \qed → ■
 
         // Eliminar comandos LaTeX que no tienen equivalente en HTML
+        // \shorthandoff{...} y \shorthandon{...} (babel) — sin efecto en HTML.
+        // El argumento puede ser '>' ya protegido como &&&GT&&& en este punto, por eso [^}]*.
+        $t = preg_replace('/\\\\shorthand(?:off|on)\s*\{[^}]*\}/', '', $t);
+
         // Comandos de espaciado vertical
         $t = preg_replace('/\\\\noindent\s*/', '', $t);
         $t = preg_replace('/\\\\vspace\*?\{[^}]*\}/', '', $t);
