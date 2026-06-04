@@ -1053,7 +1053,7 @@
                 <div class="problema-content problema-pistas">
                     <strong>💡 Pistas:</strong>
                     <div class="latex-content pistas-content">
-                        {!! nl2br(e($problema->hints)) !!}
+                        {!! LatexHelper::toHtml($problema->hints) !!}
                     </div>
                 </div>
             @endif
@@ -1071,7 +1071,7 @@
                 <div class="problema-content problema-comentarios">
                     <strong>💬 Comentarios:</strong>
                     <div class="comentarios-content">
-                        {!! nl2br(e($problema->comments)) !!}
+                        {!! LatexHelper::toHtml($problema->comments) !!}
                     </div>
                 </div>
             @endif
