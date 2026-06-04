@@ -126,7 +126,7 @@
         @if($problema->hints)
             <div class="problema-content problema-pistas">
                 <strong>💡 Pistas:</strong>
-                <div class="latex-content pistas-content">{!! nl2br(e($problema->hints)) !!}</div>
+                <div class="latex-content pistas-content">{!! \App\Helpers\LatexHelper::toHtml($problema->hints) !!}</div>
             </div>
         @endif
 
@@ -142,7 +142,7 @@
         @if($problema->comments && !\App\Helpers\AccessHelper::isRestricted())
             <div class="problema-content problema-comentarios">
                 <strong>💬 Comentarios:</strong>
-                <div class="comentarios-content">{!! nl2br(e($problema->comments)) !!}</div>
+                <div class="comentarios-content">{!! \App\Helpers\LatexHelper::toHtml($problema->comments) !!}</div>
             </div>
         @endif
 
