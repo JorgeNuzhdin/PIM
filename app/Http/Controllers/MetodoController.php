@@ -256,8 +256,9 @@ class MetodoController extends Controller
     {
         $items = $request->input('items', []);
         $results = [];
+        $user = Auth::user();
         $allMetodos = Metodo::whereNotNull('method_tex')
-            ->selectRaw('id, title, SUBSTRING(method_tex, 1, 100) AS method_tex')
+            ->selectRaw('id, title, user_id, SUBSTRING(method_tex, 1, 100) AS method_tex')
             ->get();
 
         foreach ($items as $index => $item) {
@@ -269,12 +270,12 @@ class MetodoController extends Controller
             foreach ($allMetodos as $m) {
                 if ($contentMatch === null && $contentPrefix !== '' &&
                     $this->normalizePrefix($m->method_tex) === $contentPrefix) {
-                    $contentMatch = ['id' => $m->id];
+                    $contentMatch = ['id' => $m->id, 'can_overwrite' => $user->canManageMetodo($m)];
                 }
                 if ($titleMatch === null && $title !== '' &&
                     trim((string) $m->title) !== '' &&
                     mb_strtolower(trim((string) $m->title)) === mb_strtolower($title)) {
-                    $titleMatch = ['id' => $m->id];
+                    $titleMatch = ['id' => $m->id, 'can_overwrite' => $user->canManageMetodo($m)];
                 }
                 if ($titleMatch && $contentMatch) break;
             }

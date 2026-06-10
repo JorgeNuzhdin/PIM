@@ -684,10 +684,14 @@
             let overwriteHtml = '';
             if (method.is_duplicate) {
                 statusText += ` — ⚠️ Duplicado de Método #${method.dup_id}`;
-                const checked = method.overwrite ? 'checked' : '';
-                overwriteHtml = `<label style="font-size:0.82rem;cursor:pointer;display:flex;align-items:center;gap:0.3rem;white-space:nowrap;color:#92400e;">
-                    <input type="checkbox" onchange="toggleOverwrite(${index}, this.checked)" ${checked}> Sobrescribir
-                </label>`;
+                if (method.dup_can_overwrite) {
+                    const checked = method.overwrite ? 'checked' : '';
+                    overwriteHtml = `<label style="font-size:0.82rem;cursor:pointer;display:flex;align-items:center;gap:0.3rem;white-space:nowrap;color:#92400e;">
+                        <input type="checkbox" onchange="toggleOverwrite(${index}, this.checked)" ${checked}> Sobrescribir
+                    </label>`;
+                } else {
+                    statusText += ' (de otro autor — se omitirá)';
+                }
             }
 
             li.innerHTML = `
@@ -739,8 +743,10 @@
             const results = await resp.json();
             results.forEach(r => {
                 if (r.index < methods.length && (r.content_match || r.title_match)) {
+                    const match = r.content_match || r.title_match;
                     methods[r.index].is_duplicate = true;
-                    methods[r.index].dup_id = (r.content_match || r.title_match).id;
+                    methods[r.index].dup_id = match.id;
+                    methods[r.index].dup_can_overwrite = !!match.can_overwrite;
                 }
             });
         } catch (e) {

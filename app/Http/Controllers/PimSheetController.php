@@ -239,7 +239,10 @@ class PimSheetController extends Controller
 
                         if ($overwrite) {
                             $existing = Metodo::find((int) $metodoItem['existing_id']);
-                            if ($existing) {
+                            // Solo se sobrescribe un método que el usuario puede gestionar
+                            // (admin/editor cualquiera; profesor_seguro solo los suyos).
+                            // Si no es suyo o no existe, no se machaca: se crea uno nuevo.
+                            if ($existing && Auth::user()->canManageMetodo($existing)) {
                                 $existing->update([
                                     'method_tex'  => $metodoItem['method_tex'],
                                     'subtema_ids' => implode(',', $validIds),
@@ -250,6 +253,9 @@ class PimSheetController extends Controller
                                 MetodoFigure::where('metodo_id', $metodo->id)->delete();
                                 Log::info('Método actualizado (sobrescritura): ' . $metodoItem['title']);
                             } else {
+                                if ($existing) {
+                                    Log::warning('Sobrescritura denegada (método ajeno), se crea uno nuevo: ' . $metodoItem['title']);
+                                }
                                 $overwrite = false;
                             }
                         }
