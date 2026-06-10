@@ -83,8 +83,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/metodos/{id}', [MetodoController::class, 'show'])->name('metodos.show')->where('id', '[0-9]+');
     Route::get('/metodos/{id}/descargar-tex', [MetodoController::class, 'downloadTex'])->name('metodos.download-tex')->where('id', '[0-9]+');
 
-    // Crear/editar/guardar métodos: solo para admin/editor
-    Route::middleware('can.edit.problemas')->group(function () {
+    // Crear/editar/guardar métodos: admin/editor cualquiera; profesor_seguro solo los suyos
+    // (la propiedad se valida en el controlador con canManageMetodo()).
+    Route::middleware('can.upload.metodos')->group(function () {
         Route::get('/metodos/crear', [MetodoController::class, 'create'])->name('metodos.create');
         Route::post('/metodos', [MetodoController::class, 'store'])->name('metodos.store');
         Route::get('/metodos/{id}/editar', [MetodoController::class, 'edit'])->name('metodos.edit')->where('id', '[0-9]+');

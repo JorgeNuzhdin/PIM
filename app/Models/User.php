@@ -91,6 +91,28 @@ class User extends Authenticatable
         return $this->canUploadSheets() && (int) $sheet->user_id === (int) $this->id;
     }
 
+    /**
+     * ¿Puede subir métodos?
+     * Incluye a 'profesor_seguro' además de editores/administradores.
+     */
+    public function canUploadMetodos()
+    {
+        return in_array($this->rol, ['admin', 'editor', 'profesor_seguro']);
+    }
+
+    /**
+     * ¿Puede editar/eliminar este método concreto?
+     * Admin y editor pueden con cualquiera; profesor_seguro solo con los que subió él.
+     */
+    public function canManageMetodo(Metodo $metodo): bool
+    {
+        if ($this->canEditProblemas()) {
+            return true;
+        }
+
+        return $this->canUploadMetodos() && (int) $metodo->user_id === (int) $this->id;
+    }
+
     public function isAutoApproved(): bool
     {
         return in_array($this->rol, ['admin', 'editor', 'user_seguro', 'profesor_seguro']);

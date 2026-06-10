@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'can.edit.problemas' => \App\Http\Middleware\CanEditProblemas::class,
             'can.upload.sheets' => \App\Http\Middleware\CanUploadSheets::class,
+            'can.upload.metodos' => \App\Http\Middleware\CanUploadMetodos::class,
         ]);
     })
     ->withMiddleware(function (Middleware $middleware) {

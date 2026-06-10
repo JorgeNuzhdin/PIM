@@ -128,7 +128,7 @@
                     title="Reportar un error en este método">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.2em" height="1.2em" fill="currentColor" style="vertical-align:middle;"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
                 </button>
-                @if(in_array(Auth::user()->rol, ['admin', 'editor', 'profesor_seguro']))
+                @if(Auth::user()->canManageMetodo($metodo))
                     <a href="{{ route('metodos.edit', $metodo->id) }}" class="edit-icon" title="Editar método">&#9998;</a>
                 @endif
             @endauth

@@ -405,7 +405,7 @@ window.MathJax = {
             {{-- Métodos: visible solo si no es usuario básico --}}
             @auth
                 @if(!\App\Helpers\AccessHelper::isRestricted())
-                    @if(Auth::user()->canEditProblemas())
+                    @if(Auth::user()->canUploadMetodos())
                         <div class="nav-dropdown">
                             <a href="{{ route('metodos.index') }}" class="nav-dropdown-btn">Métodos ▾</a>
                             <div class="nav-dropdown-content">

@@ -196,10 +196,10 @@
     <div class="metodos-header">
         <h1>Métodos</h1>
         <div style="display:flex;align-items:center;gap:0.75rem;">
-            @if(Auth::user()->canEditProblemas())
+            @if(Auth::user()->canUploadMetodos())
                 <a href="{{ route('metodos.create') }}" style="background:#4299e1;color:white;padding:0.5rem 1rem;border-radius:4px;text-decoration:none;font-weight:600;">+ Añadir método</a>
             @endif
-            @if(Auth::user()->isAdmin())
+            @if(Auth::user()->canUploadMetodos())
                 <button id="btn-enable-delete" onclick="toggleDeleteMode()" title="Activar modo eliminación"
                         style="background:none;border:none;cursor:pointer;font-size:1.2rem;opacity:0.4;">🗑️</button>
             @endif
@@ -267,13 +267,13 @@
                         <td class="actions-cell">
                             <button class="btn-action carrito" data-metodo-id="{{ $metodo->id }}" onclick="toggleMetodoCarrito({{ $metodo->id }}, this)" title="Añadir al carrito">🛒</button>
                             <a href="{{ route('metodos.show', $metodo->id) }}" class="btn-action view" title="Ver">👁️</a>
-                            @if(in_array(Auth::user()->rol, ['admin', 'editor', 'profesor_seguro']))
+                            @if(Auth::user()->canManageMetodo($metodo))
                                 <a href="{{ route('metodos.edit', $metodo->id) }}" class="btn-action edit" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.1em" height="1.1em" fill="currentColor" style="vertical-align:middle;"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></a>
                             @endif
                             @if(Auth::user()->rol !== 'user')
                             <a href="{{ route('metodos.download-tex', $metodo->id) }}" class="btn-action download-tex" title="Descargar TEX">TEX⤓</a>
                             @endif
-                            @if(Auth::user()->isAdmin())
+                            @if(Auth::user()->canManageMetodo($metodo))
                                 <button class="btn-action btn-delete btn-delete-item" onclick="eliminarMetodo({{ $metodo->id }}, '{{ addslashes($metodo->title) }}')" title="Eliminar" style="color:#e53e3e;display:none;">🗑️</button>
                             @endif
                         </td>
@@ -284,7 +284,7 @@
     @else
         <div class="empty-message">
             <p style="font-size: 1.2rem;">No se encontraron métodos{{ request('tema_id') ? ' con los filtros seleccionados' : '' }}.</p>
-            @if(Auth::user()->canEditProblemas())
+            @if(Auth::user()->canUploadMetodos())
                 <p>Puedes <a href="{{ route('metodos.create') }}" style="color:#4299e1;">añadir un método</a>.</p>
             @endif
         </div>

@@ -18,7 +18,7 @@ class MetodoController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-        $this->middleware('can.edit.problemas')->only(['create', 'store']);
+        $this->middleware('can.upload.metodos')->only(['create', 'store']);
     }
 
     public function index(Request $request)
@@ -138,9 +138,8 @@ class MetodoController extends Controller
     {
         $metodo = Metodo::findOrFail($id);
 
-        $user = Auth::user();
-        if (!in_array($user->rol, ['admin', 'editor', 'profesor_seguro'])) {
-            abort(403);
+        if (!Auth::user()->canManageMetodo($metodo)) {
+            abort(403, 'No tienes permiso para editar este método.');
         }
 
         $temas = Tema::all();
@@ -163,9 +162,8 @@ class MetodoController extends Controller
     {
         $metodo = Metodo::findOrFail($id);
 
-        $user = Auth::user();
-        if (!in_array($user->rol, ['admin', 'editor', 'profesor_seguro'])) {
-            abort(403);
+        if (!Auth::user()->canManageMetodo($metodo)) {
+            abort(403, 'No tienes permiso para editar este método.');
         }
 
         $request->validate([
@@ -239,13 +237,13 @@ class MetodoController extends Controller
 
     public function destroy($id)
     {
-        if (!Auth::user()->isAdmin()) {
-            return response()->json(['success' => false, 'message' => 'No autorizado.'], 403);
-        }
-
         $metodo = Metodo::find($id);
         if (!$metodo) {
             return response()->json(['success' => false, 'message' => 'Método no encontrado.'], 404);
+        }
+
+        if (!Auth::user()->canManageMetodo($metodo)) {
+            return response()->json(['success' => false, 'message' => 'No autorizado.'], 403);
         }
 
         MetodoFigure::where('metodo_id', $id)->delete();
