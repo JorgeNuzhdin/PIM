@@ -1,0 +1,108 @@
+\documentclass[12pt]{extarticle}
+\title{Análisis de juegos}
+\usepackage{gensymb}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{float}
+\usetikzlibrary{positioning}
+\usetikzlibrary{calc, shapes.geometric}
+\usetikzlibrary{intersections}
+\usepackage{subcaption}
+
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{tkz-euclide}
+\usetikzlibrary{arrows}
+\usetikzlibrary{calc,through}
+ \usetikzlibrary{math}
+ 
+\tikzset{circle through 3 points/.style n args={3}{%
+insert path={let    \p1=($(#1)!0.5!(#2)$),
+                    \p2=($(#1)!0.5!(#3)$),
+                    \p3=($(#1)!0.5!(#2)!1!-90:(#2)$),
+                    \p4=($(#1)!0.5!(#3)!1!90:(#3)$),
+                    \p5=(intersection of \p1--\p3 and \p2--\p4)
+                    in },
+at={(\p5)},
+circle through= {(#1)}
+}}
+\usetikzlibrary{shapes.geometric}
+
+
+\usepackage[shortlabels]{enumitem}
+\setenumerate[0]{label=\alph*)}
+\graphicspath{ {images/} }
+\begin{document}
+
+\newtheorem{ejer} {Reto}
+\newtheorem{ejem} {Ejemplo}
+\newtheorem{theorem} {Teorema}
+\newtheorem*{demon} {Demostración}
+\newtheorem*{pistas} {Pista}
+\newtheorem*{pistas2} {Pista 2}
+\newtheorem*{sol} {Solución}
+\newtheorem{defin} {Definición}
+\newenvironment{enumerar}{\begin{enumerate}\setlength{\parskip}{0pt}}
+{\end{enumerate}}
+
+\newcommand{\temas}[1]{}
+\newcommand{\dificultad}[1]{}
+\newcommand{\fuente}[1]{}
+\newcommand{\curso}[1]{}
+\newcommand{\comentarios}[1]{}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PROBLEMA 1
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{
+% Título del problema
+}
+
+\temas{
+% 1-4 tags apropiados, como 
+% geometría, circunferencias, inversión
+}
+
+\dificultad{
+% número del 1 al 6
+%1: ejercicio técnico que sigue el algoritmo explicado en clase
+%2: el 90% de alumnos listos lo resuelven en menos de 5 minutos
+%3: el 60-70% de alumnos listos lo resuelven en menos de 10 minutos
+%4: lo resuelve uno de cada 3-4 en 15-30 minutos
+%5: lo resuelven menos del 10% de alumnos listos en más de media hora
+%6: lo resuelven menos del 2% de alumnos listos
+}
+
+\fuente{
+% indicar autor y procedencia, por ejemplo
+% IMO 2026, Shapovalov V.
+}
+
+\curso{
+% curso mínimo necesario para comprender y poder solucionar el problema sin explicaciones adicionales
+% 1 Primaria, 2 Primaria,..., ! ESO,..., 1 BACH, 2 BACH
+}
+
+\comentarios{
+
+}
+
+\begin{ejer}
+% el enunciado
+\end{ejer}
+\begin{pistas}
+% las pistas
+\end{pistas}
+
+\begin{proof}
+% la(s) solucion(es)
+\end{proof}
+
+\end{document}
