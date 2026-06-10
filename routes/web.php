@@ -555,8 +555,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 Route::middleware('auth')->prefix('pim-sheets')->name('pim-sheets.')->group(function () {
     Route::get('/', [PimSheetController::class, 'index'])->name('index');
 
-    // Solo editores y administradores pueden subir sheets
-    Route::middleware('can.edit.problemas')->group(function () {
+    // Editores, administradores y profesores seguros pueden subir sheets
+    Route::middleware('can.upload.sheets')->group(function () {
         Route::get('/create', [PimSheetController::class, 'create'])->name('create');
         Route::post('/', [PimSheetController::class, 'store'])->name('store');
     });

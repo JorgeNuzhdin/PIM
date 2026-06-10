@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Alias de middlewares personalizados
         $middleware->alias([
             'can.edit.problemas' => \App\Http\Middleware\CanEditProblemas::class,
+            'can.upload.sheets' => \App\Http\Middleware\CanUploadSheets::class,
         ]);
     })
     ->withMiddleware(function (Middleware $middleware) {

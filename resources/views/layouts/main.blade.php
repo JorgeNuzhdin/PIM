@@ -421,9 +421,9 @@ window.MathJax = {
                 <a href="{{ route('metodos.index') }}">Métodos</a>
             @endauth
 
-            {{-- Hojas: link for all auth, dropdown for editors --}}
+            {{-- Hojas: link for all auth, dropdown para quien puede subir hojas --}}
             @auth
-                @if(Auth::user()->canEditProblemas())
+                @if(Auth::user()->canUploadSheets())
                     <div class="nav-dropdown">
                         <a href="{{ route('pim-sheets.index') }}" class="nav-dropdown-btn">Hojas ▾</a>
                         <div class="nav-dropdown-content">

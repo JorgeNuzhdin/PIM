@@ -105,8 +105,8 @@ class PimSheetController extends Controller
      */
     public function create()
     {
-        // Solo editores y administradores pueden subir sheets
-        if (!Auth::user()->canEditProblemas()) {
+        // Editores, administradores y profesores seguros pueden subir sheets
+        if (!Auth::user()->canUploadSheets()) {
             abort(403, 'No tienes permiso para subir hojas de problemas.');
         }
 
@@ -126,8 +126,8 @@ class PimSheetController extends Controller
         Log::info('Has tex_sols: ' . ($request->hasFile('tex_sols') ? 'yes' : 'no'));
         Log::info('Has imagenes_preambulo: ' . ($request->hasFile('imagenes_preambulo') ? 'yes' : 'no'));
 
-        // Solo editores y administradores pueden subir sheets
-        if (!Auth::user()->canEditProblemas()) {
+        // Editores, administradores y profesores seguros pueden subir sheets
+        if (!Auth::user()->canUploadSheets()) {
             abort(403, 'No tienes permiso para subir hojas de problemas.');
         }
 

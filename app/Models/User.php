@@ -69,6 +69,15 @@ class User extends Authenticatable
         return in_array($this->rol, ['admin', 'editor']);
     }
 
+    /**
+     * ¿Puede subir hojas de problemas (PimSheets)?
+     * Incluye a 'profesor_seguro' además de editores/administradores.
+     */
+    public function canUploadSheets()
+    {
+        return in_array($this->rol, ['admin', 'editor', 'profesor_seguro']);
+    }
+
     public function isAutoApproved(): bool
     {
         return in_array($this->rol, ['admin', 'editor', 'user_seguro', 'profesor_seguro']);

@@ -269,7 +269,7 @@
         <h1>Hojas de Problemas</h1>
         <div style="display:flex;align-items:center;gap:0.75rem;">
             @auth
-                @if(Auth::user()->canEditProblemas())
+                @if(Auth::user()->canUploadSheets())
                     <a href="{{ route('pim-sheets.create') }}" class="btn btn-success">+ Subir Nueva Hoja</a>
                 @endif
                 @if(Auth::user()->isAdmin())
