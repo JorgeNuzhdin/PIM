@@ -78,6 +78,19 @@ class User extends Authenticatable
         return in_array($this->rol, ['admin', 'editor', 'profesor_seguro']);
     }
 
+    /**
+     * ¿Puede editar/eliminar esta hoja concreta?
+     * El admin puede con cualquiera; los demás solo con las que subieron ellos.
+     */
+    public function canManageSheet(PimSheet $sheet): bool
+    {
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        return $this->canUploadSheets() && (int) $sheet->user_id === (int) $this->id;
+    }
+
     public function isAutoApproved(): bool
     {
         return in_array($this->rol, ['admin', 'editor', 'user_seguro', 'profesor_seguro']);

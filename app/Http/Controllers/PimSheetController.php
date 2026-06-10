@@ -154,6 +154,7 @@ class PimSheetController extends Controller
 
         try {
             $data = [
+                'user_id' => Auth::id(),
                 'title' => $request->title,
                 'date_year' => $request->date_year,
                 'access' => $request->access ?? 0,
@@ -728,16 +729,25 @@ class PimSheetController extends Controller
     public function edit($id)
     {
         $sheet = PimSheet::findOrFail($id);
+
+        if (!Auth::user()->canManageSheet($sheet)) {
+            abort(403, 'No tienes permiso para editar esta hoja.');
+        }
+
         $temas = Tema::orderBy('tema')->get();
         return view('pim_sheets.edit', compact('sheet', 'temas'));
     }
 
     /**
-     * Guardar edición de metadatos (solo admin)
+     * Guardar edición de metadatos (admin o el profesor que la subió)
      */
     public function update(Request $request, $id)
     {
         $sheet = PimSheet::findOrFail($id);
+
+        if (!Auth::user()->canManageSheet($sheet)) {
+            abort(403, 'No tienes permiso para editar esta hoja.');
+        }
 
         $request->validate([
             'title'       => 'required|string|max:255',
@@ -784,19 +794,18 @@ class PimSheetController extends Controller
     }
 
     /**
-     * Eliminar una hoja de problemas (solo admin)
+     * Eliminar una hoja de problemas (admin o el profesor que la subió)
      */
     public function destroy($id)
     {
-        // Solo administradores pueden eliminar sheets
-        if (!Auth::user()->isAdmin()) {
-            return response()->json(['success' => false, 'message' => 'No tienes permiso para eliminar hojas.'], 403);
-        }
-
         $sheet = PimSheet::find($id);
 
         if (!$sheet) {
             return response()->json(['success' => false, 'message' => 'Hoja no encontrada.'], 404);
+        }
+
+        if (!Auth::user()->canManageSheet($sheet)) {
+            return response()->json(['success' => false, 'message' => 'No tienes permiso para eliminar hojas.'], 403);
         }
 
         $sheet->delete();

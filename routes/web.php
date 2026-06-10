@@ -561,8 +561,9 @@ Route::middleware('auth')->prefix('pim-sheets')->name('pim-sheets.')->group(func
         Route::post('/', [PimSheetController::class, 'store'])->name('store');
     });
 
-    // Solo administradores pueden editar/eliminar sheets
-    Route::middleware('admin')->group(function () {
+    // Editar/eliminar: admin cualquier hoja; profesor/editor solo las suyas
+    // (la propiedad se valida en el controlador con canManageSheet()).
+    Route::middleware('can.upload.sheets')->group(function () {
         Route::get('/{id}/edit', [PimSheetController::class, 'edit'])->name('edit');
         Route::put('/{id}', [PimSheetController::class, 'update'])->name('update');
         Route::delete('/{id}', [PimSheetController::class, 'destroy'])->name('destroy');

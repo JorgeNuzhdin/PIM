@@ -13,6 +13,7 @@ class PimSheet extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'user_id',
         'title',
         'date_year',
         'access',
@@ -30,6 +31,14 @@ class PimSheet extends Model
     public function tema(): BelongsTo
     {
         return $this->belongsTo(Tema::class, 'theme', 'id');
+    }
+
+    /**
+     * Usuario que subió la hoja
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
     /**
