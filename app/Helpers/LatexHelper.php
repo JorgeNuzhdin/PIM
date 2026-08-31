@@ -547,7 +547,7 @@ private static function getImSimple($filename)
     // para que ningún preg_replace posterior con \s* los devore
     $t = str_replace("\n\n", '###PARABREAK###', $t);
 
-     $t = str_replace('\%', 'PCTG', $t);
+     $t = str_replace('\%', '###ESCPCT###', $t);
 
         // Proteger < y > del contenido original ANTES de generar HTML
         // Se convertirán a &lt; y &gt; al final
@@ -1449,7 +1449,7 @@ $t = str_replace('\end{verbatim}', '</code></pre>', $t);
 
 $t = str_replace('&&&LT&&&', '&lt;', $t);
     $t = str_replace('&&&GT&&&', '&gt;', $t);
-$t = str_replace( 'PCTG','\%', $t);
+$t = str_replace( '###ESCPCT###','\%', $t);
 
 // \degree fuera de math → símbolo °
 $t = str_replace('\degree', '°', $t);

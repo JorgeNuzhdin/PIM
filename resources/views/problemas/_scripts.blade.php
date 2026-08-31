@@ -60,18 +60,54 @@ function updatePreview(inputId, previewId) {
 // Los eventos se adjuntan en el segundo DOMContentLoaded más abajo
 
 
-// Función para mostrar nombres de archivos seleccionados
+// Función para mostrar nombres de archivos seleccionados.
+// Reabrir el selector de archivos reemplaza input.files por defecto, así que
+// acumulamos las selecciones anteriores en un DataTransfer y las reinyectamos.
 function showFileNames(input) {
     const fileList = document.getElementById('file-list');
     if (!fileList) return;
 
-    if (input.files.length === 0) {
+    const previousFiles = input._accumulatedFiles || [];
+    const newFiles = Array.from(input.files);
+
+    const merged = previousFiles.concat(newFiles).filter((f, idx, arr) =>
+        arr.findIndex(o => o.name === f.name && o.size === f.size) === idx
+    );
+
+    input._accumulatedFiles = merged;
+
+    const dt = new DataTransfer();
+    merged.forEach(f => dt.items.add(f));
+    input.files = dt.files;
+
+    renderFileList(input);
+}
+
+function removeSelectedFile(input, index) {
+    const files = input._accumulatedFiles || [];
+    files.splice(index, 1);
+    input._accumulatedFiles = files;
+
+    const dt = new DataTransfer();
+    files.forEach(f => dt.items.add(f));
+    input.files = dt.files;
+
+    renderFileList(input);
+}
+
+function renderFileList(input) {
+    const fileList = document.getElementById('file-list');
+    if (!fileList) return;
+
+    const files = input._accumulatedFiles || [];
+    if (files.length === 0) {
         fileList.innerHTML = '';
         return;
     }
 
-    const names = Array.from(input.files).map(f => `📎 ${f.name}`).join('<br>');
-    fileList.innerHTML = names;
+    fileList.innerHTML = files.map((f, idx) =>
+        `<div>📎 ${f.name} <a href="#" onclick="removeSelectedFile(document.getElementById('${input.id}'), ${idx}); return false;" style="color:#e53e3e; margin-left:0.5rem;">✕</a></div>`
+    ).join('');
 }
 
 // Función para limpiar el formulario
