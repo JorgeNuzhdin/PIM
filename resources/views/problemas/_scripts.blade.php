@@ -215,13 +215,16 @@ function extraerEjercicios(contenido) {
         // Buscar metadatos SOLO entre el ejercicio anterior y el actual
         const bloqueMetadatos = documento.substring(lastEjerEnd, match.index);
 
-        const temas = extraerComando(bloqueMetadatos, 'temas') || '';
+        // Los metadatos se leen sin los comentarios LaTeX (% ...) de la plantilla
+        const temas = quitarComentariosTex(extraerComando(bloqueMetadatos, 'temas'));
         const tema = quitarComentariosTex(extraerComando(bloqueMetadatos, 'tema'));
-        const dificultad = extraerComando(bloqueMetadatos, 'dificultad') || '';
-        const fuente = extraerComando(bloqueMetadatos, 'fuente') || '';
-        const curso = extraerComando(bloqueMetadatos, 'curso') || '';
-        const titulo = extraerComando(bloqueMetadatos, 'título') || extraerComando(bloqueMetadatos, 'titulo') || extraerComando(bloqueMetadatos, 'title') || '';
-        const comentarios = extraerComando(bloqueMetadatos, 'comentarios') || '';
+        const dificultad = quitarComentariosTex(extraerComando(bloqueMetadatos, 'dificultad'));
+        const fuente = quitarComentariosTex(extraerComando(bloqueMetadatos, 'fuente'));
+        const curso = quitarComentariosTex(extraerComando(bloqueMetadatos, 'curso'));
+        const titulo = quitarComentariosTex(extraerComando(bloqueMetadatos, 'título'))
+            || quitarComentariosTex(extraerComando(bloqueMetadatos, 'titulo'))
+            || quitarComentariosTex(extraerComando(bloqueMetadatos, 'title'));
+        const comentarios = quitarComentariosTex(extraerComando(bloqueMetadatos, 'comentarios'));
 
         // Extraer enunciado
         const enunciado = match[1].trim();
