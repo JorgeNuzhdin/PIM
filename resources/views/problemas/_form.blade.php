@@ -18,10 +18,12 @@
     </div>
     <small class="tex2jax_ignore" style="color: #718096; display: block; margin-top: 0.5rem;">
         El archivo debe contener la estructura estándar:
-        <code>\título{}</code>, <code>\temas{}</code>, <code>\dificultad{}</code>,
+        <code>\título{}</code>, <code>\tema{}</code>, <code>\temas{}</code>, <code>\dificultad{}</code>,
         <code>\fuente{}</code>, <code>\curso{}</code>, <code>\comentarios{}</code>,
         <code>\begin{ejer}...\end{ejer}</code>, <code>\begin{pistas}...\end{pistas}</code>,
         <code>\begin{proof}...\end{proof}</code>
+        <br><code>\tema{}</code> es el tema del problema; si no viene, se deduce de los tags o se elige a mano.
+        <code>\temas{}</code> son los tags, separados por comas o puntos y coma.
     </small>
 </div>
 

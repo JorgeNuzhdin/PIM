@@ -49,6 +49,7 @@ circle through= {(#1)}
 \newenvironment{enumerar}{\begin{enumerate}\setlength{\parskip}{0pt}}
 {\end{enumerate}}
 
+\newcommand{\tema}[1]{}
 \newcommand{\temas}[1]{}
 \newcommand{\dificultad}[1]{}
 \newcommand{\fuente}[1]{}
@@ -65,8 +66,13 @@ circle through= {(#1)}
 % Título del problema
 }
 
+\tema{
+% el tema del problema: uno solo, de la lista de temas del PIM
+% (Geometría, Aritmética, Combinatoria, Métodos...)
+}
+
 \temas{
-% 1-4 tags apropiados, como 
+% 1-4 tags apropiados, separados por comas o puntos y coma, como 
 % geometría, circunferencias, inversión
 }
 

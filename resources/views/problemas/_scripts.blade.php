@@ -216,6 +216,7 @@ function extraerEjercicios(contenido) {
         const bloqueMetadatos = documento.substring(lastEjerEnd, match.index);
 
         const temas = extraerComando(bloqueMetadatos, 'temas') || '';
+        const tema = quitarComentariosTex(extraerComando(bloqueMetadatos, 'tema'));
         const dificultad = extraerComando(bloqueMetadatos, 'dificultad') || '';
         const fuente = extraerComando(bloqueMetadatos, 'fuente') || '';
         const curso = extraerComando(bloqueMetadatos, 'curso') || '';
@@ -241,6 +242,7 @@ function extraerEjercicios(contenido) {
 
         ejercicios.push({
             temas: temas,
+            tema: tema,
             dificultad: dificultad,
             fuente: fuente,
             curso: curso,
@@ -297,6 +299,42 @@ function extraerComando(texto, comando) {
     }
 
     return '';
+}
+
+// Quitar los comentarios LaTeX (% hasta fin de línea) de un valor extraído
+// (\x5c = barra invertida: no se corta en un \% escapado)
+function quitarComentariosTex(texto) {
+    return (texto || '').replace(/(^|[^\x5c])%[^\n]*/g, '$1').trim();
+}
+
+// Separar la lista de \temas{}: acepta coma y punto y coma como delimitadores
+function separarTemas(texto) {
+    return quitarComentariosTex(texto).split(/[,;]+/).map(t => t.trim()).filter(t => t);
+}
+
+// Normalizar texto para comparar nombres de tema (sin mayúsculas ni acentos)
+function normalizarNombreTema(texto) {
+    return (texto || '').trim().toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ');
+}
+
+// Buscar el id de tema correspondiente a un nombre (usa las opciones del select)
+function temaIdDesdeNombre(nombre) {
+    const select = document.getElementById('tema_id');
+    if (!select || !nombre || !nombre.trim()) return null;
+    const objetivo = normalizarNombreTema(nombre);
+    const opt = Array.from(select.options)
+        .find(o => o.value && normalizarNombreTema(o.text) === objetivo);
+    return opt ? opt.value : null;
+}
+
+// Mostrar el indicador junto a la etiqueta Tema
+function marcarIndicadorTema(texto) {
+    const indicator = document.getElementById('tema-auto-indicator');
+    if (!indicator) return;
+    indicator.textContent = texto;
+    indicator.style.display = 'inline';
 }
 
 // Rellenar formulario con datos de un ejercicio; devuelve array de avisos
@@ -358,25 +396,38 @@ function rellenarFormulario(ejercicio) {
         document.getElementById('comments').value = ejercicio.comentarios;
     }
 
+    // Tema indicado en el archivo con \tema{}
+    let temaFijado = false;
+    if (ejercicio.tema && ejercicio.tema.trim()) {
+        const temaId = temaIdDesdeNombre(ejercicio.tema);
+        if (temaId) {
+            const temaSelect = document.getElementById('tema_id');
+            if (temaSelect) temaSelect.value = temaId;
+            marcarIndicadorTema('✨ Del archivo');
+            temaFijado = true;
+        } else {
+            avisos.push(`⚠️ Tema no reconocido: "${ejercicio.tema.trim()}". Selecciónalo manualmente.`);
+        }
+    }
+
     // Tags (temas)
     if (ejercicio.temas) {
-        const tagsArray = ejercicio.temas.split(',').map(t => t.trim()).filter(t => t);
+        const tagsArray = separarTemas(ejercicio.temas);
         cargarTagsEnFormulario(tagsArray);
 
-        // Auto-detectar tema desde todos los tags
-        if (tagsArray.length > 0) {
+        // Auto-detectar tema desde los tags (solo si el archivo no traía \tema{})
+        if (tagsArray.length > 0 && !temaFijado) {
             const params = new URLSearchParams();
             tagsArray.forEach(t => params.append('tags[]', t));
             fetch('{{ route("tema.desde.tag") }}?' + params.toString())
                 .then(r => r.json())
                 .then(data => {
                     const temaSelect = document.getElementById('tema_id');
-                    const indicator  = document.getElementById('tema-auto-indicator');
                     // Limpiar prompt anterior si existe
                     document.getElementById('tema-conflict-prompt')?.remove();
                     if (!data.conflict && data.tema_id) {
                         if (temaSelect) temaSelect.value = data.tema_id;
-                        if (indicator)  indicator.style.display = 'inline';
+                        marcarIndicadorTema('✨ Auto-detectado');
                     } else if (data.conflict && data.options?.length > 0) {
                         mostrarSelectorTema(data.options);
                     }
@@ -406,8 +457,7 @@ function mostrarSelectorTema(options) {
         btn.style.cssText = 'margin:0 0.25rem;padding:0.2rem 0.6rem;border:1px solid #d69e2e;border-radius:3px;background:white;cursor:pointer;font-size:0.875rem;';
         btn.onclick = () => {
             temaSelect.value = opt.id;
-            const indicator = document.getElementById('tema-auto-indicator');
-            if (indicator) indicator.style.display = 'inline';
+            marcarIndicadorTema('✨ Auto-detectado');
             prompt.remove();
         };
         prompt.appendChild(btn);
@@ -700,7 +750,7 @@ async function importarMultiplesEjercicios(ejercicios) {
             
             // Tags
             if (ejercicio.temas) {
-                const tags = ejercicio.temas.split(',').map(t => t.trim()).filter(t => t);
+                const tags = separarTemas(ejercicio.temas);
                 tags.forEach(tag => {
                     formData.append('tags[]', tag);
                 });
@@ -810,7 +860,7 @@ async function analizarYMostrarPreview(ejercicios, contenido) {
             if (!ej.titulo || !ej.titulo.trim())  { issues.push('Sin título (se cargará vacío)');  if (estado === 'ok') estado = 'warn'; }
         }
 
-        return { index: i, issues, estado, title_match: null, content_match: null };
+        return { index: i, issues, estado, title_match: null, content_match: null, temaExplicito: null };
     });
 
     // Paso 2: comprobar duplicados en la API
@@ -848,9 +898,21 @@ async function analizarYMostrarPreview(ejercicios, contenido) {
         console.warn('Error al verificar duplicados:', e);
     }
 
-    // Paso 3: detectar tema desde tags (en paralelo)
-    const temaPromises = ejercicios.map(ej => {
-        const tags = (ej.temas || '').split(',').map(t => t.trim()).filter(t => t);
+    // Paso 3: tema del archivo (\tema{}) y, si no viene, detectarlo desde los tags
+    ejercicios.forEach((ej, i) => {
+        if (!ej.tema || !ej.tema.trim()) return;
+        const temaId = temaIdDesdeNombre(ej.tema);
+        if (temaId) {
+            analisis[i].temaExplicito = temaId;
+        } else {
+            analisis[i].issues.push(`Tema "${ej.tema.trim()}" no reconocido (selecciónalo a mano)`);
+            if (analisis[i].estado === 'ok') analisis[i].estado = 'warn';
+        }
+    });
+
+    const temaPromises = ejercicios.map((ej, i) => {
+        if (analisis[i].temaExplicito) return Promise.resolve(null);
+        const tags = separarTemas(ej.temas);
         if (!tags.length) return Promise.resolve(null);
         const params = new URLSearchParams();
         tags.forEach(t => params.append('tags[]', t));
@@ -903,7 +965,8 @@ function mostrarPreviewProblemas(ejercicios, analisis, contenido) {
             : '<span style="color:#68d391;font-size:0.85rem;">OK</span>';
 
         const temaResol = a.temaResolucion;
-        const preselected = (temaResol && !temaResol.conflict && temaResol.tema_id) ? temaResol.tema_id : '';
+        const preselected = a.temaExplicito
+            || ((temaResol && !temaResol.conflict && temaResol.tema_id) ? temaResol.tema_id : '');
 
         return `<tr style="${rowBg}">
             <td style="padding:0.4rem 0.5rem;text-align:center;">
