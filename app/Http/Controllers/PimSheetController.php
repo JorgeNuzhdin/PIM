@@ -12,6 +12,7 @@ use App\Models\MetodoFigure;
 use App\Models\Subtema;
 use App\Helpers\LatexHelper;
 use App\Helpers\AccessHelper;
+use App\Helpers\SheetPresentationHelper;
 use App\Services\LatexCompilerService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -727,6 +728,34 @@ class PimSheetController extends Controller
         }
 
         return view('pim_sheets.show', compact('sheet', 'preambleHtml', 'problemas', 'mostrarArray'));
+    }
+
+    /**
+     * Presentación HTML de la hoja: explicación por secciones, ejemplos convertidos
+     * en retos y retos/soluciones en páginas separadas (como /carrito/presentacion).
+     */
+    public function html($id)
+    {
+        $sheet = PimSheet::with('tema')->find($id);
+
+        if (!$sheet) {
+            abort(404, 'Hoja no encontrada.');
+        }
+
+        // Problemas de la hoja, en el orden en que aparecen en el campo problems
+        $problemas = collect();
+        if (!empty($sheet->problems)) {
+            $problemIds = array_filter(array_map('trim', explode(',', $sheet->problems)));
+            if (!empty($problemIds)) {
+                $problemas = Problema::whereIn('id', $problemIds)
+                    ->orderByRaw('FIELD(id, ' . implode(',', $problemIds) . ')')
+                    ->get();
+            }
+        }
+
+        $pages = SheetPresentationHelper::build($sheet->preambles, $problemas);
+
+        return view('pim_sheets.html', compact('sheet', 'pages'));
     }
 
     /**

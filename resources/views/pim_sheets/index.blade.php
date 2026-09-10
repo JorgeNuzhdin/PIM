@@ -169,6 +169,16 @@
         background-color: #bee3f8;
     }
 
+    .btn-action.html {
+        color: #6366f1;
+        font-weight: 700;
+        font-size: 0.85rem;
+    }
+
+    .btn-action.html:hover {
+        background-color: #e0e7ff;
+    }
+
     .btn-action.download-tex {
         color: #059669;
         font-weight: 700;
@@ -468,6 +478,7 @@
                         <td>{{ $sheet->tema->tema ?? '-' }}</td>
                         <td class="actions-cell">
                             <a href="{{ route('pim-sheets.show', ['id' => $sheet->id]) }}" class="btn-action view" title="Ver hoja">👁️</a>
+                            <a href="{{ route('pim-sheets.html', ['id' => $sheet->id]) }}" class="btn-action html" title="Presentación HTML (retos y soluciones en páginas separadas)">HTML</a>
                             @if(!\App\Helpers\AccessHelper::isRestricted())<a href="{{ route('pim-sheets.download', ['id' => $sheet->id]) }}" class="btn-action download-tex" title="Descargar TEX+IMG (ZIP)">TEX⤓</a>@endif
                             <button class="btn-action download-pdf"
                                     data-url-prof="{{ route('pim-sheets.download-pdf', ['id' => $sheet->id, 'solutions' => '1']) }}"

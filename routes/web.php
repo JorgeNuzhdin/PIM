@@ -573,6 +573,9 @@ Route::middleware('auth')->prefix('pim-sheets')->name('pim-sheets.')->group(func
     // Ver hoja (debe ir después de /create para evitar conflictos)
     Route::get('/{id}', [PimSheetController::class, 'show'])->name('show');
 
+    // Presentación HTML paginada de la hoja
+    Route::get('/{id}/html', [PimSheetController::class, 'html'])->name('html');
+
     // Descarga de hojas
     Route::get('/{id}/download', [PimSheetController::class, 'download'])->name('download');
     Route::get('/{id}/download-pdf', [PimSheetController::class, 'downloadPdf'])->name('download-pdf');
