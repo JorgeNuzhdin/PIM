@@ -34,6 +34,10 @@ class LatexHelper
     {
         $clean = $source;
 
+        // Arroba inclusiva antes de quitar llaves: l{\arr}s -> l@s
+        $clean = preg_replace('/\{\s*\\\\arr\s*\}/', '@', $clean);
+        $clean = preg_replace('/\\\\arr(?![a-zA-Z])\s*/', '@', $clean);
+
         $clean = preg_replace('/\\\\(?:textit|textbf|textsl|textsc|emph|mathrm|mathit|mathbf|texttt|textsf)\s*\{([^{}]*)\}/u', '$1', $clean);
 
         $clean = preg_replace('/\\\\\\\\/', ' ', $clean);
@@ -553,6 +557,14 @@ private static function getImSimple($filename)
         // Se convertirán a &lt; y &gt; al final
         $t = str_replace('<', '&&&LT&&&', $t);
         $t = str_replace('>', '&&&GT&&&', $t);
+
+        // Arroba inclusiva: \arr se define en la plantilla como @ ({\fontfamily{ptm}\selectfont @}).
+        // Se usa como l{\arr}s, compañer{\arr}s, tod{\arr}s...
+        // Va PRONTO (antes de \textbf, \textit, etc.) porque esos se procesan buscando la
+        // primera "}" y las llaves de {\arr} los descuadran.
+        // El lookahead evita tocar \arrow, \arraystretch, \array, etc.
+        $t = preg_replace('/\{\s*\\\\arr\s*\}/', '@', $t);
+        $t = preg_replace('/\\\\arr(?![a-zA-Z])\s*/', '@', $t);
 
         // Eliminar comentarios: tanto al inicio de línea como inline (después de %)
         $t = preg_replace('/^%.*$/m', '', $t);  // Comentarios al inicio de línea
