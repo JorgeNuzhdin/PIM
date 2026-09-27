@@ -8,10 +8,19 @@ use App\Helpers\LatexHelper;
 class SourceHelper
 {
     /**
+     * Número mínimo de problemas para que un grupo aparezca en "Grupos".
+     * Los grupos más pequeños se muestran dentro de "Otras fuentes".
+     */
+    const MIN_GROUP_SIZE = 10;
+
+    /**
      * Patrones para agrupar fuentes similares.
-     * La clave es el nombre del grupo, el valor es un array de patrones regex.
+     * La clave es el nombre del grupo, el valor es un array de patrones regex
+     * (sin delimitadores; se aplican con /iu sobre cada parte separada por comas).
      */
     private static $groupPatterns = [
+        'Baltic Way' => ['Baltic\s*Way'],
+
         // Competiciones AMC/AIME/USAMO
         'AIME' => ['AIME'],
         'AMC 8' => ['AMC\s*8'],
@@ -30,14 +39,14 @@ class SourceHelper
         // Olimpiadas nacionales
         'OME' => ['^OME\b', 'Olimpiada.*Espa', 'fase.*local.*OME'],
         'OIM' => ['^OIM\b', 'Olimpiada.*Iberoamericana'],
+        'Olimpiada de Irán' => ['Olimpiada.*Ir[aá]n\b', '\bIranian\b'],
         'Concurso de Primavera' => ['Concurso.*Primavera', 'Primavera.*Matem'],
 
         // Competiciones rusas y de Moscú
         'Olimpiada de Moscú' => ['Olimpiada.*Mosc', 'Moscow.*Olympiad', 'Mosc.*Olympiad'],
-        'Olimpiada de Rusia' => ['Olimpiada.*Rusia', 'Russian.*Olympiad', 'Russia.*Olympiad', 'Olimpiada.*Rusa', 'Russia', 'Russian', 'USSR', 'Soviet'],
+        'Olimpiada de Rusia' => ['Olimpiada.*Rusia', 'Russian.*Olympiad', 'Russia.*Olympiad', 'Olimpiada.*Rusa', 'Russia', 'Russian', '\bRusia\b', 'Olimpiada\s*Matem[aá]tica\s*Oral', 'USSR', 'Soviet'],
         'Tournament of Towns' => ['Tournament.*Towns', 'Tornео.*ciudad', 'Torneo.*ciudades'],
-        'Fiesta Matemática de Moscú' => ['Fiesta.*Matem.*Mosc', 'Moscow.*Math.*Festival'],
-
+        'Fiesta Matemática de Moscú' => ['Fiesta.*Matem.*Mosc', 'Fiesta\s*Matem[aá]tica\s*de\s*\d{4}', 'Moscow.*Math.*Festival'],
 
         // Competiciones por países
         'China' => ['China', 'Chinese'],
@@ -47,8 +56,20 @@ class SourceHelper
         'Bulgaria' => ['Bulgar'],
 
         // Autores conocidos (normalizar variantes)
+        'Folklore' => ['\bfol[kc]lore\b', '\bcl[aá]sico\b'],
         'A. Shen' => ['\bShen\b', 'A\.\s*Shen', 'Shen\s*A'],
         'A. Shapovalov' => ['\bShapovalov\b', 'A\.\s*Shapovalov', 'Shapovalov\s*A'],
+        'A. Skopenkov - A. Zaslavsky' => ['Skopenkov', 'Zaslavsk[iy](?!\s*O\b)', 'Math(ematics)?\s*via\s*Problems'],
+        'A. Ryabichev' => ['R[iy]abichev'],
+        'M. Evdokimov' => ['E[uv]dok[ií]m?[oó]v', 'Eudokomov'],
+        'I. Yaschenko' => ['Yas(c)?hchenko', 'Yaschenko'],
+        'I. Yakovlev' => ['I\.\s*Yakovlev'],
+        'J. Ponarin' => ['Ponarin'],
+        'A. Knop' => ['Knop\s*A\b'],
+        'V. Bragin' => ['\bBragin\b'],
+        'Catriona Agg' => ['Catriona\s*Agg'],
+        'A. Gribalko' => ['Gribalko'],
+        'A. Peshnin' => ['Peshnin'],
         'N. Konstantinov' => ['\bKonstantinov\b', 'N\.\s*Konstantinov', 'Konstantinov\s*N'],
         'M. Volchkevich' => ['\bVolchkevich\b', 'M\.\s*Volchkevich', 'Volchkevich\s*M', 'Maxim\s*Volchkevich'],
         'A. Kanel-Belov' => ['\bKanel-Belov\b', '\bKanel\b', 'A\.\s*Kanel', 'Kanel-Belov\s*A'],
@@ -71,57 +92,55 @@ class SourceHelper
         // Libros
         'Problem Solving Strategies' => ['Problem\s*Solving\s*Strategies', 'Engel.*Strategies'],
         'Excalibur' => ['Excalibur'],
-        'Mathematics via Problems' => ['Mathematics.*via.*Problems', 'Mathematics_via_Problems'],
 
         // Otras competiciones
         'Putnam' => ['Putnam'],
         'MATHCOUNTS' => ['MATHCOUNTS', 'Mathcounts'],
-        'Canguro' => ['Canguro', 'Kangourou', 'Kangaroo'],
+        'Canguro' => ['Canguro', 'Cangur\b', 'Kangourou', 'Kangaroo'],
     ];
+
+    /** Conteo de fuentes crudas (source => nº de problemas), cacheado por petición. */
+    private static $rawSourceCounts = null;
 
     /**
      * Obtiene las fuentes agrupadas para mostrar en el desplegable.
      * Retorna un array con:
-     * - 'groups' => grupos detectados con sus patrones
-     * - 'ungrouped' => fuentes que no encajan en ningún grupo (solo las que aparecen 2+ veces)
+     * - 'groups' => grupos con al menos MIN_GROUP_SIZE problemas (nombre => ['count', 'sources'])
+     * - 'others' => lista ordenada de ['value', 'label', 'count']: grupos pequeños
+     *   y fuentes sueltas que no encajan en ningún grupo (solo las que aparecen 2+ veces)
      */
     public static function getGroupedSources(): array
     {
-        // Obtener todas las fuentes con su conteo
-        $sourceCounts = DB::table('pim_problems')
-            ->whereNotNull('source')
-            ->where('source', '!=', '')
-            ->select('source', DB::raw('COUNT(*) as count'))
-            ->groupBy('source')
-            ->orderBy('source')
-            ->pluck('count', 'source')
-            ->toArray();
+        return self::groupSources(self::rawSourceCounts());
+    }
 
-        $rawSources = array_keys($sourceCounts);
-
+    /**
+     * Agrupa un array source => count (separado de la BD para poder probarlo).
+     */
+    public static function groupSources(array $sourceCounts): array
+    {
         // Expandir fuentes con comas en partes individuales
-        $allSources = self::expandSourcesWithCommas($rawSources, $sourceCounts);
+        $allSources = self::expandSourcesWithCommas(array_keys($sourceCounts), $sourceCounts);
 
         $groups = [];
         $usedSources = [];
 
-        // Agrupar fuentes por patrones
+        // Agrupar fuentes por patrones. El conteo es de problemas (fuentes crudas),
+        // para que "Skopenkov, Zaslavsky" no cuente dos veces en el mismo grupo.
         foreach (self::$groupPatterns as $groupName => $patterns) {
             $matchingSources = [];
-            $totalCount = 0;
-
-            foreach ($allSources as $source => $count) {
-                foreach ($patterns as $pattern) {
-                    if (preg_match('/' . $pattern . '/i', $source)) {
-                        $matchingSources[] = $source;
-                        $totalCount += $count;
-                        $usedSources[$source] = true;
-                        break;
-                    }
+            foreach (array_keys($allSources) as $source) {
+                if (self::matchesAny($source, $patterns)) {
+                    $matchingSources[] = $source;
+                    $usedSources[$source] = true;
                 }
             }
 
             if (count($matchingSources) > 0) {
+                $totalCount = 0;
+                foreach (self::rawSourcesForGroup($groupName, $sourceCounts) as $raw) {
+                    $totalCount += $sourceCounts[$raw];
+                }
                 $groups[$groupName] = [
                     'count' => $totalCount,
                     'sources' => $matchingSources,
@@ -129,55 +148,61 @@ class SourceHelper
             }
         }
 
+        $others = [];
+
+        // Los grupos poco relevantes bajan a "Otras fuentes"
+        foreach ($groups as $groupName => $info) {
+            if ($info['count'] < self::MIN_GROUP_SIZE) {
+                if ($info['count'] >= 2) {
+                    $others[] = ['value' => 'group:' . $groupName, 'label' => $groupName, 'count' => $info['count']];
+                }
+                unset($groups[$groupName]);
+            }
+        }
+
         // Fuentes no agrupadas (solo las que aparecen al menos 2 veces y no son solo números)
-        $ungrouped = [];
         foreach ($allSources as $source => $count) {
             // Excluir fuentes que son solo números o rangos de años (ej: "2020", "2020-2021")
             if (preg_match('/^\d{4}(-\d{4})?$/', $source)) {
                 continue;
             }
             if (!isset($usedSources[$source]) && $count >= 2) {
-                $ungrouped[$source] = $count;
+                $others[] = ['value' => $source, 'label' => LatexHelper::cleanLatexForDisplay($source), 'count' => $count];
             }
         }
 
-        // Ordenar grupos por nombre
-        ksort($groups);
+        // Ordenar grupos y otras fuentes por nombre
+        uksort($groups, 'strcasecmp');
+        usort($others, fn ($a, $b) => strcasecmp($a['label'], $b['label']));
 
         return [
             'groups' => $groups,
-            'ungrouped' => $ungrouped,
+            'others' => $others,
         ];
     }
 
     /**
-     * Obtiene los patrones de búsqueda SQL para un grupo dado.
-     * Si es un grupo conocido, devuelve array de patrones LIKE.
-     * Si no, devuelve el valor exacto.
+     * Devuelve las fuentes crudas de la BD que pertenecen a un grupo
+     * (alguna de sus partes separadas por comas encaja con un patrón del grupo).
      */
-    public static function getSearchPatterns(string $sourceFilter): array
+    public static function rawSourcesForGroup(string $groupName, ?array $sourceCounts = null): array
     {
-        // Si empieza con "group:", es un grupo
-        if (strpos($sourceFilter, 'group:') === 0) {
-            $groupName = substr($sourceFilter, 6);
+        $patterns = self::$groupPatterns[$groupName] ?? null;
+        if ($patterns === null) {
+            return [];
+        }
 
-            if (isset(self::$groupPatterns[$groupName])) {
-                // Convertir patrones regex a patrones LIKE
-                $likePatterns = [];
-                foreach (self::$groupPatterns[$groupName] as $pattern) {
-                    // Simplificar el regex a un patrón LIKE básico
-                    $like = preg_replace('/[\^\$\\\\]/', '', $pattern);
-                    $like = preg_replace('/\\\\s\*/', '%', $like);
-                    $like = preg_replace('/\.\*/', '%', $like);
-                    $like = preg_replace('/\\\\b/', '', $like);
-                    $likePatterns[] = '%' . $like . '%';
+        $result = [];
+        foreach (array_keys($sourceCounts ?? self::rawSourceCounts()) as $source) {
+            foreach (self::splitSource($source) as $part) {
+                if (self::matchesAny($part, $patterns)) {
+                    $result[] = $source;
+                    break;
                 }
-                return $likePatterns;
             }
         }
 
-        // Valor exacto
-        return [$sourceFilter];
+        return $result;
     }
 
     /**
@@ -189,19 +214,16 @@ class SourceHelper
             return $query;
         }
 
-        $patterns = self::getSearchPatterns($sourceFilter);
-
-        if (count($patterns) === 1 && strpos($patterns[0], '%') === false) {
-            // Búsqueda exacta
-            return $query->where('source', $patterns[0]);
+        if (strpos($sourceFilter, 'group:') === 0) {
+            $sources = self::rawSourcesForGroup(substr($sourceFilter, 6));
+            if (empty($sources)) {
+                return $query->whereRaw('1 = 0');
+            }
+            return $query->whereIn('source', $sources);
         }
 
-        // Búsqueda con LIKE para múltiples patrones
-        return $query->where(function($q) use ($patterns) {
-            foreach ($patterns as $pattern) {
-                $q->orWhere('source', 'LIKE', $pattern);
-            }
-        });
+        // Búsqueda exacta
+        return $query->where('source', $sourceFilter);
     }
 
     /**
@@ -209,25 +231,48 @@ class SourceHelper
      */
     public static function countByGroup(string $groupName): int
     {
-        if (!isset(self::$groupPatterns[$groupName])) {
-            return 0;
+        $counts = self::rawSourceCounts();
+        $total = 0;
+        foreach (self::rawSourcesForGroup($groupName, $counts) as $source) {
+            $total += $counts[$source];
         }
+        return $total;
+    }
 
-        $query = DB::table('pim_problems')->whereNotNull('source');
+    private static function rawSourceCounts(): array
+    {
+        if (self::$rawSourceCounts === null) {
+            self::$rawSourceCounts = DB::table('pim_problems')
+                ->whereNotNull('source')
+                ->where('source', '!=', '')
+                ->select('source', DB::raw('COUNT(*) as count'))
+                ->groupBy('source')
+                ->pluck('count', 'source')
+                ->toArray();
+        }
+        return self::$rawSourceCounts;
+    }
 
-        $patterns = self::$groupPatterns[$groupName];
-        $query->where(function($q) use ($patterns) {
-            foreach ($patterns as $pattern) {
-                // Convertir regex a LIKE
-                $like = preg_replace('/[\^\$\\\\]/', '', $pattern);
-                $like = preg_replace('/\\\\s\*/', '%', $like);
-                $like = preg_replace('/\.\*/', '%', $like);
-                $like = preg_replace('/\\\\b/', '', $like);
-                $q->orWhere('source', 'LIKE', '%' . $like . '%');
+    private static function matchesAny(string $source, array $patterns): bool
+    {
+        foreach ($patterns as $pattern) {
+            if (preg_match('/' . $pattern . '/iu', $source)) {
+                return true;
             }
-        });
+        }
+        return false;
+    }
 
-        return $query->count();
+    /**
+     * Separa por comas que NO estén precedidas por '\' (para no romper LaTeX como \,)
+     */
+    private static function splitSource(string $source): array
+    {
+        $parts = preg_split('/(?<!\\\\),/', $source);
+        if ($parts === false) {
+            return [$source];
+        }
+        return array_values(array_filter(array_map('trim', $parts), fn ($p) => $p !== ''));
     }
 
     /**
@@ -241,35 +286,10 @@ class SourceHelper
 
         foreach ($rawSources as $source) {
             $count = $sourceCounts[$source] ?? 1;
-
-            // Separar por comas que NO estén precedidas por '\' (para no romper LaTeX como \,)
-            $parts = preg_split('/(?<!\\\\),/', $source);
-
-            if ($parts !== false && count($parts) > 1) {
-                $parts = array_map('trim', $parts);
-                foreach ($parts as $part) {
-                    if (!empty($part)) {
-                        if (isset($expanded[$part])) {
-                            $expanded[$part] += $count;
-                        } else {
-                            $expanded[$part] = $count;
-                        }
-                    }
-                }
-            } else {
-                if (isset($expanded[$source])) {
-                    $expanded[$source] += $count;
-                } else {
-                    $expanded[$source] = $count;
-                }
+            foreach (self::splitSource($source) as $part) {
+                $expanded[$part] = ($expanded[$part] ?? 0) + $count;
             }
         }
-
-        // Ordenar alfabéticamente por clave (usando la versión limpia para evitar
-        // que "\textit{...}" se ordene al principio por el carácter '\')
-        uksort($expanded, function ($a, $b) {
-            return strcasecmp(LatexHelper::cleanLatexForDisplay($a), LatexHelper::cleanLatexForDisplay($b));
-        });
 
         return $expanded;
     }

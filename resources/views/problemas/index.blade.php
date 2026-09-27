@@ -757,12 +757,12 @@
                         </optgroup>
                     @endif
 
-                    {{-- Fuentes individuales no agrupadas --}}
-                    @if(count($sourceData['ungrouped']) > 0)
+                    {{-- Grupos pequeños y fuentes individuales no agrupadas --}}
+                    @if(count($sourceData['others']) > 0)
                         <optgroup label="Otras fuentes">
-                            @foreach($sourceData['ungrouped'] as $source => $count)
-                                <option value="{{ $source }}" {{ request('source') == $source ? 'selected' : '' }}>
-                                    {{ \App\Helpers\LatexHelper::cleanLatexForDisplay($source) }} ({{ $count }})
+                            @foreach($sourceData['others'] as $other)
+                                <option value="{{ $other['value'] }}" {{ request('source') == $other['value'] ? 'selected' : '' }}>
+                                    {{ $other['label'] }} ({{ $other['count'] }})
                                 </option>
                             @endforeach
                         </optgroup>
