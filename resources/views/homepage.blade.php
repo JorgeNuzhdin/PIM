@@ -112,6 +112,7 @@
     .welcome-text { font-size: 1.75rem; }
     .stats-bar { flex-direction: column; align-items: center; }
 }
+@include('_partials.site-footer-styles')
 </style>
 @endsection
 
@@ -157,4 +158,6 @@
     </div>
     @endif
 </div>
+
+@include('_partials.site-footer')
 @endsection

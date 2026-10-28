@@ -13,6 +13,7 @@ use App\Http\Controllers\MetodoController;
 
 
 Route::get('/', [HomePageController::class, 'index'])->name('homepage');
+Route::view('/autores', 'autores')->name('autores');
 Auth::routes();
 
 
