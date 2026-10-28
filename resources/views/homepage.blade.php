@@ -134,7 +134,7 @@
         <p>
             Para poder usar las opciones avanzadas de la base de datos, como ver todos los problemas,
             descargar problemas en LaTeX y confeccionar tus propias hojas, contacta con los
-            <a href="mailto:pim@icmat.es">organizadores del PIM</a>.
+            <a href="{{ route('contacto') }}">organizadores del PIM</a>.
         </p>
     </div>
 

@@ -39,4 +39,9 @@ return [
         'pdflatex_path' => env('PDFLATEX_PATH', 'pdflatex'),
     ],
 
+    // Destinatario del formulario de contacto
+    'contact' => [
+        'email' => env('CONTACT_EMAIL', 'pim@icmat.es'),
+    ],
+
 ];

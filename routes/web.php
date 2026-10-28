@@ -14,6 +14,9 @@ use App\Http\Controllers\MetodoController;
 
 Route::get('/', [HomePageController::class, 'index'])->name('homepage');
 Route::view('/autores', 'autores')->name('autores');
+Route::view('/proyecto', 'proyecto')->name('proyecto');
+Route::get('/contacto', [App\Http\Controllers\ContactoController::class, 'show'])->name('contacto');
+Route::post('/contacto', [App\Http\Controllers\ContactoController::class, 'send'])->name('contacto.send')->middleware('throttle:5,10');
 Auth::routes();
 
 
