@@ -54,7 +54,6 @@
     .autor-card { flex-direction: column; text-align: center; }
     .autor-card ul { list-style: none; padding-left: 0; }
 }
-@include('_partials.site-footer-styles')
 </style>
 @endsection
 
@@ -86,6 +85,4 @@
         </div>
     </div>
 </div>
-
-@include('_partials.site-footer')
 @endsection
