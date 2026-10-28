@@ -7,9 +7,15 @@
 .proyecto-container {
     max-width: 900px;
     margin: 2rem auto;
-    padding: 0 1rem;
+    padding: 2rem 2.5rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     color: #2d3748;
     line-height: 1.75;
+}
+.proyecto-container h1 {
+    margin-top: 0;
 }
 .proyecto-container h1 {
     font-size: 2rem;
@@ -41,9 +47,9 @@
     gap: 1.25rem;
 }
 .bloque {
-    background: white;
+    background: #f7fafc;
+    border: 1px solid #e2e8f0;
     border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
     padding: 1.25rem 1.5rem;
 }
 .bloque h3 {
@@ -58,11 +64,11 @@
 }
 .acceso-tabla {
     width: 100%;
-    border-collapse: collapse;
-    background: white;
+    border: 1px solid #e2e8f0;
     border-radius: 8px;
+    border-collapse: separate;
+    border-spacing: 0;
     overflow: hidden;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
     font-size: 0.95rem;
 }
 .acceso-tabla th,
@@ -108,6 +114,7 @@
     background: #ebf8ff;
 }
 @media (max-width: 760px) {
+    .proyecto-container { margin: 1rem; padding: 1.5rem 1.25rem; }
     .bloques { grid-template-columns: 1fr; }
     .acceso-tabla th { width: 40%; }
 }
