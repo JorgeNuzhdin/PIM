@@ -3,7 +3,6 @@
 @section('title', 'El proyecto - PIM')
 
 @section('styles')
-<style>
 .proyecto-container {
     max-width: 900px;
     margin: 2rem auto;
@@ -118,7 +117,6 @@
     .bloques { grid-template-columns: 1fr; }
     .acceso-tabla th { width: 40%; }
 }
-</style>
 @endsection
 
 @section('content')

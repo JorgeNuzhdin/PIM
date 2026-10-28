@@ -3,7 +3,6 @@
 @section('title', 'Autores - PIM')
 
 @section('styles')
-<style>
 .autores-container {
     max-width: 900px;
     margin: 2rem auto;
@@ -54,7 +53,6 @@
     .autor-card { flex-direction: column; text-align: center; }
     .autor-card ul { list-style: none; padding-left: 0; }
 }
-</style>
 @endsection
 
 @section('content')

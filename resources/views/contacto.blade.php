@@ -3,7 +3,6 @@
 @section('title', 'Contacto - PIM')
 
 @section('styles')
-<style>
 .contacto-container {
     max-width: 600px;
     margin: 2rem auto;
@@ -92,7 +91,6 @@
 .btn-enviar:hover {
     background: #3182ce;
 }
-</style>
 @endsection
 
 @section('content')
